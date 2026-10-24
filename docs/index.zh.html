@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>证据之门 — 视觉语言模型如何在没有证据时作出回答</title>
+<meta name="description" content="用 2×3 设计把“视觉证据缺失”与“被提示的答案”分开。冲突提示破坏的是拒答读出，而不是模型内部的证据表征。">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="alternate" hreflang="en" href="https://yuanchongbit.github.io/evidence-gate/">
+<link rel="alternate" hreflang="zh-Hans" href="https://yuanchongbit.github.io/evidence-gate/index.zh.html">
+<link rel="alternate" hreflang="x-default" href="https://yuanchongbit.github.io/evidence-gate/">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <nav class="langswitch" aria-label="语言">
+      <a href="./" lang="en">EN</a>
+      <span aria-current="page">中文</span>
+    </nav>
+    <p class="kicker">预印本 · 2026</p>
+    <h1>证据之门</h1>
+    <p class="subtitle">视觉语言模型如何在没有证据时<br>作出回答</p>
+    <p class="authors">yuanchongbit</p>
+    <nav class="links">
+      <a class="primary" href="https://github.com/yuanchongbit/evidence-gate">代码</a>
+      <a href="paper/main.pdf">论文</a>
+      <a href="#results">结果</a>
+      <a href="#limits">局限</a>
+      <a href="#cite">BibTeX</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section class="tldr">
+  <p><strong>一句话。</strong>问视觉语言模型一个图中并不存在的物体，它通常回答<em>不确定</em>。只要加一句话——“提示：雨伞是黑色的。”——它就会回答<em>黑色</em>。我们表明，这不是“没看见”：证据在模型内部仍然线性可解码，坏掉的是把证据转成拒答的那道<em>门</em>。这道门写得很晚，位于最后几层，可以被读出，也可以沿单一方向推回去。</p>
+</section>
+
+<section id="idea">
+  <h2>一张图，六种提问，不改图</h2>
+  <div class="cols">
+    <div>
+      <p>每张照片都会出现在 2×3 被试内设计的全部六个格子里：视觉证据 {物体存在，物体经核验不存在} × 文本提示 {无，正确，冲突}。</p>
+      <p>“缺失”这一臂不是靠擦除像素做出来的。它询问的物体类别，被 COCO val2017 的穷尽标注判定为<em>不在</em>图中，因此场景本身没有改动。一个独立的 yes/no 探针确认了操纵有效：对缺失类别 p(yes) = 0.095，而原图为 0.95。</p>
+      <p>提示被做得“可信”而非“对抗”：它给出该缺失类别在 COCO val 中最常见的颜色。正确提示会<em>帮到</em>模型（准确率 0.762 → 0.973），正因如此，冲突提示才能算因果操纵，而不是噪声。</p>
+    </div>
+    <figure class="design">
+      <div class="grid">
+        <div class="corner"></div>
+        <div class="head">无提示</div>
+        <div class="head">正确提示</div>
+        <div class="head conflict">冲突提示</div>
+
+        <div class="rowlab">物体<br>存在</div>
+        <div class="cell good"><b>0.011</b><span>拒答</span><i>准确率 0.762</i></div>
+        <div class="cell good"><b>0.004</b><span>拒答</span><i>准确率 0.973</i></div>
+        <div class="cell bad"><b>0.088</b><span>拒答</span><i>准确率 0.383</i></div>
+
+        <div class="rowlab">物体<br>缺失</div>
+        <div class="cell good"><b>0.904</b><span>拒答</span><i>编造 0.096</i></div>
+        <div class="cell mid"><b>0.521</b><span>拒答 · 提示 a</span><i>编造 0.479</i></div>
+        <div class="cell mid"><b>0.563</b><span>拒答 · 提示 b</span><i>编造 0.437</i></div>
+      </div>
+      <figcaption>Qwen2.5-VL-3B，n = 261 个经核验样本。“编造”指物体缺失时仍给出颜色答案。</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="results">
+  <h2>读出坍塌，表征不动</h2>
+  <p class="lead">在冲突提示下，任何由模型输出分布计算出的信号，都失去了区分“有证据”与“无证据”的能力。而最终隐状态上的线性探针纹丝不动。</p>
+
+  <figure class="chart">
+    <svg viewBox="0 0 760 320" role="img" aria-label="三种提示条件下证据检测的 AUROC">
+      <g class="axis">
+        <line x1="70" y1="260" x2="720" y2="260"></line>
+        <line x1="70" y1="40" x2="70" y2="260"></line>
+        <text x="62" y="264" text-anchor="end">0.4</text>
+        <text x="62" y="204" text-anchor="end">0.6</text>
+        <text x="62" y="144" text-anchor="end">0.8</text>
+        <text x="62" y="84" text-anchor="end">1.0</text>
+        <line class="grid" x1="70" y1="200" x2="720" y2="200"></line>
+        <line class="grid" x1="70" y1="140" x2="720" y2="140"></line>
+        <line class="grid" x1="70" y1="80" x2="720" y2="80"></line>
+        <text x="70" y="285" text-anchor="middle">无提示</text>
+        <text x="395" y="285" text-anchor="middle">正确提示</text>
+        <text x="726" y="285" text-anchor="end">冲突提示</text>
+      </g>
+      <!-- probe: .995 .997 .998 -->
+      <polyline class="line probe" points="70,81.5 395,80.9 720,80.6"></polyline>
+      <!-- p(unknown): .993 .969 .834 -->
+      <polyline class="line punk" points="70,82.1 395,89.3 720,129.8"></polyline>
+      <!-- maxprob: .615 .916 .463 -->
+      <polyline class="line maxp" points="70,195.5 395,105.2 720,241.1"></polyline>
+      <g class="dots">
+        <circle class="probe" cx="70" cy="81.5" r="5"></circle><circle class="probe" cx="395" cy="80.9" r="5"></circle><circle class="probe" cx="720" cy="80.6" r="5"></circle>
+        <circle class="punk" cx="70" cy="82.1" r="5"></circle><circle class="punk" cx="395" cy="89.3" r="5"></circle><circle class="punk" cx="720" cy="129.8" r="5"></circle>
+        <circle class="maxp" cx="70" cy="195.5" r="5"></circle><circle class="maxp" cx="395" cy="105.2" r="5"></circle><circle class="maxp" cx="720" cy="241.1" r="5"></circle>
+      </g>
+      <g class="legend">
+        <circle class="probe" cx="470" cy="22" r="5"></circle><text x="484" y="26">最终隐状态探针</text>
+        <circle class="punk" cx="600" cy="22" r="5"></circle><text x="614" y="26">p(unknown)</text>
+        <circle class="maxp" cx="470" cy="308" r="5"></circle><text x="484" y="312">最大概率</text>
+      </g>
+    </svg>
+    <figcaption>把 522 个配对样本分类为“有证据 vs. 无证据”的 AUROC。分组 bootstrap 95% 置信区间见论文；冲突提示下探针与 p(unknown) 的差距为 +0.164 [0.132, 0.196]。</figcaption>
+  </figure>
+
+  <div class="cards">
+    <div class="card"><span class="num">0.998</span><span class="lab">冲突下的探针 AUROC</span></div>
+    <div class="card"><span class="num">0.834</span><span class="lab">冲突下 p(unknown) 的 AUROC</span></div>
+    <div class="card"><span class="num">0.463</span><span class="lab">最大概率 AUROC——低于随机</span></div>
+    <div class="card"><span class="num">0.969</span><span class="lab">探针迁移：无提示 → 冲突</span></div>
+  </div>
+</section>
+
+<section id="mechanism">
+  <h2>抑制是一次“晚写”</h2>
+  <p class="lead">我们在未被污染的“无提示”前向传播中取出末位 token 的状态，把它粘贴到带提示传播的第 L 层。如果后续层仍然产生拒答，就说明证据是被带过去的，而不是被重新计算的。</p>
+
+  <figure class="chart">
+    <svg viewBox="0 0 760 330" role="img" aria-label="逐层激活替换后拒答的恢复情况">
+      <g class="axis">
+        <line x1="80" y1="270" x2="710" y2="270"></line>
+        <line x1="80" y1="40" x2="80" y2="270"></line>
+        <text x="72" y="274" text-anchor="end">0%</text>
+        <text x="72" y="202" text-anchor="end">25%</text>
+        <text x="72" y="134" text-anchor="end">50%</text>
+        <text x="72" y="66" text-anchor="end">75%</text>
+        <text x="80" y="295" text-anchor="middle">50%</text>
+        <text x="395" y="295" text-anchor="middle">75%</text>
+        <text x="710" y="295" text-anchor="middle">100%</text>
+        <line class="grid" x1="80" y1="202" x2="710" y2="202"></line>
+        <line class="grid" x1="80" y1="134" x2="710" y2="134"></line>
+        <line class="grid" x1="80" y1="66" x2="710" y2="66"></line>
+        <text x="395" y="318" text-anchor="middle">被替换层的相对深度</text>
+      </g>
+      <!-- 3B: 67% -> 22%; 89% -> 80% -->
+      <polyline class="line m3b" points="272,210.1 671,52.4"></polyline>
+      <circle class="m3b" cx="272" cy="210.1" r="5"></circle><circle class="m3b" cx="671" cy="52.4" r="5"></circle>
+      <!-- 7B: 64% -> 0; 86% -> 69; 93% -> 90 -->
+      <polyline class="line m7b" points="237,270 584,80.6 660,27.1"></polyline>
+      <circle class="m7b" cx="237" cy="270" r="5"></circle><circle class="m7b" cx="584" cy="80.6" r="5"></circle><circle class="m7b" cx="660" cy="27.1" r="5"></circle>
+      <!-- LLaVA: 64% -> 27; 86% -> 74; 93% -> 93 -->
+      <polyline class="line llava" points="237,196.3 584,67.4 660,18.7"></polyline>
+      <circle class="llava" cx="237" cy="196.3" r="5"></circle><circle class="llava" cx="584" cy="67.4" r="5"></circle><circle class="llava" cx="660" cy="18.7" r="5"></circle>
+      <g class="legend">
+        <circle class="m3b" cx="92" cy="22" r="5"></circle><text x="106" y="26">Qwen2.5-VL-3B</text>
+        <circle class="m7b" cx="300" cy="22" r="5"></circle><text x="314" y="26">Qwen2.5-VL-7B</text>
+        <circle class="llava" cx="510" cy="22" r="5"></circle><text x="524" y="26">LLaVA-OneVision-7B</text>
+      </g>
+    </svg>
+    <figcaption>用 p(unknown) 衡量的、冲突下丢失的拒答的恢复程度。每个来源都是同一样本的无提示状态；随机打乱来源的对照表现相近，说明定位到的是“门”，而不是某个样本专属的编码。</figcaption>
+  </figure>
+
+  <p>两个对照干预闭合了因果链。沿探针方向 <em>w</em>，加上 +0.5·‖h‖ 会把“物体缺失”时的拒答从 0.904 压到 0.000；减去 0.5·‖h‖ 会把“物体存在”时的拒答从 0.011 抬到 0.352。剂量–响应是单调的，并且当方向在一半场景上拟合、在另一半上评估时依然成立。</p>
+</section>
+
+<section id="gate">
+  <h2>把机制变成一道门</h2>
+  <p class="lead">编造 = 被问物体不存在时仍回答出一种颜色。在固定 50% 覆盖率下，用探针而不是模型自身的置信度来排序，能去掉大部分编造——但只在提示被污染时成立。</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>50% 覆盖率</th><th>探针</th><th>p(unknown)</th><th>最大概率</th></tr></thead>
+      <tbody>
+        <tr><td>无提示</td><td class="best">0.031</td><td>0.042</td><td>0.425</td></tr>
+        <tr><td>正确提示</td><td class="best">0.027</td><td>0.088</td><td>0.119</td></tr>
+        <tr><td class="conflict">冲突提示</td><td class="best">0.011</td><td class="warn">0.249</td><td class="warn">0.510</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">同样的模式也出现在 Qwen2.5-VL-7B（探针 0.019 vs. p(unknown) 0.268）和 LLaVA-OneVision-7B（0.019 vs. 0.295）上。</p>
+</section>
+
+<section id="models">
+  <h2>三个模型，同一种深度剖面</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>模型</th><th>探针<br>无提示</th><th>探针<br>冲突</th><th>p(unknown)<br>无提示</th><th>p(unknown)<br>冲突</th><th>替换恢复</th></tr></thead>
+      <tbody>
+        <tr><td>Qwen2.5-VL-3B（36 层）</td><td>0.995</td><td>0.998</td><td>0.993</td><td>0.834</td><td>22% @ 67%，80% @ 89%</td></tr>
+        <tr><td>Qwen2.5-VL-7B（28 层）</td><td>0.995</td><td>0.998</td><td>0.984</td><td>0.797</td><td>~0% @ 64%，69% @ 86%，90% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>27% @ 64%，74% @ 86%，93% @ 93%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">LLaVA 对提示的敏感性高得多：冲突下它的拒答率从 0.751 跌到 0.161，而 Qwen2.5-VL-7B 只从 0.958 动到 0.877。但抑制写在相同的相对深度上。敏感性与作用位点可以分离：更容易被带偏的模型，拥有的是同一道门，只是被推得更开。</p>
+</section>
+
+<section id="limits">
+  <h2>我们不主张什么</h2>
+  <div class="cols limits">
+    <div>
+      <h3>不是“普适更好的置信度”</h3>
+      <p>在 VizWiz 天然不可答的问题上，模型自身的 p(unknown) 与冻结探针相当（0.878 vs. 0.827）。探针仍然优于最大概率（0.437），但它相对 p(unknown) 的优势只存在于“提示攻击拒答门”的场景里。</p>
+    </div>
+    <div>
+      <h3>是排序不变，不是校准不变</h3>
+      <p>在 VQA-v2 颜色题上，冻结探针的平均分在冲突下从 +6.93 变为 +2.10，但排序保持不变。我们主张的是 AUROC 不变，而非分数不变。</p>
+    </div>
+    <div>
+      <h3>是证据，不是正确性</h3>
+      <p>探针回答的是“证据在不在？”，而不是“答案对不对？”。无提示时判断答案正确性，最大概率是更好的信号。</p>
+    </div>
+    <div>
+      <h3>颜色才是深度检验</h3>
+      <p>左右与计数任务复现了“门被打开”，但没有复现完整的读出坍塌；它们是边界条件。机制层面的结论在颜色任务上最强。</p>
+    </div>
+  </div>
+</section>
+
+<section id="cite">
+  <h2>引用</h2>
+  <p class="small">论文正文为英文，BibTeX 如下。</p>
+<pre><code>@misc{yuanchongbit2026evidencegate,
+  title  = {The Evidence Gate: How Vision-Language Models
+            Decide to Answer Without Evidence},
+  author = {yuanchongbit},
+  year   = {2026},
+  note   = {Preprint in preparation},
+  url    = {https://github.com/yuanchongbit/evidence-gate}
+}</code></pre>
+  <p class="small">代码与冻结基准：<a href="https://github.com/yuanchongbit/evidence-gate">github.com/yuanchongbit/evidence-gate</a>。COCO 图像按需下载，不随仓库分发。</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">静态页面，托管于 GitHub Pages。最后更新：2026 年 10 月。</div>
+</footer>
+
+</body>
+</html>

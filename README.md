@@ -4,7 +4,7 @@
 
 This repository contains the code, the frozen benchmark and the result summaries for the paper *The Evidence Gate: How Vision-Language Models Decide to Answer Without Evidence* (preprint in preparation).
 
-Project page: <https://yuanchongbit.github.io/evidence-gate/>
+Project page: <https://yuanchongbit.github.io/evidence-gate/> (English) · [中文](https://yuanchongbit.github.io/evidence-gate/index.zh.html)
 
 ## The question
 

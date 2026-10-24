@@ -28,12 +28,49 @@ body {
 
 .wrap { max-width: 980px; margin: 0 auto; padding: 0 26px; }
 
+html[lang="zh-CN"] body {
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB",
+    "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+html[lang="zh-CN"] h2,
+html[lang="zh-CN"] .hero h1,
+html[lang="zh-CN"] .subtitle,
+html[lang="zh-CN"] .design .cell b,
+html[lang="zh-CN"] .card .num {
+  font-family: "Songti SC", "Noto Serif SC", Georgia, "Times New Roman", serif;
+}
+html[lang="zh-CN"] .kicker { letter-spacing: .1em; }
+html[lang="zh-CN"] .lead { line-height: 1.75; }
+html[lang="zh-CN"] em { font-style: normal; font-weight: 600; }
+html[lang="zh-CN"] .design .head,
+html[lang="zh-CN"] .design .rowlab,
+html[lang="zh-CN"] .design .cell span { letter-spacing: .03em; }
+html[lang="zh-CN"] thead th { text-transform: none; letter-spacing: .02em; }
+html[lang="zh-CN"] .design .cell span { font-size: 12px; text-transform: none; }
+
 .hero {
   background: var(--navy);
   color: #fff;
   padding: 74px 0 58px;
   border-bottom: 5px solid var(--orange);
+  position: relative;
 }
+
+.langswitch {
+  position: absolute;
+  top: 26px;
+  right: 26px;
+  display: inline-flex;
+  border: 1px solid rgba(255,255,255,.4);
+  border-radius: 999px;
+  overflow: hidden;
+  font-size: 13px;
+  line-height: 1;
+}
+.langswitch a, .langswitch span { padding: 7px 13px; color: #fff; text-decoration: none; }
+.langswitch a:hover { background: rgba(255,255,255,.14); }
+.langswitch [aria-current] { background: #fff; color: var(--navy); font-weight: 600; }
+.langswitch [aria-current]:hover { background: #fff; }
 
 .kicker {
   margin: 0 0 10px;
@@ -275,6 +312,7 @@ footer {
   .cols, .limits { grid-template-columns: 1fr; gap: 20px; }
   .cards { grid-template-columns: 1fr 1fr; }
   .hero { padding: 54px 0 40px; }
+  .langswitch { position: static; margin-bottom: 20px; }
   .design .grid { grid-template-columns: 62px repeat(3, 1fr); }
   .design .cell b { font-size: 20px; }
   .design .cell { min-height: 84px; padding: 10px 5px 8px; }
