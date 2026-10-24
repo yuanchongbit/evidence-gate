@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Evidence Gate — How VLMs decide to answer without evidence</title>
+<meta name="description" content="A 2×3 design separating missing visual evidence from asserted answers in vision-language models. Conflicting hints break the refusal readout, not the internal evidence representation.">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">Preprint · 2026</p>
+    <h1>The Evidence Gate</h1>
+    <p class="subtitle">How vision-language models decide to answer<br>without evidence</p>
+    <p class="authors">yuanchongbit</p>
+    <nav class="links">
+      <a class="primary" href="https://github.com/yuanchongbit/evidence-gate">Code</a>
+      <a href="paper/main.pdf">Paper</a>
+      <a href="#results">Results</a>
+      <a href="#limits">Limits</a>
+      <a href="#cite">BibTeX</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+<section class="tldr">
+  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still linearly decodable inside the model; what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last few layers, and can be read out and pushed back along a single direction.</p>
+</section>
+
+<section id="idea">
+  <h2>One image, six prompts, no editing</h2>
+  <div class="cols">
+    <div>
+      <p>Every photograph appears in all six cells of a 2×3 within-subject design: visual evidence {object present, object verified absent} × textual hint {none, correct, conflicting}.</p>
+      <p>The absent arm is not produced by erasing pixels. It asks about an object category that COCO’s exhaustive val2017 annotations place <em>outside</em> the image, so the scene is untouched. A separate yes/no probe confirms the manipulation: p(yes) = 0.095 for absent categories versus 0.95 for the original images.</p>
+      <p>The hint is made plausible rather than adversarial: it names the absent category’s most frequent colour in COCO val. Correct hints <em>help</em> (accuracy 0.762 → 0.973), which is what makes the conflicting hint a causal manipulation rather than noise.</p>
+    </div>
+    <figure class="design">
+      <div class="grid">
+        <div class="corner"></div>
+        <div class="head">no hint</div>
+        <div class="head">correct hint</div>
+        <div class="head conflict">conflicting hint</div>
+
+        <div class="rowlab">object<br>present</div>
+        <div class="cell good"><b>0.011</b><span>refusal</span><i>acc 0.762</i></div>
+        <div class="cell good"><b>0.004</b><span>refusal</span><i>acc 0.973</i></div>
+        <div class="cell bad"><b>0.088</b><span>refusal</span><i>acc 0.383</i></div>
+
+        <div class="rowlab">object<br>absent</div>
+        <div class="cell good"><b>0.904</b><span>refusal</span><i>fab 0.096</i></div>
+        <div class="cell mid"><b>0.521</b><span>refusal · hint a</span><i>fab 0.479</i></div>
+        <div class="cell mid"><b>0.563</b><span>refusal · hint b</span><i>fab 0.437</i></div>
+      </div>
+      <figcaption>Qwen2.5-VL-3B, n = 261 verified samples. “Fab” is answering when the object is absent.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="results">
+  <h2>The readout collapses. The representation does not.</h2>
+  <p class="lead">Under a conflicting hint, every signal computed from the model’s output distribution loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state does not move.</p>
+
+  <figure class="chart">
+    <svg viewBox="0 0 760 320" role="img" aria-label="AUROC of evidence detection under three hint conditions">
+      <g class="axis">
+        <line x1="70" y1="260" x2="720" y2="260"></line>
+        <line x1="70" y1="40" x2="70" y2="260"></line>
+        <text x="62" y="264" text-anchor="end">0.4</text>
+        <text x="62" y="204" text-anchor="end">0.6</text>
+        <text x="62" y="144" text-anchor="end">0.8</text>
+        <text x="62" y="84" text-anchor="end">1.0</text>
+        <line class="grid" x1="70" y1="200" x2="720" y2="200"></line>
+        <line class="grid" x1="70" y1="140" x2="720" y2="140"></line>
+        <line class="grid" x1="70" y1="80" x2="720" y2="80"></line>
+        <text x="70" y="285" text-anchor="middle">no hint</text>
+        <text x="395" y="285" text-anchor="middle">correct hint</text>
+        <text x="726" y="285" text-anchor="end">conflicting hint</text>
+      </g>
+      <!-- probe: .995 .997 .998 -->
+      <polyline class="line probe" points="70,81.5 395,80.9 720,80.6"></polyline>
+      <!-- p(unknown): .993 .969 .834 -->
+      <polyline class="line punk" points="70,82.1 395,89.3 720,129.8"></polyline>
+      <!-- maxprob: .615 .916 .463 -->
+      <polyline class="line maxp" points="70,195.5 395,105.2 720,241.1"></polyline>
+      <g class="dots">
+        <circle class="probe" cx="70" cy="81.5" r="5"></circle><circle class="probe" cx="395" cy="80.9" r="5"></circle><circle class="probe" cx="720" cy="80.6" r="5"></circle>
+        <circle class="punk" cx="70" cy="82.1" r="5"></circle><circle class="punk" cx="395" cy="89.3" r="5"></circle><circle class="punk" cx="720" cy="129.8" r="5"></circle>
+        <circle class="maxp" cx="70" cy="195.5" r="5"></circle><circle class="maxp" cx="395" cy="105.2" r="5"></circle><circle class="maxp" cx="720" cy="241.1" r="5"></circle>
+      </g>
+      <g class="legend">
+        <circle class="probe" cx="470" cy="22" r="5"></circle><text x="484" y="26">final-state probe</text>
+        <circle class="punk" cx="600" cy="22" r="5"></circle><text x="614" y="26">p(unknown)</text>
+        <circle class="maxp" cx="470" cy="308" r="5"></circle><text x="484" y="312">max probability</text>
+      </g>
+    </svg>
+    <figcaption>AUROC for classifying 522 paired items as evidence-present vs. evidence-absent. Grouped bootstrap 95% CIs are in the paper; the conflicting-hint gap between probe and p(unknown) is +0.164 [0.132, 0.196].</figcaption>
+  </figure>
+
+  <div class="cards">
+    <div class="card"><span class="num">0.998</span><span class="lab">probe AUROC under conflict</span></div>
+    <div class="card"><span class="num">0.834</span><span class="lab">p(unknown) AUROC under conflict</span></div>
+    <div class="card"><span class="num">0.463</span><span class="lab">max-probability AUROC — below chance</span></div>
+    <div class="card"><span class="num">0.969</span><span class="lab">probe transfer, no hint → conflict</span></div>
+  </div>
+</section>
+
+<section id="mechanism">
+  <h2>The suppression is a late write</h2>
+  <p class="lead">We capture the last-token state from an unpolluted no-hint forward pass and paste it into the hinted pass at layer L. If the remaining layers still produce a refusal, the evidence was carried forward rather than recomputed.</p>
+
+  <figure class="chart">
+    <svg viewBox="0 0 760 330" role="img" aria-label="Recovery of refusal after layer-wise activation patching">
+      <g class="axis">
+        <line x1="80" y1="270" x2="710" y2="270"></line>
+        <line x1="80" y1="40" x2="80" y2="270"></line>
+        <text x="72" y="274" text-anchor="end">0%</text>
+        <text x="72" y="202" text-anchor="end">25%</text>
+        <text x="72" y="134" text-anchor="end">50%</text>
+        <text x="72" y="66" text-anchor="end">75%</text>
+        <text x="80" y="295" text-anchor="middle">50%</text>
+        <text x="395" y="295" text-anchor="middle">75%</text>
+        <text x="710" y="295" text-anchor="middle">100%</text>
+        <line class="grid" x1="80" y1="202" x2="710" y2="202"></line>
+        <line class="grid" x1="80" y1="134" x2="710" y2="134"></line>
+        <line class="grid" x1="80" y1="66" x2="710" y2="66"></line>
+        <text x="395" y="318" text-anchor="middle">relative depth of the patched layer</text>
+      </g>
+      <!-- 3B: 67% -> 22%; 89% -> 80% -->
+      <polyline class="line m3b" points="272,210.1 671,52.4"></polyline>
+      <circle class="m3b" cx="272" cy="210.1" r="5"></circle><circle class="m3b" cx="671" cy="52.4" r="5"></circle>
+      <!-- 7B: 64% -> 0; 86% -> 69; 93% -> 90 -->
+      <polyline class="line m7b" points="237,270 584,80.6 660,27.1"></polyline>
+      <circle class="m7b" cx="237" cy="270" r="5"></circle><circle class="m7b" cx="584" cy="80.6" r="5"></circle><circle class="m7b" cx="660" cy="27.1" r="5"></circle>
+      <!-- LLaVA: 64% -> 27; 86% -> 74; 93% -> 93 -->
+      <polyline class="line llava" points="237,196.3 584,67.4 660,18.7"></polyline>
+      <circle class="llava" cx="237" cy="196.3" r="5"></circle><circle class="llava" cx="584" cy="67.4" r="5"></circle><circle class="llava" cx="660" cy="18.7" r="5"></circle>
+      <g class="legend">
+        <circle class="m3b" cx="92" cy="22" r="5"></circle><text x="106" y="26">Qwen2.5-VL-3B</text>
+        <circle class="m7b" cx="300" cy="22" r="5"></circle><text x="314" y="26">Qwen2.5-VL-7B</text>
+        <circle class="llava" cx="510" cy="22" r="5"></circle><text x="524" y="26">LLaVA-OneVision-7B</text>
+      </g>
+    </svg>
+    <figcaption>Recovery of the refusal lost under conflict, measured by p(unknown). Each source is the same sample’s no-hint state; a shuffled-source control behaves similarly, locating the gate rather than a sample-specific code.</figcaption>
+  </figure>
+
+  <p>Two control interventions close the causal loop. Along the probe direction <em>w</em>, adding +0.5·‖h‖ push absent-object refusal from 0.904 to 0.000; subtracting 0.5·‖h‖ raises present-object refusal from 0.011 to 0.352. The dose–response is monotone and survives when the direction is fitted on one half of the scenes and evaluated on the other.</p>
+</section>
+
+<section id="gate">
+  <h2>Turning the mechanism into a gate</h2>
+  <p class="lead">Fabrication = answering a colour when the queried object is absent. At a fixed 50% coverage, ranking by the probe instead of by the model’s own confidence removes most fabrications — but only when the prompt is polluted.</p>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>50% coverage</th><th>probe</th><th>p(unknown)</th><th>max probability</th></tr></thead>
+      <tbody>
+        <tr><td>no hint</td><td class="best">0.031</td><td>0.042</td><td>0.425</td></tr>
+        <tr><td>correct hint</td><td class="best">0.027</td><td>0.088</td><td>0.119</td></tr>
+        <tr><td class="conflict">conflicting hint</td><td class="best">0.011</td><td class="warn">0.249</td><td class="warn">0.510</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">The same pattern holds on Qwen2.5-VL-7B (probe 0.019 vs. p(unknown) 0.268) and LLaVA-OneVision-7B (0.019 vs. 0.295).</p>
+</section>
+
+<section id="models">
+  <h2>Three models, one depth profile</h2>
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>model</th><th>probe, no hint</th><th>probe, conflict</th><th>p(unknown), no hint</th><th>p(unknown), conflict</th><th>patch recovery</th></tr></thead>
+      <tbody>
+        <tr><td>Qwen2.5-VL-3B (36 layers)</td><td>0.995</td><td>0.998</td><td>0.993</td><td>0.834</td><td>22% @ 67%, 80% @ 89%</td></tr>
+        <tr><td>Qwen2.5-VL-7B (28 layers)</td><td>0.995</td><td>0.998</td><td>0.984</td><td>0.797</td><td>~0% @ 64%, 69% @ 86%, 90% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B (28 layers)</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>27% @ 64%, 74% @ 86%, 93% @ 93%</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">LLaVA is far more hint-sensitive: under conflict its refusal falls from 0.751 to 0.161, while Qwen2.5-VL-7B only moves from 0.958 to 0.877. Yet the suppression is written at the same relative depth. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
+</section>
+
+<section id="limits">
+  <h2>What we do not claim</h2>
+  <div class="cols limits">
+    <div>
+      <h3>Not a universal better confidence</h3>
+      <p>On VizWiz’s naturally unanswerable questions, the model’s own p(unknown) matches the frozen probe (0.878 vs. 0.827). The probe still beats max-probability (0.437), but its advantage over p(unknown) is specific to settings where a hint attacks the refusal gate.</p>
+    </div>
+    <div>
+      <h3>Rank invariance, not calibration invariance</h3>
+      <p>On VQA-v2 colour questions the frozen probe’s mean score moves from +6.93 to +2.10 under conflict even though its ordering is preserved. We claim AUROC invariance, not score invariance.</p>
+    </div>
+    <div>
+      <h3>Evidence, not correctness</h3>
+      <p>The probe answers “is the evidence there?”, not “is this answer right?”. For answer correctness without hints, max-probability is the better signal.</p>
+    </div>
+    <div>
+      <h3>Colour is the deep test</h3>
+      <p>Side and count tasks replicate the gate opening but not the full readout collapse; they are boundary conditions. Mechanistic claims are strongest on colour.</p>
+    </div>
+  </div>
+</section>
+
+<section id="cite">
+  <h2>Citation</h2>
+<pre><code>@misc{yuanchongbit2026evidencegate,
+  title  = {The Evidence Gate: How Vision-Language Models
+            Decide to Answer Without Evidence},
+  author = {yuanchongbit},
+  year   = {2026},
+  note   = {Preprint in preparation},
+  url    = {https://github.com/yuanchongbit/evidence-gate}
+}</code></pre>
+  <p class="small">Code and frozen benchmark: <a href="https://github.com/yuanchongbit/evidence-gate">github.com/yuanchongbit/evidence-gate</a>. COCO images are downloaded, not redistributed.</p>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">Built as a static page for GitHub Pages. Last updated October 2026.</div>
+</footer>
+
+</body>
+</html>

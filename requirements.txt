@@ -1,0 +1,10 @@
+torch>=2.4
+transformers>=4.49
+accelerate>=1.0
+pillow>=10.0
+numpy>=1.26
+scikit-learn>=1.4
+scipy>=1.11
+pyarrow>=15.0
+modelscope>=1.20
+matplotlib>=3.8
