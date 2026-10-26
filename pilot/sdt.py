@@ -243,6 +243,9 @@ def binary_bootstrap(recs, conditions, n_boot=2000, seed=0):
     rng = np.random.default_rng(seed)
     keys = ["dprime", "criterion"]
     vals = {c: {k: [] for k in keys} for c in conditions}
+    for c in conditions[1:]:
+        for k in keys:
+            vals[c][f"{k}_diff"] = []
     for _ in range(n_boot):
         pick = rng.choice(ids, len(ids), replace=True)
         sample = [r for i in pick for r in by_id[i]]
