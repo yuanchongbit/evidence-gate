@@ -173,7 +173,7 @@ def fit_summary(rows, conditions):
         b0 = beta[names.index("b0")]
         shifts[cond] = {
             "delta_b": float(b),
-            "delta_a": float(a - a0),
+            "delta_a": float(a),
             "ed50_none": float(-b0 / a0),
             "ed50_cond": float(-(b0 + b) / (a0 + a)),
             "horizontal_shift_at_mean_slope": float(-b / ((a0 + a) / 2)),
@@ -200,7 +200,7 @@ def cluster_bootstrap(rows, conditions, n_boot=2000, seed=0):
             a = beta[names.index(f"a_{c}")]
             b0 = beta[0]
             vals[c]["delta_b"].append(b)
-            vals[c]["delta_a"].append(a - a0)
+            vals[c]["delta_a"].append(a)
             vals[c]["ed50"].append(-(b0 + b) / (a0 + a))
             vals[c]["shift"].append(-b / ((a0 + a) / 2))
         for c in conditions:
