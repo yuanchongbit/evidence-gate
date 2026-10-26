@@ -186,8 +186,8 @@ def cluster_bootstrap(rows, conditions, n_boot=2000, seed=0):
     ids = sorted({r["sample_id"] for r in rows})
     by_id = {i: [r for r in rows if r["sample_id"] == i] for i in ids}
     rng = np.random.default_rng(seed)
-    vals = {c: {"delta_b": [], "delta_a": [], "ed50": [], "shift": []}
-            for c in conditions[1:]}
+    vals = {c: {"delta_b": [], "delta_a": [], "ed50": [], "ed50_diff": [],
+                "shift": []} for c in conditions[1:]}
     bin_vals = {c: [] for c in conditions}
     for _ in range(n_boot):
         pick = rng.choice(ids, len(ids), replace=True)
@@ -195,13 +195,16 @@ def cluster_bootstrap(rows, conditions, n_boot=2000, seed=0):
         X, y, names = design(sample, conditions)
         beta = fit_logit(X, y)
         a0 = beta[1]
+        ed50_none = -beta[0] / a0
         for c in conditions[1:]:
             b = beta[names.index(f"b_{c}")]
             a = beta[names.index(f"a_{c}")]
             b0 = beta[0]
+            ed50 = -(b0 + b) / (a0 + a)
             vals[c]["delta_b"].append(b)
             vals[c]["delta_a"].append(a)
-            vals[c]["ed50"].append(-(b0 + b) / (a0 + a))
+            vals[c]["ed50"].append(ed50)
+            vals[c]["ed50_diff"].append(ed50 - ed50_none)
             vals[c]["shift"].append(-b / ((a0 + a) / 2))
         for c in conditions:
             sub = [r["refuse"] for r in sample if r["cond"] == c]
@@ -356,7 +359,7 @@ def main():
     ci = cluster_bootstrap(rows, conditions, n_boot=args.n_boot)
     for c in conditions[1:]:
         print(f"{c} bootstrap 95% CI: delta_b {ci[c]['delta_b']}  "
-              f"delta_a {ci[c]['delta_a']}  shift {ci[c]['shift']}")
+              f"delta_a {ci[c]['delta_a']}  ed50_diff {ci[c]['ed50_diff']}")
 
     sdt = binary_sdt(recs, conditions)
     for c in conditions:
