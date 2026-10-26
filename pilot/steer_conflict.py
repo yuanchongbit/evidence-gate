@@ -28,10 +28,19 @@ def prompts_for(row):
     }
 
 
+def find_lm_head(model):
+    for name, module in model.named_modules():
+        if name.endswith("lm_head"):
+            return module
+    raise ValueError("no lm_head found")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default=str(DATA / "manifest_v5.jsonl"))
     ap.add_argument("--model", default="Qwen/Qwen2.5-VL-3B-Instruct")
+    ap.add_argument("--family", default="qwen", choices=["qwen", "gen"])
+    ap.add_argument("--resize", type=int, default=1024)
     ap.add_argument("--run", default=str(ROOT / "runs" / "v5_261.jsonl"))
     ap.add_argument("--out", default=str(ROOT / "runs" / "steer_conflict.jsonl"))
     ap.add_argument("--alphas", default="-0.5,-0.25,0.25,0.5")
@@ -46,8 +55,21 @@ def main():
     w, scale = fit_direction(args.run)
     print(f"direction fitted, median hidden norm {scale:.1f}", flush=True)
 
-    scorer = Scorer(args.model)
-    st = Steer(scorer.model, w, scale)
+    if args.family == "qwen":
+        scorer = Scorer(args.model)
+        cand_names = scorer.cand_names
+
+        def score(img, text):
+            return scorer.score([img], text)[0]
+    else:
+        from .infer_gen import Gen
+        scorer = Gen(args.model, resize=args.resize)
+        cand_names = list(scorer.ids)
+
+        def score(img, text):
+            return scorer.score(img, text)
+
+    st = Steer(scorer.model, w, scale, head=find_lm_head(scorer.model))
     settings = [("base", "none", 0.0), ("ablate", "ablate", 0.0)]
     settings += [(f"a{alpha:+.2f}", "add", alpha)
                  for alpha in [float(x) for x in args.alphas.split(",")]]
@@ -55,7 +77,7 @@ def main():
     t0 = time.time()
     with open(args.out, "w") as f:
         f.write(json.dumps({"meta": {"model": args.model,
-                                     "candidates": ",".join(scorer.cand_names),
+                                     "candidates": ",".join(cand_names),
                                      "scale": scale,
                                      "alphas": args.alphas}}) + "\n")
         for n, row in enumerate(rows, 1):
@@ -67,8 +89,7 @@ def main():
             for name, mode, alpha in settings:
                 set_mode(st, mode, alpha * scale)
                 for key in KEYS:
-                    rec["probs"][f"{key}|{name}"] = scorer.score(
-                        [img], prompts[key])[0]
+                    rec["probs"][f"{key}|{name}"] = score(img, prompts[key])
             set_mode(st, "none")
             f.write(json.dumps(rec) + "\n")
             f.flush()

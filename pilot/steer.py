@@ -40,14 +40,14 @@ def fit_direction(run_path, C=0.01, keep=None):
 
 
 class Steer:
-    def __init__(self, model, w, scale):
+    def __init__(self, model, w, scale, head=None):
         import torch
         self.torch = torch
         self.w = torch.tensor(w, dtype=torch.float32, device="cuda")
         self.scale = scale
         self.alpha = 0.0
         self.mode = "none"
-        self.handle = model.lm_head.register_forward_pre_hook(self.hook)
+        self.handle = (head or model.lm_head).register_forward_pre_hook(self.hook)
 
     def hook(self, module, args):
         if self.mode == "none":
