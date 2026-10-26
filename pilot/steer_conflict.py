@@ -40,7 +40,7 @@ def main():
     ap.add_argument("--manifest", default=str(DATA / "manifest_v5.jsonl"))
     ap.add_argument("--model", default="Qwen/Qwen2.5-VL-3B-Instruct")
     ap.add_argument("--family", default="qwen", choices=["qwen", "gen"])
-    ap.add_argument("--resize", type=int, default=1024)
+    ap.add_argument("--resize", type=int, default=512)
     ap.add_argument("--run", default=str(ROOT / "runs" / "v5_261.jsonl"))
     ap.add_argument("--out", default=str(ROOT / "runs" / "steer_conflict.jsonl"))
     ap.add_argument("--alphas", default="-0.5,-0.25,0.25,0.5")
@@ -77,6 +77,8 @@ def main():
     t0 = time.time()
     with open(args.out, "w") as f:
         f.write(json.dumps({"meta": {"model": args.model,
+                                     "family": args.family,
+                                     "resize": args.resize,
                                      "candidates": ",".join(cand_names),
                                      "scale": scale,
                                      "alphas": args.alphas}}) + "\n")

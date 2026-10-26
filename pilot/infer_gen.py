@@ -28,7 +28,7 @@ def first_id(tokenizer, word):
 
 
 class Gen:
-    def __init__(self, path, max_pixels=1024 * 1024, resize=1024):
+    def __init__(self, path, max_pixels=1024 * 1024, resize=512):
         kw = dict(min_pixels=256 * 256, max_pixels=max_pixels)
         try:
             self.proc = AutoProcessor.from_pretrained(path, **kw)
@@ -131,7 +131,7 @@ def main():
     ap.add_argument("--model", required=True)
     ap.add_argument("--out", default=str(ROOT / "runs" / "gen.jsonl"))
     ap.add_argument("--limit", type=int)
-    ap.add_argument("--resize", type=int, default=768)
+    ap.add_argument("--resize", type=int, default=512)
     args = ap.parse_args()
     run(args)
 

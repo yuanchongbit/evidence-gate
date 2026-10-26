@@ -30,7 +30,7 @@ def main():
     ap.add_argument("--layers", default="18,24,26")
     ap.add_argument("--out", default=str(ROOT / "runs" / "patch4_llava.jsonl"))
     ap.add_argument("--limit", type=int, default=0)
-    ap.add_argument("--resize", type=int, default=768)
+    ap.add_argument("--resize", type=int, default=512)
     args = ap.parse_args()
 
     rows = [json.loads(l) for l in open(args.manifest)]

@@ -1,0 +1,30 @@
+direction fitted, median hidden norm 249.4
+Loading weights:   0%|          | 0/765 [00:00<?, ?it/s]Loading weights:   0%|          | 2/765 [00:00<02:49,  4.50it/s]Loading weights:   4%|▍         | 31/765 [00:00<00:10, 70.84it/s]Loading weights:   7%|▋         | 53/765 [00:00<00:06, 101.82it/s]Loading weights:   9%|▉         | 69/765 [00:00<00:06, 108.40it/s]Loading weights:  11%|█         | 84/765 [00:00<00:05, 118.81it/s]Loading weights:  13%|█▎        | 101/765 [00:01<00:05, 116.76it/s]Loading weights:  15%|█▌        | 115/765 [00:01<00:05, 115.00it/s]Loading weights:  18%|█▊        | 137/765 [00:01<00:05, 116.55it/s]Loading weights:  21%|██        | 161/765 [00:01<00:04, 131.17it/s]Loading weights:  23%|██▎       | 175/765 [00:01<00:04, 122.61it/s]Loading weights:  26%|██▌       | 197/765 [00:01<00:04, 133.85it/s]Loading weights:  28%|██▊       | 211/765 [00:01<00:04, 131.94it/s]Loading weights:  29%|██▉       | 225/765 [00:02<00:04, 129.69it/s]Loading weights:  32%|███▏      | 245/765 [00:02<00:03, 147.45it/s]Loading weights:  34%|███▍      | 261/765 [00:02<00:03, 141.66it/s]Loading weights:  36%|███▌      | 276/765 [00:02<00:03, 142.94it/s]Loading weights:  38%|███▊      | 293/765 [00:02<00:03, 121.92it/s]Loading weights:  40%|████      | 306/765 [00:02<00:03, 123.24it/s]Loading weights:  43%|████▎     | 329/765 [00:02<00:03, 133.53it/s]Loading weights:  69%|██████▉   | 529/765 [00:02<00:00, 588.06it/s]Loading weights: 100%|██████████| 765/765 [00:02<00:00, 257.73it/s]
+model class: LlavaOnevisionForConditionalGeneration
+10/261 100s
+20/261 205s
+30/261 312s
+40/261 410s
+50/261 522s
+60/261 625s
+70/261 725s
+80/261 829s
+90/261 934s
+100/261 1032s
+110/261 1130s
+120/261 1228s
+130/261 1348s
+140/261 1447s
+150/261 1550s
+160/261 1649s
+170/261 1747s
+180/261 1844s
+190/261 1948s
+200/261 2046s
+210/261 2141s
+220/261 2239s
+230/261 2337s
+240/261 2443s
+250/261 2540s
+260/261 2645s
+saved runs/steer_conflict_llava512.jsonl

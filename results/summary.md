@@ -14,7 +14,7 @@ them to regenerate the underlying `.jsonl` / `.npz` files and full logs.
 | Output-space baselines | `pilot/baselines.py` | `runs/repro/baselines_3b.txt` |
 | Selective gate | `pilot/selective.py` | `runs/repro/selective_3b.txt` |
 | Steering / held-out half | `pilot/steer.py`, `pilot/steer_half.py` | `runs/repro/steer_3b.txt`, `steer_half.txt` |
-| Steering under conflict | `pilot/steer_conflict.py`, `pilot/analyze_steer_conflict.py` | `results/steer_conflict.json` |
+| Steering under conflict (3B / 7B / LLaVA) | `pilot/steer_conflict.py`, `pilot/analyze_steer_conflict.py` | `results/steer_conflict{,_7b,_llava}.json` |
 | Layer patching | `pilot/patch3.py`, `pilot/patch4.py` | `runs/repro/patch*.txt` |
 | Task forms | `pilot/task2.py`, `pilot/task3.py` | `runs/repro/task2.txt`, `task3.txt` |
 | External validation | `pilot/ext_analyze.py`, `pilot/ext_vqa_analyze.py` | `runs/ext_*_summary.json` |
@@ -204,6 +204,42 @@ still partly necessary. It does not resolve the colour: at +0.25 w true-colour
 answers rise by 9.6 pp while hint adoption is unchanged (-1.5 pp, CI spans 0).
 The evidence is under-weighted, not erased. Raw run: `results/runs/steer_conflict.jsonl`.
 
+## 4c. Steering under conflict, cross-model
+
+The direction is refitted on each model's no-hint states with the same
+construction. Base and the two non-saturated doses (LLaVA uses a 512 px longest
+side, matching its main run):
+
+| model | setting | present refusal | present true | present hint | absent refusal | absent hint |
+|---|---|---|---|---|---|---|
+| 3B | base | 0.088 | 0.383 | 0.448 | 0.542 | 0.450 |
+| | -0.25 w | 0.759 | 0.073 | 0.134 | 0.874 | 0.125 |
+| | +0.25 w | 0.000 | 0.479 | 0.433 | 0.065 | 0.845 |
+| 7B | base | 0.556 | 0.249 | 0.176 | 0.918 | 0.082 |
+| | -0.25 w | 0.950 | 0.011 | 0.038 | 1.000 | 0.000 |
+| | +0.25 w | 0.004 | 0.421 | 0.425 | 0.057 | 0.870 |
+| LLaVA | base | 0.004 | 0.360 | 0.490 | 0.138 | 0.833 |
+| | -0.25 w | 0.345 | 0.149 | 0.253 | 0.734 | 0.241 |
+| | +0.25 w | 0.000 | 0.379 | 0.533 | 0.000 | 0.990 |
+
+Unsteered no-hint refusal (present/absent): 3B 0.011/0.904, 7B 0.100/0.958,
+LLaVA 0.004/0.820. Paired LLaVA effects of -0.25 w: present refusal +0.341
+[0.284, 0.402], absent refusal +0.596 [0.550, 0.640]; of +0.25 w: absent hint
++0.157 [0.123, 0.192], present hint +0.042 [0.004, 0.084], present true +0.019
+[-0.011, 0.050]. Paired 7B effects of +0.25 w: present true +0.172
+[0.111, 0.234], present hint +0.249 [0.188, 0.307], absent hint +0.787
+[0.747, 0.826].
+
+Reading: refusal is bidirectionally and monotonically controllable in all
+three models, whose base policies range from over-refusal (7B) to near-total
+credulity (LLaVA). Opening the gate does not choose the answer. LLaVA becomes
+even more hint-adherent on absent items (0.833 to 0.990) and its present-item
+true-colour rate is statistically unchanged (+0.019); 7B recovers true-colour
+answers but also adopts the hint more; 3B's present-item content barely changes
+(hint adoption 0.448 to 0.433, true colour 0.383 to 0.479). The direction is
+an abstention gate, not an answer-selection mechanism. Raw runs: `results/runs/steer_conflict_7b.jsonl`,
+`results/runs/steer_conflict_llava.jsonl`.
+
 ## 5. Layer-wise patching
 
 `same` pastes the sample's no-hint final-token state into the hinted pass at
@@ -223,12 +259,12 @@ layer L; `shuffled` pastes another sample's no-hint state.
 | | same L24 (86%) | 0.962 | 0.863 | 69% |
 | | same L26 (93%) | 0.962 | 0.888 | 90% |
 | | shuffled L26 | 0.965 | 0.902 | 103% |
-| LLaVA-OneVision-7B (28 layers) | no hint | 0.751 | 0.579 | 100% |
-| | conflict | 0.161 | 0.194 | 0% |
-| | same L18 (64%) | 0.314 | 0.299 | 27% |
-| | same L24 (86%) | 0.648 | 0.480 | 74% |
-| | same L26 (93%) | 0.743 | 0.550 | 93% |
-| | shuffled L26 | 0.781 | 0.585 | 102% |
+| LLaVA-OneVision-7B (28 layers) | no hint | 0.820 | 0.655 | 100% |
+| | conflict | 0.088 | 0.134 | 0% |
+| | same L18 (64%) | 0.330 | 0.324 | 36% |
+| | same L24 (86%) | 0.743 | 0.549 | 80% |
+| | same L26 (93%) | 0.808 | 0.633 | 96% |
+| | shuffled L26 | 0.842 | 0.662 | 101% |
 
 ## 6. Selective gate: fabrication at fixed coverage under conflict
 

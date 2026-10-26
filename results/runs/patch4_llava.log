@@ -1,18 +1,18 @@
-Loading weights:   0%|          | 0/765 [00:00<?, ?it/s]Loading weights:   0%|          | 2/765 [00:00<01:21,  9.42it/s]Loading weights:   0%|          | 3/765 [00:00<01:31,  8.30it/s]Loading weights:   4%|▍         | 29/765 [00:00<00:08, 82.27it/s]Loading weights:   5%|▌         | 42/765 [00:00<00:07, 94.94it/s]Loading weights:   7%|▋         | 53/765 [00:00<00:07, 91.44it/s]Loading weights:   8%|▊         | 65/765 [00:00<00:08, 84.68it/s]Loading weights:  10%|█         | 77/765 [00:01<00:08, 80.07it/s]Loading weights:  12%|█▏        | 89/765 [00:01<00:08, 78.64it/s]Loading weights:  13%|█▎        | 102/765 [00:01<00:08, 80.54it/s]Loading weights:  15%|█▍        | 113/765 [00:01<00:08, 78.10it/s]Loading weights:  16%|█▋        | 125/765 [00:01<00:08, 76.00it/s]Loading weights:  18%|█▊        | 138/765 [00:01<00:07, 81.37it/s]Loading weights:  19%|█▉        | 149/765 [00:02<00:09, 63.98it/s]Loading weights:  21%|██        | 157/765 [00:02<00:13, 44.44it/s]Loading weights:  22%|██▏       | 169/765 [00:02<00:10, 55.09it/s]Loading weights:  23%|██▎       | 177/765 [00:02<00:10, 56.34it/s]Loading weights:  24%|██▍       | 185/765 [00:02<00:10, 53.50it/s]Loading weights:  26%|██▌       | 199/765 [00:03<00:08, 63.01it/s]Loading weights:  28%|██▊       | 217/765 [00:03<00:06, 79.74it/s]Loading weights:  30%|██▉       | 226/765 [00:03<00:06, 77.40it/s]Loading weights:  31%|███       | 235/765 [00:03<00:07, 70.87it/s]Loading weights:  32%|███▏      | 245/765 [00:03<00:07, 70.31it/s]Loading weights:  34%|███▎      | 258/765 [00:03<00:06, 77.65it/s]Loading weights:  35%|███▌      | 271/765 [00:03<00:05, 83.48it/s]Loading weights:  37%|███▋      | 282/765 [00:03<00:05, 89.18it/s]Loading weights:  38%|███▊      | 293/765 [00:04<00:05, 88.03it/s]Loading weights:  40%|████      | 307/765 [00:04<00:05, 81.64it/s]Loading weights:  43%|████▎     | 329/765 [00:04<00:04, 93.21it/s]Loading weights:  64%|██████▍   | 491/765 [00:04<00:00, 409.06it/s]Loading weights:  88%|████████▊ | 673/765 [00:04<00:00, 729.80it/s]Loading weights: 100%|██████████| 765/765 [00:04<00:00, 161.57it/s]
+Loading weights:   0%|          | 0/765 [00:00<?, ?it/s]Loading weights:   0%|          | 2/765 [00:00<01:58,  6.41it/s]Loading weights:   0%|          | 3/765 [00:00<01:46,  7.14it/s]Loading weights:   4%|▍         | 29/765 [00:00<00:09, 77.94it/s]Loading weights:   7%|▋         | 53/765 [00:00<00:06, 106.75it/s]Loading weights:   9%|▊         | 66/765 [00:00<00:06, 108.86it/s]Loading weights:  10%|█         | 78/765 [00:00<00:06, 108.85it/s]Loading weights:  13%|█▎        | 101/765 [00:01<00:05, 118.38it/s]Loading weights:  15%|█▍        | 114/765 [00:01<00:05, 116.96it/s]Loading weights:  18%|█▊        | 137/765 [00:01<00:05, 123.01it/s]Loading weights:  20%|█▉        | 151/765 [00:01<00:05, 122.25it/s]Loading weights:  23%|██▎       | 173/765 [00:01<00:04, 131.86it/s]Loading weights:  24%|██▍       | 187/765 [00:01<00:04, 129.81it/s]Loading weights:  27%|██▋       | 209/765 [00:01<00:04, 127.14it/s]Loading weights:  30%|███       | 233/765 [00:02<00:04, 132.78it/s]Loading weights:  32%|███▏      | 247/765 [00:02<00:04, 123.59it/s]Loading weights:  34%|███▍      | 260/765 [00:02<00:04, 124.22it/s]Loading weights:  36%|███▌      | 273/765 [00:02<00:03, 125.04it/s]Loading weights:  38%|███▊      | 293/765 [00:02<00:03, 133.35it/s]Loading weights:  40%|████      | 307/765 [00:02<00:03, 126.99it/s]Loading weights:  42%|████▏     | 320/765 [00:02<00:03, 126.14it/s]Loading weights:  54%|█████▎    | 411/765 [00:02<00:01, 332.01it/s]Loading weights:  90%|█████████ | 692/765 [00:03<00:00, 1008.46it/s]Loading weights: 100%|██████████| 765/765 [00:03<00:00, 251.54it/s] 
 model class: LlavaOnevisionForConditionalGeneration
 stack model.language_model n_layers 28 probe [18, 24, 26]
-20/261 160s
-40/261 331s
-60/261 503s
-80/261 674s
-100/261 851s
-120/261 1021s
-[W1024 12:07:29.807366696 CUDACachingAllocator.cpp:3933] memory allocation failed with OOM on device 0 while trying to allocate 1142947840 bytes (free: 946536448, total: 23819976704).
-140/261 1194s
-160/261 1367s
-180/261 1537s
-200/261 1713s
-220/261 1877s
-240/261 2050s
-260/261 2219s
-saved runs/patch4_llava.jsonl
+20/261 126s
+40/261 251s
+60/261 382s
+80/261 506s
+100/261 630s
+120/261 750s
+[W1027 03:21:14.812678586 CUDACachingAllocator.cpp:3933] memory allocation failed with OOM on device 0 while trying to allocate 1145044992 bytes (free: 631963648, total: 23819976704).
+140/261 883s
+160/261 1006s
+180/261 1126s
+200/261 1249s
+220/261 1366s
+240/261 1491s
+260/261 1614s
+saved runs/patch4_llava512.jsonl

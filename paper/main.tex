@@ -33,7 +33,7 @@ How Vision-Language Models Decide to Answer Without Evidence}
 \maketitle
 
 \begin{abstract}
-Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Signal detection locates the failure: under conflict sensitivity collapses in all three models ($d'=3.51\to1.45$, $2.98\to1.24$, $3.44\to1.44$), while criterion shifts are inconsistent in sign; a correct hint never reduces sensitivity. The conflict compresses the evidence axis rather than lowering a threshold. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $93\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A probe direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
+Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Signal detection locates the failure: under conflict sensitivity collapses in all three models ($d'=3.51\to1.45$, $2.98\to1.24$, $3.44\to1.44$), while criterion shifts are inconsistent in sign; a correct hint never reduces sensitivity. The conflict compresses the evidence axis rather than lowering a threshold. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $96\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A probe direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes and in all three models. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
 \end{abstract}
 
 \section{Introduction}
@@ -46,7 +46,7 @@ We separate the two with a design in which the image is held fixed and only the 
 
 The design yields a sharp dissociation (Figure~\ref{fig:signals}). With no hint, the model's own $\punk$ detects evidence availability almost perfectly (AUROC $0.993$), so there is no room for a better internal signal. Under a conflicting hint, every output-space signal degrades: $\punk$ drops to $0.834$, maximum probability to $0.463$---below chance---and a learned readout over the full 12-way distribution reaches only $0.923$. A linear probe on the final-token hidden state, trained only on the no-hint pair, does not move ($0.998$) and transfers to the conflicting pair at $0.969$. The conflict changes what the model \emph{says about its evidence}, not what it \emph{knows about its evidence}.
 
-Two causal interventions show that this is not a correlational artefact. Along the probe direction, adding or ablating a single vector changes abstention bidirectionally and dose-monotonically, including on scenes held out from fitting. Pasting the no-hint state back at intermediate layers recovers the lost refusal, and the recovery profile is steep and late: little at two-thirds depth, most of it in the final few layers. The same profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B. The last model is far more hint-sensitive than either Qwen model, yet the suppression is written at the same relative depth---sensitivity and locus are separable.
+Two causal interventions show that this is not a correlational artefact. Along the probe direction, adding or ablating a single vector changes abstention bidirectionally and dose-monotonically, including on scenes held out from fitting. Pasting the no-hint state back at intermediate layers recovers the lost refusal, and the recovery profile is steep and late: little at two-thirds depth, most of it in the final few layers. The same profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B. The last model is far more hint-sensitive than either Qwen model, yet the suppression is written at the same relative depth---sensitivity and locus are separable. The steering effect also replicates in all three models, whose base policies range from near-total credulity to over-refusal: the same construction restores refusal when subtracted and removes it when added.
 
 Finally, we turn the mechanism into a training-free gate: rank items by the internal probe and answer only the top fraction. At $50\%$ coverage under conflict, fabrication falls from $0.249$ ($\punk$) to $0.011$ (probe). The benefit is specific to the polluted regime. On naturally unanswerable VizWiz questions the model's own $\punk$ matches the frozen probe, and on VQA-v2 colour questions the probe's ordering is preserved but its calibration is not. We report both boundaries rather than hiding them.
 
@@ -133,7 +133,7 @@ where the hint line is omitted in the no-hint condition. The readout is a distri
 
 \paragraph{Metrics.} Evidence detection is AUROC over the 522 paired items, with grouped bootstrap confidence intervals (2000 resamples, groups = samples) and paired bootstrap intervals for differences between signals. Selective answering is reported as fabrication rate at fixed coverage: among the top-$k$ items ranked by an evidence score, the fraction that are absent-object items answered with a colour. Fabrication at $50\%$ coverage is the primary operating point.
 
-\paragraph{Models.} Qwen2.5-VL-3B and 7B \citep{bai2025qwen25vl} in bfloat16 with SDPA attention and at most $1024^2$ pixels, and LLaVA-OneVision-7B \citep{li2024llavaov} resized to 768 px, loaded through \texttt{AutoModelForImageTextToText}. All experiments ran on a single 24 GB A10.
+\paragraph{Models.} Qwen2.5-VL-3B and 7B \citep{bai2025qwen25vl} in bfloat16 with SDPA attention and at most $1024^2$ pixels, and LLaVA-OneVision-7B \citep{li2024llavaov} with the longest image side at most $512$ px, loaded through \texttt{AutoModelForImageTextToText}. All LLaVA stages---behaviour, patching and steering---use the same $512$ px preprocessing. All experiments ran on a single 24 GB A10.
 
 \section{Results}
 
@@ -312,6 +312,36 @@ The probe score remains decodable under conflict, but a decoder can read a varia
 
 What the direction does not do is resolve the colour. On present items, $+0.25\,w$ raises true-colour answers from $0.383$ to $0.479$ ($+0.096$ $[0.050,0.142]$) while hint adoption stays at $0.433$ ($-0.015$ $[-0.065,0.034]$). The hint still wins the content of the answer; the direction moves whether the model answers at all. This is the causal analogue of the psychometric result: conflict lowers the gain on the evidence axis, but the axis remains connected to the gate. The information is present, decodable and usable; it is under-weighted rather than erased.
 
+\begin{table}[t]
+\centering
+\small
+\caption{Conflict-condition steering in all three models ($n=261$ each). The direction is fitted separately on each model's no-hint states and injected during the conflicting pass; no vector is shared across models. Conventions follow Table~\ref{tab:steer-conflict}. Unsteered no-hint refusal (present/absent): 3B $0.011$/$0.904$, 7B $0.100$/$0.958$, LLaVA $0.004$/$0.820$.}
+\label{tab:steer-conflict-cross}
+\begin{tabular}{llccccc}
+\toprule
+ & & \multicolumn{3}{c}{present} & \multicolumn{2}{c}{absent} \\
+\cmidrule(lr){3-5}\cmidrule(lr){6-7}
+model & setting & refusal & true & hint & refusal & hint \\
+\midrule
+3B & base & 0.088 & 0.383 & 0.448 & 0.542 & 0.450 \\
+   & $-0.25\,w$ & 0.759 & 0.073 & 0.134 & 0.874 & 0.125 \\
+   & $+0.25\,w$ & 0.000 & 0.479 & 0.433 & 0.065 & 0.845 \\
+\addlinespace
+7B & base & 0.556 & 0.249 & 0.176 & 0.918 & 0.082 \\
+   & $-0.25\,w$ & 0.950 & 0.011 & 0.038 & 1.000 & 0.000 \\
+   & $+0.25\,w$ & 0.004 & 0.421 & 0.425 & 0.057 & 0.870 \\
+\addlinespace
+LLaVA & base & 0.004 & 0.360 & 0.490 & 0.138 & 0.833 \\
+      & $-0.25\,w$ & 0.345 & 0.149 & 0.253 & 0.734 & 0.241 \\
+      & $+0.25\,w$ & 0.000 & 0.379 & 0.533 & 0.000 & 0.990 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:steer-conflict-cross} repeats the base, $-0.25\,w$ and $+0.25\,w$ conditions on the other two models, fitting the direction anew in each. Their base policies are as different as the benchmark allows: 7B refuses $91.8\%$ of absent and $55.6\%$ of present conflict items, LLaVA $13.8\%$ and $0.4\%$. The intervention moves both in the same directions. Subtracting $w$ raises absent refusal to $100.0\%$ in 7B and to $73.4\%$ in LLaVA ($+0.596$ $[0.550,0.640]$); adding $w$ lowers it to $5.7\%$ and $0.0\%$. Present refusal follows the same order. The gate is bidirectionally controllable in every model, including one that starts out refusing almost everything and one that starts out refusing almost nothing.
+
+Opening the gate does not supply the answer. In LLaVA, which is already credulous, $+0.25\,w$ raises absent hint adoption from $0.833$ to $0.990$ ($+0.157$ $[0.123,0.192]$); on present items it leaves true-colour answers statistically unchanged ($0.360\to0.379$, $+0.019$ $[-0.011,0.050]$) while nudging hint adoption up ($+0.042$ $[0.004,0.084]$). In 7B the gate is closed too far: opening it recovers true-colour answers on present items from $0.249$ to $0.421$ ($+0.172$ $[0.111,0.234]$), but also raises hint adoption from $0.176$ to $0.425$ ($+0.249$ $[0.188,0.307]$). In 3B, $+w$ leaves hint adoption on present items unchanged ($0.448\to0.433$) while true-colour answers rise modestly; the hint already wins the content. The same direction thus controls abstention across three models and two families; what the model says once it stops abstaining is set elsewhere. This is why the probe gate is useful and why it is not a solution to sycophancy: it detects whether evidence is available, not which of two available answers is true.
+
 \subsection{The suppression is written in the last few layers}
 
 \begin{figure}[t]
@@ -341,20 +371,20 @@ Qwen2.5-VL-7B (28 layers) & no hint & 0.958 & 0.899 & 100\% \\
  & same, L24 (86\%) & 0.962 & 0.863 & 69\% \\
  & same, L26 (93\%) & 0.962 & 0.888 & 90\% \\
 \midrule
-LLaVA-OneVision-7B (28 layers) & no hint & 0.751 & 0.579 & 100\% \\
- & conflict & 0.161 & 0.194 & 0\% \\
- & same, L18 (64\%) & 0.314 & 0.299 & 27\% \\
- & same, L24 (86\%) & 0.648 & 0.480 & 74\% \\
- & same, L26 (93\%) & 0.743 & 0.550 & 93\% \\
+LLaVA-OneVision-7B (28 layers) & no hint & 0.820 & 0.655 & 100\% \\
+ & conflict & 0.088 & 0.134 & 0\% \\
+ & same, L18 (64\%) & 0.330 & 0.324 & 36\% \\
+ & same, L24 (86\%) & 0.743 & 0.549 & 80\% \\
+ & same, L26 (93\%) & 0.808 & 0.633 & 96\% \\
 \bottomrule
 \end{tabular}
 \end{table}
 
 If the conflict erased the evidence, restoring an early state should not help. If it overrides a late decision, restoring a late state should. Table~\ref{tab:patch} and Figure~\ref{fig:depth} show the latter. In the 3B model, patching at layer 24 (67\% depth) recovers $22\%$ of the lost refusal; patching at layer 32 (89\%) recovers $80\%$. In the 7B model, layer 18 (64\%) recovers essentially nothing, layer 24 (86\%) recovers $69\%$, and layer 26 (93\%) recovers $90\%$. The suppression is concentrated in the final few layers, not spread through the network.
 
-The shuffled-source control recovers as much or more (3B L32: $0.927$ refusal; 7B L26: $0.965$; LLaVA L26: $0.781$). Pasting another sample's no-hint state works, which means the patched state carries a category-level ``no evidence'' status rather than a sample-specific code. It also means the control cannot be used to estimate a clean effect size: replacing a state with a differently distributed one perturbs the residual stream. We therefore use patching to locate the stage and steering to quantify the effect.
+The shuffled-source control recovers as much or more (3B L32: $0.927$ refusal; 7B L26: $0.965$; LLaVA L26: $0.842$). Pasting another sample's no-hint state works, which means the patched state carries a category-level ``no evidence'' status rather than a sample-specific code. It also means the control cannot be used to estimate a clean effect size: replacing a state with a differently distributed one perturbs the residual stream. We therefore use patching to locate the stage and steering to quantify the effect.
 
-LLaVA-OneVision-7B is the strongest test of generality. Its refusal under conflict is $0.161$, far lower than Qwen-7B's $0.877$: the same kind of hint is much more effective on this model. Yet the recovery profile is the same shape and the same depth ($27\%$, $74\%$, $93\%$). A model that is easier to fool does not have an earlier gate; its gate is pushed further open at the same place. This separates hint sensitivity from the locus of suppression.
+LLaVA-OneVision-7B is the strongest test of generality. Its refusal under conflict is $0.088$, far lower than Qwen-7B's $0.877$: the same kind of hint is much more effective on this model. Yet the recovery profile is the same shape and the same depth ($36\%$, $80\%$, $96\%$). A model that is easier to fool does not have an earlier gate; its gate is pushed further open at the same place. This separates hint sensitivity from the locus of suppression.
 
 \subsection{A training-free gate}
 

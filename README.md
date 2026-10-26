@@ -14,7 +14,7 @@ Is that a failure of **seeing** or of **reporting what was seen**? We separate t
 
 - **Output-space evidence signals collapse under conflict.** The AUROC of p(unknown) for detecting whether the queried object is present drops from **0.993 to 0.834**; max-probability drops from 0.615 to **0.463**, below chance.
 - **The internal evidence representation does not.** A linear probe on the final-token hidden state scores **0.995 / 0.998 / 0.997** under no / conflicting / correct hints, and transfers from no-hint to conflict at **0.969**.
-- **The suppression is a late write.** Pasting the no-hint state back at layer 32/36 recovers **80%** of the lost refusal (3B); at 26/28 it recovers **90%** (7B); a LLaVA-OneVision model, second family, recovers **27% / 74% / 93%** at 64% / 86% / 93% depth.
+- **The suppression is a late write.** Pasting the no-hint state back at layer 32/36 recovers **80%** of the lost refusal (3B); at 26/28 it recovers **90%** (7B); a LLaVA-OneVision model, second family, recovers **36% / 80% / 96%** at 64% / 86% / 93% depth.
 - **The gate is causal and readable.** Adding or ablating one probe direction changes abstention bidirectionally and dose-monotonically on held-out halves.
 - **A training-free gate works where it matters.** At 50% coverage under conflicting hints, a probe-based gate reduces fabrication from **0.249** (p(unknown)) to **0.011** (3B), and similarly on 7B and LLaVA.
 
@@ -41,7 +41,7 @@ pilot/                 model-agnostic experiment code
   v5data.py            build data/manifest_v5.jsonl (the frozen 2x3 design)
   sheets.py            contact sheets for manual label verification
   infer.py             Qwen2.5-VL scorer, 12-way readout, main run
-  infer_gen.py         AutoModelForImageTextToText runner (7B, LLaVA)
+  infer_gen.py         AutoModelForImageTextToText runner (LLaVA-OneVision-7B)
   probe.py             final-state linear probe, grouped CV, bootstrap CIs
   sdt.py               signal detection and psychometric curves on the probe axis
   decompose.py         answer decomposition and hint adoption vs evidence
@@ -98,7 +98,7 @@ bash scripts/download_vqa2.sh
 bash scripts/run_controls.sh
 ```
 
-Every script accepts `MODEL=` / `MODELS=` environment overrides. `pilot/infer.py` resumes from an existing `.jsonl`, so interrupted runs can be restarted safely.
+Every script accepts `MODEL=` / `MODELS=` environment overrides. `pilot/infer.py` resumes from an existing `.jsonl`, so interrupted runs can be restarted safely. All LLaVA-OneVision stages use a 512 px longest image side (`--resize 512`).
 
 Build the paper and figures (Tectonic downloads the TeX bundle on first use):
 
@@ -131,7 +131,7 @@ Evidence detection (AUROC over 522 paired items):
 
 Fabrication at 50% coverage under conflict: probe **0.011**, p(unknown) **0.249**, max-probability **0.510**.
 
-Layer-wise patching, recovery of refusal (3B): L24 (67% depth) 22%, L32 (89%) 80%. 7B: L18 (64%) ~0%, L24 (86%) 69%, L26 (93%) 90%. LLaVA-OneVision-7B: L18 (64%) 27%, L24 (86%) 74%, L26 (93%) 93%.
+Layer-wise patching, recovery of refusal (3B): L24 (67% depth) 22%, L32 (89%) 80%. 7B: L18 (64%) ~0%, L24 (86%) 69%, L26 (93%) 90%. LLaVA-OneVision-7B: L18 (64%) 36%, L24 (86%) 80%, L26 (93%) 96%.
 
 Full numbers, including 7B/LLaVA, controls, task forms and external validation, are in [`results/summary.md`](results/summary.md) and in the paper.
 

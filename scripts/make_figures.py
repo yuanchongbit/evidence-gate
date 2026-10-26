@@ -79,7 +79,7 @@ def fig_depth():
     models = [
         ("Qwen2.5-VL-3B", [66.7, 88.9], [22, 80], NAVY, "o"),
         ("Qwen2.5-VL-7B", [64.3, 85.7, 92.9], [0, 69, 90], TEAL, "s"),
-        ("LLaVA-OneVision-7B", [64.3, 85.7, 92.9], [27, 74, 93], ORANGE, "^"),
+        ("LLaVA-OneVision-7B", [64.3, 85.7, 92.9], [36, 80, 96], ORANGE, "^"),
     ]
     fig, ax = plt.subplots(figsize=(3.5, 2.5))
     for name, xs, ys, color, marker in models:

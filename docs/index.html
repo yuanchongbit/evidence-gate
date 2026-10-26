@@ -143,9 +143,9 @@
       <!-- 7B: 64% -> 0; 86% -> 69; 93% -> 90 -->
       <polyline class="line m7b" points="237,270 584,80.6 660,27.1"></polyline>
       <circle class="m7b" cx="237" cy="270" r="5"></circle><circle class="m7b" cx="584" cy="80.6" r="5"></circle><circle class="m7b" cx="660" cy="27.1" r="5"></circle>
-      <!-- LLaVA: 64% -> 27; 86% -> 74; 93% -> 93 -->
-      <polyline class="line llava" points="237,196.3 584,67.4 660,18.7"></polyline>
-      <circle class="llava" cx="237" cy="196.3" r="5"></circle><circle class="llava" cx="584" cy="67.4" r="5"></circle><circle class="llava" cx="660" cy="18.7" r="5"></circle>
+      <!-- LLaVA: 64% -> 36; 86% -> 80; 93% -> 96 -->
+      <polyline class="line llava" points="237,172.1 584,52.4 660,8.9"></polyline>
+      <circle class="llava" cx="237" cy="172.1" r="5"></circle><circle class="llava" cx="584" cy="52.4" r="5"></circle><circle class="llava" cx="660" cy="8.9" r="5"></circle>
       <g class="legend">
         <circle class="m3b" cx="92" cy="22" r="5"></circle><text x="106" y="26">Qwen2.5-VL-3B</text>
         <circle class="m7b" cx="240" cy="22" r="5"></circle><text x="254" y="26">Qwen2.5-VL-7B</text>
@@ -158,6 +158,8 @@
   <p>Two control interventions close the causal loop. Along the probe direction <em>w</em>, adding +0.5·‖h‖ push absent-object refusal from 0.904 to 0.000; subtracting 0.5·‖h‖ raises present-object refusal from 0.011 to 0.352. The dose–response is monotone and survives when the direction is fitted on one half of the scenes and evaluated on the other.</p>
 
   <p>The same direction still works when the hint is present. Applied during the conflicting pass, −0.25·‖h‖ raises absent-object refusal from 0.542 to 0.874, and +0.25·‖h‖ raises true-colour answers from 0.383 to 0.479 while hint adoption stays at 0.433. Conflict under-weights the evidence; it does not disconnect it from the decision.</p>
+
+  <p>The effect replicates in the other two models, whose conflict policies are opposite. Qwen2.5-VL-7B over-refuses (absent refusal 0.918); −0.25·‖h‖ raises it to 1.000 and +0.25·‖h‖ lowers it to 0.057. LLaVA-OneVision-7B refuses almost nothing (0.138 absent, 0.004 present); the same sweep gives 0.734 and 0.000. Opening the gate does not choose the answer: it makes LLaVA more hint-adherent (0.833 → 0.990 on absent items) while its present-item true-colour rate stays statistically unchanged (+0.019), and lets 7B recover true answers (0.249 → 0.421) but also adopt the hint more (0.176 → 0.425). The direction is an abstention gate, not an answer selector.</p>
 </section>
 
 <section id="gate">
@@ -184,11 +186,11 @@
       <tbody>
         <tr><td>Qwen2.5-VL-3B (36 layers)</td><td>0.995</td><td>0.998</td><td>0.993</td><td>0.834</td><td>22% @ 67%, 80% @ 89%</td></tr>
         <tr><td>Qwen2.5-VL-7B (28 layers)</td><td>0.995</td><td>0.998</td><td>0.984</td><td>0.797</td><td>~0% @ 64%, 69% @ 86%, 90% @ 93%</td></tr>
-        <tr><td>LLaVA-OneVision-7B (28 layers)</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>27% @ 64%, 74% @ 86%, 93% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B (28 layers)</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>36% @ 64%, 80% @ 86%, 96% @ 93%</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">LLaVA is far more hint-sensitive: under conflict its refusal falls from 0.751 to 0.161, while Qwen2.5-VL-7B only moves from 0.958 to 0.877. Yet the suppression is written at the same relative depth. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
+  <p class="small">LLaVA is far more hint-sensitive: under conflict its refusal falls from 0.820 to 0.088, while Qwen2.5-VL-7B only moves from 0.958 to 0.877. Yet the suppression is written at the same relative depth. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
 </section>
 
 <section id="limits">

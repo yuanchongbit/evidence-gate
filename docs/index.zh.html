@@ -143,9 +143,9 @@
       <!-- 7B: 64% -> 0; 86% -> 69; 93% -> 90 -->
       <polyline class="line m7b" points="237,270 584,80.6 660,27.1"></polyline>
       <circle class="m7b" cx="237" cy="270" r="5"></circle><circle class="m7b" cx="584" cy="80.6" r="5"></circle><circle class="m7b" cx="660" cy="27.1" r="5"></circle>
-      <!-- LLaVA: 64% -> 27; 86% -> 74; 93% -> 93 -->
-      <polyline class="line llava" points="237,196.3 584,67.4 660,18.7"></polyline>
-      <circle class="llava" cx="237" cy="196.3" r="5"></circle><circle class="llava" cx="584" cy="67.4" r="5"></circle><circle class="llava" cx="660" cy="18.7" r="5"></circle>
+      <!-- LLaVA: 64% -> 36; 86% -> 80; 93% -> 96 -->
+      <polyline class="line llava" points="237,172.1 584,52.4 660,8.9"></polyline>
+      <circle class="llava" cx="237" cy="172.1" r="5"></circle><circle class="llava" cx="584" cy="52.4" r="5"></circle><circle class="llava" cx="660" cy="8.9" r="5"></circle>
       <g class="legend">
         <circle class="m3b" cx="92" cy="22" r="5"></circle><text x="106" y="26">Qwen2.5-VL-3B</text>
         <circle class="m7b" cx="240" cy="22" r="5"></circle><text x="254" y="26">Qwen2.5-VL-7B</text>
@@ -158,6 +158,8 @@
   <p>两个对照干预闭合了因果链。沿探针方向 <em>w</em>，加上 +0.5·‖h‖ 会把“物体缺失”时的拒答从 0.904 压到 0.000；减去 0.5·‖h‖ 会把“物体存在”时的拒答从 0.011 抬到 0.352。剂量–响应是单调的，并且当方向在一半场景上拟合、在另一半上评估时依然成立。</p>
 
   <p>同一方向在提示存在时依然有效。在冲突提示的前向过程中，−0.25·‖h‖ 把“物体缺失”时的拒答从 0.542 抬到 0.874；+0.25·‖h‖ 把答对真实颜色的比例从 0.383 提到 0.479，而采纳提示的比例仍为 0.433。冲突削弱的是证据的权重，而不是证据与决策之间的连接。</p>
+
+  <p>这一效应在另外两个冲突策略完全相反的模型上同样成立。Qwen2.5-VL-7B 过度拒答（缺失时拒答 0.918），−0.25·‖h‖ 把它抬到 1.000，+0.25·‖h‖ 压到 0.057；LLaVA-OneVision-7B 几乎不拒答（缺失 0.138，存在 0.004），同样的扫描得到 0.734 和 0.000。打开这道门并不等于给出答案：LLaVA 更采纳提示（缺失项 0.833 → 0.990），但存在项的真实颜色率没有统计上显著变化（+0.019）；7B 恢复了部分真实答案（0.249 → 0.421），但提示采纳也上升（0.176 → 0.425）。这个方向控制的是一道“是否弃答”的门，而不是答案选择。</p>
 </section>
 
 <section id="gate">
@@ -184,11 +186,11 @@
       <tbody>
         <tr><td>Qwen2.5-VL-3B（36 层）</td><td>0.995</td><td>0.998</td><td>0.993</td><td>0.834</td><td>22% @ 67%，80% @ 89%</td></tr>
         <tr><td>Qwen2.5-VL-7B（28 层）</td><td>0.995</td><td>0.998</td><td>0.984</td><td>0.797</td><td>~0% @ 64%，69% @ 86%，90% @ 93%</td></tr>
-        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>27% @ 64%，74% @ 86%，93% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>36% @ 64%，80% @ 86%，96% @ 93%</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">LLaVA 对提示的敏感性高得多：冲突下它的拒答率从 0.751 跌到 0.161，而 Qwen2.5-VL-7B 只从 0.958 动到 0.877。但抑制写在相同的相对深度上。敏感性与作用位点可以分离：更容易被带偏的模型，拥有的是同一道门，只是被推得更开。</p>
+  <p class="small">LLaVA 对提示的敏感性高得多：冲突下它的拒答率从 0.820 跌到 0.088，而 Qwen2.5-VL-7B 只从 0.958 动到 0.877。但抑制写在相同的相对深度上。敏感性与作用位点可以分离：更容易被带偏的模型，拥有的是同一道门，只是被推得更开。</p>
 </section>
 
 <section id="limits">
