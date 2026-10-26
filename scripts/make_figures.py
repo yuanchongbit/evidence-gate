@@ -1,9 +1,8 @@
 """Generate the paper figures and the web SVGs from the recorded numbers.
 
-Numbers come from results/summaries/ (main_3b.txt, probe_3b.txt,
-selective_3b.txt, patch3_3b.txt, patch3_7b.txt, patch4_llava.txt) and from the
-cross-model probe runs. Keeping them here in one place makes it easy to audit
-the figures against those files.
+Numbers come from results/summary.md and the per-run logs under results/runs/.
+Keeping them here in one place makes it easy to audit the figures against
+those files.
 """
 
 from pathlib import Path
