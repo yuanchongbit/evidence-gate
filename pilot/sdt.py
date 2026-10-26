@@ -334,12 +334,34 @@ def main():
     ap.add_argument("--Cs", default="0.1",
                     help="probe regularisation; fixed to the main probe's C")
     ap.add_argument("--n-boot", type=int, default=2000)
+    ap.add_argument("--binary-only", action="store_true",
+                    help="skip the probe-axis fit; only d' and c (no .npz needed)")
     ap.add_argument("--out", default=str(ROOT / "results" / "sdt.json"))
     ap.add_argument("--fig", default=str(ROOT / "paper" / "figures" / "fig_sdt.pdf"))
     args = ap.parse_args()
 
-    recs, _, H = load(args.run)
     conditions = [c for c in ORDER if c in args.conditions.split(",")]
+    if args.binary_only:
+        recs = [json.loads(l) for l in open(args.run) if '"sample_id"' in l]
+        sdt = binary_sdt(recs, conditions)
+        sdt_ci = binary_bootstrap(recs, conditions, n_boot=args.n_boot)
+        print(f"n={len(recs)} scenes, binary SDT")
+        for c in conditions:
+            print(f"{c}: d'={sdt[c]['dprime']:.2f} c={sdt[c]['criterion']:+.2f} "
+                  f"(refuse present {sdt[c]['fa_refuse']:.3f}, "
+                  f"absent {sdt[c]['hit_refuse']:.3f})")
+        for c in conditions[1:]:
+            print(f"{c} 95% CI: delta_d' {sdt_ci[c]['dprime_diff']} "
+                  f"delta_c {sdt_ci[c]['criterion_diff']}")
+        payload = {"run": args.run, "n_scenes": len(recs),
+                   "conditions": conditions, "binary_sdt": sdt,
+                   "binary_ci": sdt_ci}
+        Path(args.out).parent.mkdir(parents=True, exist_ok=True)
+        with open(args.out, "w") as f:
+            json.dump(payload, f, indent=2)
+        print("saved", args.out)
+        return
+    recs, _, H = load(args.run)
     C, auroc_none = choose_C(recs, H, [float(x) for x in args.Cs.split(",")])
     scores = oof_scores(recs, H, C)
     rows = rows_for(recs, scores, conditions)

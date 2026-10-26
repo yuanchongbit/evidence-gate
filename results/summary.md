@@ -80,8 +80,22 @@ Conflict intercept at z=0: -0.561 [-1.264, +0.475] (n.s.). Non-parallel
 likelihood-ratio 6.4, df=2, p=0.041. Correct hint: all changes n.s.
 
 Reading: the hidden state still encodes evidence (probe 0.998 under conflict),
-but behaviour loses sensitivity to it without a criterion shift. The failure is
-in the use of evidence, not its representation. Figure: paper/figures/fig_sdt.pdf.
+but behaviour loses sensitivity to it. The criterion shift is 3B-specific.
+Figure: paper/figures/fig_sdt.pdf.
+
+Cross-model binary SDT (same 261 scenes, 522 absent items under conflict):
+
+| model | d' no hint | d' conflict | delta d' [95% CI] | c no hint | c conflict | delta c [95% CI] |
+|---|---|---|---|---|---|---|
+| Qwen2.5-VL-3B | 3.51 | 1.45 | -2.13 [-2.69, -1.66] | 0.46 | 0.62 | +0.16 [-0.18, +0.39] |
+| Qwen2.5-VL-7B | 2.98 | 1.24 | -1.80 [-2.14, -1.39] | -0.22 | -0.76 | -0.54 [-0.73, -0.35] |
+| LLaVA-OneVision-7B | 3.44 | 1.44 | -2.06 [-2.71, -1.32] | 0.81 | 1.81 | +1.00 [+0.66, +1.33] |
+
+The sensitivity collapse replicates in all three; the criterion shift changes
+sign across models (null / negative / positive), so a uniform threshold account
+is ruled out. Under a correct hint d' never falls: 3B +0.31 [-0.36, +0.93],
+7B +0.50 [+0.17, +0.82], LLaVA +0.32 [0.00, +0.68].
+
 
 ## 3. Controls
 
