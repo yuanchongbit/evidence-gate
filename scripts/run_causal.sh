@@ -12,6 +12,11 @@ python -m pilot.steer_half --manifest data/manifest_v5.jsonl --model "$MODEL" \
   --run runs/v5_261.jsonl --out runs/steer_half.jsonl
 python -m pilot.steer_analyze --run runs/steer_half.jsonl
 
+python -m pilot.steer_conflict --manifest data/manifest_v5.jsonl --model "$MODEL" \
+  --run runs/v5_261.jsonl --out runs/steer_conflict.jsonl
+python -m pilot.analyze_steer_conflict --run runs/steer_conflict.jsonl \
+  --baseline runs/v5_261.jsonl --out results/steer_conflict.json
+
 python -m pilot.patch3 --manifest data/manifest_v5.jsonl --model "$MODEL" \
   --layers 24,32 --out runs/patch3.jsonl
 python -m pilot.patch_analyze --out runs/patch3.jsonl

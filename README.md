@@ -15,7 +15,7 @@ Is that a failure of **seeing** or of **reporting what was seen**? We separate t
 - **Output-space evidence signals collapse under conflict.** The AUROC of p(unknown) for detecting whether the queried object is present drops from **0.993 to 0.834**; max-probability drops from 0.615 to **0.463**, below chance.
 - **The internal evidence representation does not.** A linear probe on the final-token hidden state scores **0.995 / 0.998 / 0.997** under no / conflicting / correct hints, and transfers from no-hint to conflict at **0.969**.
 - **The suppression is a late write.** Pasting the no-hint state back at layer 32/36 recovers **80%** of the lost refusal (3B); at 26/28 it recovers **90%** (7B); a LLaVA-OneVision model, second family, recovers **27% / 74% / 93%** at 64% / 86% / 93% depth.
-- **The gate is causal and readable.** Adding or ablating one difference-of-means direction changes abstention bidirectionally and dose-monotonically on held-out halves.
+- **The gate is causal and readable.** Adding or ablating one probe direction changes abstention bidirectionally and dose-monotonically on held-out halves.
 - **A training-free gate works where it matters.** At 50% coverage under conflicting hints, a probe-based gate reduces fabrication from **0.249** (p(unknown)) to **0.011** (3B), and similarly on 7B and LLaVA.
 
 The effect is not a property of one checkpoint: the same depth profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B.
@@ -50,7 +50,9 @@ pilot/                 model-agnostic experiment code
   blank.py             gray-image text-only control
   matched.py           category-matched pairs (same prompt, different image)
   check_presence.py    presence manipulation check
-  steer.py             difference-of-means steering sweep
+  steer.py             probe-direction steering sweep
+  steer_conflict.py    same direction applied under conflict
+  analyze_steer_conflict.py  paired summary for the conflict sweep
   steer_half.py        split-half causal check
   patch3.py            layer-wise patching for Qwen-VL
   patch4.py            layer-wise patching for other families (LLaVA)

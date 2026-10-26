@@ -151,7 +151,7 @@ versus 0.969 / 0.996 for the real-image direction.
 
 In-sample direction, n=261:
 
-| setting | present refusal | present top-1 conf. | absent refusal | absent adopts hint |
+| setting | present refusal | present top-1 conf. | absent refusal | absent answers colour |
 |---|---|---|---|---|
 | base | 0.011 | 0.836 | 0.904 | 0.096 |
 | ablate w | 0.004 | 0.838 | 0.759 | 0.241 |

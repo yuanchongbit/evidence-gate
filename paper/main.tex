@@ -33,7 +33,7 @@ How Vision-Language Models Decide to Answer Without Evidence}
 \maketitle
 
 \begin{abstract}
-Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Signal detection locates the failure: under conflict sensitivity collapses in all three models ($d'=3.51\to1.45$, $2.98\to1.24$, $3.44\to1.44$), while criterion shifts are inconsistent in sign; a correct hint never reduces sensitivity. The conflict compresses the evidence axis rather than lowering a threshold. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $93\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A difference-of-means direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
+Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Signal detection locates the failure: under conflict sensitivity collapses in all three models ($d'=3.51\to1.45$, $2.98\to1.24$, $3.44\to1.44$), while criterion shifts are inconsistent in sign; a correct hint never reduces sensitivity. The conflict compresses the evidence axis rather than lowering a threshold. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $93\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A probe direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
 \end{abstract}
 
 \section{Introduction}
@@ -91,7 +91,7 @@ object absent & \texttt{absent|none} & \texttt{absent|a} & \texttt{absent|b} \\
 \bottomrule
 \end{tabular}
 \end{center}
-In the present arm the correct hint states $g$ and the conflicting hint states a fixed far-hue distractor. In the absent arm there is no correct colour; \texttt{a} is the absent category's most frequent colour in COCO val, and \texttt{b} is its second most frequent colour. The two absent hints therefore differ in plausibility but both assert a colour for an object that is not in the image. Every image appears in all six cells, so all comparisons are within-image and within-question.
+In the present arm the correct hint states $g$ and the conflicting hint states a fixed far-hue distractor. In the absent arm there is no correct colour; \texttt{a} is the absent category's most frequent colour in COCO val, and \texttt{b} applies the same far-hue mapping to that colour. The two absent hints therefore differ in plausibility but both assert a colour for an object that is not in the image. Every image appears in all six cells, so all comparisons are within-image and within-question.
 
 \begin{figure}[t]
 \centering
@@ -127,7 +127,7 @@ where the hint line is omitted in the no-hint condition. The readout is a distri
 
 \paragraph{Internal probe.} A logistic regression on the final-token hidden state (2048-d for the 3B model, 3584-d for the 7B models), trained on the no-hint pair \texttt{sufficient|none} vs.\ \texttt{absent|none} and evaluated on hinted pairs. Cross-validation is grouped by sample (five folds) so a scene never appears in both train and test; a second analysis groups by queried category to test for a category$\to$colour shortcut. Regularisation strength is chosen by cross-validation. The probe is frozen when transferred to external data.
 
-\paragraph{Steering.} The direction $w$ is the difference of class means on the no-hint pair. We inject $\alpha\lVert h\rVert w$ at the final position, where $\lVert h\rVert$ is the median hidden-state norm and $\alpha\in\{\pm0.25,\pm0.5\}$, and ablate by projecting $w$ out of the state. A split-half check fits $w$ on 130 scenes and evaluates on the remaining 131.
+\paragraph{Steering.} The direction $w$ is the logistic-regression probe direction fitted on the no-hint pair (standardised features, $C=0.01$). We inject $\alpha\lVert h\rVert w$ at the final position, where $\lVert h\rVert$ is the median hidden-state norm and $\alpha\in\{\pm0.25,\pm0.5\}$, and ablate by projecting $w$ out of the state. A split-half check fits $w$ on 130 scenes and evaluates on the remaining 131.
 
 \paragraph{Patching.} For layer $L$ we capture the final-token state from a no-hint forward pass and paste it into the hinted pass at the same layer, letting the remaining layers run. A shuffled-source control pastes another sample's no-hint state at the same layer. Since pasting changes the state distribution, we use patching for localisation and rely on steering for quantitative effect size.
 
@@ -254,13 +254,13 @@ Third, the main probe analysis grouped by sample already prevents scene leakage.
 \begin{table}[t]
 \centering
 \small
-\caption{Steering along the difference-of-means direction. $\alpha$ is a fraction of the median hidden norm; positive $\alpha$ pushes toward ``evidence present''. The lower block refits the direction on 130 scenes and evaluates only on the held-out 131.}
+\caption{Steering along the probe direction $w$. $\alpha$ is a fraction of the median hidden norm; positive $\alpha$ pushes toward ``evidence present''. The lower block refits the direction on 130 scenes and evaluates only on the held-out 131.}
 \label{tab:steer}
 \begin{tabular}{lcccc}
 \toprule
  & \multicolumn{2}{c}{present} & \multicolumn{2}{c}{absent} \\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}
-setting & refusal & top-1 conf. & refusal & adopts hint \\
+setting & refusal & top-1 conf. & refusal & fabricates \\
 \midrule
 \multicolumn{5}{l}{\emph{In-sample direction ($n=261$)}}\\
 base & 0.011 & 0.836 & 0.904 & 0.096 \\

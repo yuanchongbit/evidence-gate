@@ -90,17 +90,16 @@ def main():
         vals = {m: [] for m in METRICS}
         for rec in recs:
             b = by_id[rec["sample_id"]]
-            present = b["probs"]["sufficient|wrong"]
+            present = b["probs"]["sufficient|none"]
             plabel = base_names[int(np.argmax(present))]
-            absent = [base_names[int(np.argmax(b["probs"][k]))]
-                      for k in ("absent|a", "absent|b")]
-            hints = [b["absent_hint"], DISTRACTOR[b["absent_hint"]]]
+            absent = base_names[int(np.argmax(b["probs"]["absent|none"]))]
             vals["present_refusal"].append(float(plabel == "unknown"))
             vals["present_gold"].append(float(plabel == b["gold"]))
-            vals["present_hint"].append(float(plabel == DISTRACTOR[b["gold"]]))
-            vals["absent_refusal"].append(float(np.mean([a == "unknown" for a in absent])))
-            vals["absent_hint"].append(float(np.mean([a == h for a, h in zip(absent, hints)])))
-        result["no_hint"] = {m: float(np.mean(v)) for m, v in vals.items()}
+            vals["present_hint"].append(None)
+            vals["absent_refusal"].append(float(absent == "unknown"))
+            vals["absent_hint"].append(None)
+        result["no_hint"] = {m: (None if v[0] is None else float(np.mean(v)))
+                             for m, v in vals.items()}
 
     print(json.dumps(result, indent=2))
     if args.out:
