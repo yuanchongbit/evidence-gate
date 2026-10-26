@@ -81,7 +81,12 @@ def oof_scores(recs, H, C):
     return out
 
 
-def rows_for(recs, scores, conditions):
+def rows_for(recs, scores, conditions, axis="pre"):
+    """Match each item-condition to an evidence score.
+
+    axis="pre" uses the no-hint state of the same item, which the hint cannot
+    affect; axis="post" uses the state from the condition's own forward pass.
+    """
     rows = []
     for r in recs:
         sid = r["sample_id"]
@@ -92,12 +97,19 @@ def rows_for(recs, scores, conditions):
             for key, absent in entries:
                 if (sid, key) not in scores:
                     continue
+                if axis == "pre":
+                    skey = "absent|none" if absent else "sufficient|none"
+                    if (sid, skey) not in scores:
+                        continue
+                    z = scores[(sid, skey)]
+                else:
+                    z = scores[(sid, key)]
                 p = r["probs"][key]
                 rows.append({
                     "sample_id": sid,
                     "cond": cond,
                     "absent": absent,
-                    "score": scores[(sid, key)],
+                    "score": z,
                     "refuse": int(np.argmax(p) == len(p) - 1),
                 })
     return rows
@@ -266,6 +278,17 @@ def binary_bootstrap(recs, conditions, n_boot=2000, seed=0):
     }
 
 
+def predicted(fit, conditions, z):
+    beta = fit["beta"]
+    out = {}
+    for c in conditions:
+        eta = beta["b0"] + beta["a"] * z
+        if c != "none":
+            eta += beta[f"b_{c}"] + beta[f"a_{c}"] * z
+        out[c] = float(1.0 / (1.0 + np.exp(-eta)))
+    return out
+
+
 def binned(rows, conditions, nbins=8):
     z = np.array([r["score"] for r in rows])
     edges = np.quantile(z, np.linspace(0, 1, nbins + 1))
@@ -336,6 +359,8 @@ def main():
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--binary-only", action="store_true",
                     help="skip the probe-axis fit; only d' and c (no .npz needed)")
+    ap.add_argument("--axis", default="pre", choices=["pre", "post"],
+                    help="pre: no-hint state of the same item; post: condition state")
     ap.add_argument("--out", default=str(ROOT / "results" / "sdt.json"))
     ap.add_argument("--fig", default=str(ROOT / "paper" / "figures" / "fig_sdt.pdf"))
     args = ap.parse_args()
@@ -364,9 +389,9 @@ def main():
     recs, _, H = load(args.run)
     C, auroc_none = choose_C(recs, H, [float(x) for x in args.Cs.split(",")])
     scores = oof_scores(recs, H, C)
-    rows = rows_for(recs, scores, conditions)
+    rows = rows_for(recs, scores, conditions, axis=args.axis)
     print(f"n={len(recs)} scenes, C={C:g}, no-hint AUROC={auroc_none:.3f}, "
-          f"{len(rows)} item-conditions")
+          f"{len(rows)} item-conditions, axis={args.axis}")
 
     fit, X, y, names, beta = fit_summary(rows, conditions)
     print("full fit:", " ".join(f"{n}={b:+.3f}" for n, b in fit["beta"].items()))
@@ -378,6 +403,16 @@ def main():
         print(f"{c}: delta_b={s['delta_b']:+.3f} delta_a={s['delta_a']:+.3f} "
               f"ED50 {s['ed50_none']:+.3f} -> {s['ed50_cond']:+.3f} "
               f"shift={s['horizontal_shift_at_mean_slope']:+.3f}")
+
+    z_abs = float(np.median([r["score"] for r in rows if r["absent"] == 1]))
+    z_pres = float(np.median([r["score"] for r in rows if r["absent"] == 0]))
+    pred = {
+        "absent_median": {"z": z_abs, **predicted(fit, conditions, z_abs)},
+        "present_median": {"z": z_pres, **predicted(fit, conditions, z_pres)},
+    }
+    for k, v in pred.items():
+        print(k, "z=%.2f" % v["z"],
+              " ".join(f"{c}={v[c]:.3f}" for c in conditions))
 
     ci = cluster_bootstrap(rows, conditions, n_boot=args.n_boot)
     for c in conditions[1:]:
@@ -399,10 +434,10 @@ def main():
     print("figure ->", args.fig)
 
     payload = {
-        "run": args.run, "n_scenes": len(recs), "C": C,
+        "run": args.run, "n_scenes": len(recs), "C": C, "axis": args.axis,
         "auroc_no_hint": auroc_none, "conditions": conditions,
         "fit": fit, "bootstrap_ci": ci, "binary_sdt": sdt,
-        "binary_ci": sdt_ci, "bins": bins,
+        "binary_ci": sdt_ci, "bins": bins, "predicted": pred,
     }
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as f:

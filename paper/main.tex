@@ -185,27 +185,27 @@ The same pattern holds under a correct hint, where no signal collapses: the prob
 
 \subsection{Conflict compresses the evidence axis}
 
-A natural reading of Table~\ref{tab:behaviour} is that a conflicting hint lowers the refusal threshold: the model becomes more willing to answer. Signal detection separates this from a loss of sensitivity. Using the out-of-fold probe score as the evidence axis, we compute $d'$ and criterion $c$ for each condition, and fit the psychometric model $\mathrm{logit}\,P(\text{refuse})=b_0+az+\sum_k d_k(b_k+a_kz)$ over the 1{,}827 item--condition observations.
+A natural reading of Table~\ref{tab:behaviour} is that a conflicting hint lowers the refusal threshold: the model becomes more willing to answer. Signal detection separates this from a loss of sensitivity. Using the out-of-fold probe score as the evidence axis, we compute $d'$ and criterion $c$ for each condition, and fit the psychometric model $\mathrm{logit}\,P(\text{refuse})=b_0+az+\sum_k d_k(b_k+a_kz)$ over the 1{,}827 item--condition observations. For the fit, $z$ is taken from the \emph{no-hint} forward pass of the same item, so the hint cannot move the axis it is compared on.
 
 \begin{table}[t]
 \centering
 \small
-\caption{Signal-detection summary. $d'$ is sensitivity and $c$ the criterion, computed from refusal rates on the paired present/absent items. The last two columns are from the parametric fit on the probe axis: change in slope (logit per $z$) and shift of the 50\% point ($z$ units), with cluster-bootstrap $95\%$ CIs over scenes.}
+\caption{Signal detection. $d'$ and $c$ are computed from refusal rates on the paired present/absent items. The last three columns are from the parametric fit: logit slope on the no-hint probe score, and predicted refusal at the median no-hint score of absent ($z=-8.56$) and present ($z=7.43$) items.}
 \label{tab:sdt}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccccc}
 \toprule
-condition & $d'$ & $c$ & slope change & ED50 shift \\
+condition & $d'$ & $c$ & slope & $P(\text{refuse})$ absent & present \\
 \midrule
-no hint & 3.51 & 0.46 & --- & --- \\
-conflicting hint & 1.45 & 0.62 & $+0.160$ $[0.021,0.404]$ & $-1.71$ $[-2.55,-0.82]$ \\
-correct hint & 3.83 & 0.62 & $-0.031$ $[-0.100,0.040]$ & $-0.30$ $[-0.56,0.18]$ \\
+no hint & 3.51 & 0.46 & $-0.719$ & 0.988 & 0.001 \\
+conflicting hint & 1.45 & 0.62 & $-0.171$ & 0.577 & 0.082 \\
+correct hint & 3.83 & 0.62 & $-0.680$ & 0.983 & 0.001 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:sdt} shows the dissociation. Under conflict, sensitivity falls from $3.51$ to $1.45$ ($\Delta d'=-2.13$ $[-2.69,-1.66]$), while the criterion does not move reliably ($\Delta c=+0.16$ $[-0.18,+0.39]$). A correct hint leaves both unchanged ($\Delta d'=+0.31$ $[-0.36,+0.93]$; $\Delta c=+0.16$ $[-0.18,+0.46]$). The effect is bidirectional: conflict raises refusal on present items ($1.1\%\to8.8\%$) and lowers it on absent items ($90.4\%\to54.2\%$). A criterion shift moves both arms in the same direction, so it cannot produce this pattern.
+Table~\ref{tab:sdt} shows the dissociation. Under conflict, sensitivity falls from $3.51$ to $1.45$ ($\Delta d'=-2.13$ $[-2.69,-1.66]$), while the criterion does not move reliably ($\Delta c=+0.16$ $[-0.18,+0.39]$). A correct hint leaves both unchanged ($\Delta d'=+0.31$ $[-0.36,+0.93]$; $\Delta c=+0.16$ $[-0.18,+0.46]$). The behavioural effect is bidirectional: conflict raises refusal on present items ($1.1\%\to8.8\%$) and lowers it on absent items ($90.4\%\to54.2\%$). A criterion shift moves both arms in the same direction, so it cannot produce this pattern.
 
-The parametric fit agrees. The conflict condition flattens the slope ($+0.160$ $[0.021,0.404]$) and moves the 50\% point left ($-1.71$ $[-2.55,-0.82]$), without a reliable intercept change at $z=0$ ($-0.56$ $[-1.26,+0.48]$); the two curves are non-parallel (likelihood-ratio $6.4$, $df=2$, $p=0.041$). The leftward ED50 is a consequence of the pivot: the curve is compressed toward the middle, not translated. This is the behavioural counterpart of Section~\ref{sec:signals}: the evidence is still linearly decodable from the same hidden states at $0.998$ AUROC, but the decision uses it with much lower sensitivity. The failure is in the use of evidence, not in its representation.
+The parametric fit makes the compression explicit. The conflict slope is $-0.171$ against $-0.719$ (change $+0.548$ $[0.439,0.774]$; likelihood-ratio $178.2$, $df=2$, $p<10^{-38}$), a fourfold flattening. The fitted curve reproduces both arms: at the median evidence of absent items, refusal falls from $98.8\%$ to $57.7\%$; at the median of present items, it rises from $0.1\%$ to $8.2\%$. A correct hint leaves the curve intact (slope change $+0.039$ $[-0.074,0.196]$). The change is a pivot, not a translation: the two curves cross near $z=-1.2$. This is the behavioural counterpart of Section~\ref{sec:signals}: the evidence is still linearly decodable from the same hidden states at $0.998$ AUROC, but the decision uses it with much lower sensitivity. The failure is in the use of evidence, not in its representation.
 
 \begin{table}[t]
 \centering
@@ -228,7 +228,7 @@ The sensitivity collapse replicates in all three models (Table~\ref{tab:sdt-cros
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.52\linewidth]{figures/fig_sdt.pdf}
-\caption{Refusal probability as a function of the no-hint probe score. Points are binned rates with binomial standard errors; lines are the fitted psychometric curves. The conflicting-hint curve is flatter and pivots left, while the correct-hint curve tracks the no-hint curve.}
+\caption{Refusal probability as a function of the no-hint probe score, which is measured before the hint is applied. Points are binned rates with binomial standard errors; lines are the fitted psychometric curves. The conflicting-hint curve is four times flatter and pivots around $z\approx-1.2$; the correct-hint curve tracks the no-hint curve.}
 \label{fig:sdt}
 \end{figure}
 

@@ -58,30 +58,35 @@ none) 0.999.
 ## 2b. Signal detection / psychometric curves, 3B
 
 The probe score (GroupKFold by scene, applied out of fold; C=0.1, the main
-probe's regularisation) is the evidence axis. 261 scenes, 1,827 item-condition
-observations. Binary SDT uses empirical refusal rates on the paired items.
+probe's regularisation) is the evidence axis. The axis is taken from the
+no-hint forward pass of each item, so the hint cannot move it. 261 scenes,
+1,827 item-condition observations. Binary SDT uses empirical refusal rates on
+the paired items; the parametric fit uses the same rates on the probe axis.
 
-| condition | d' | criterion c | slope change | ED50 shift |
-|---|---|---|---|---|
-| no hint | 3.51 | 0.46 | — | — |
-| conflicting hint | 1.45 | 0.62 | +0.160 [0.021, 0.404] | -1.71 [-2.55, -0.82] |
-| correct hint | 3.83 | 0.62 | -0.031 [-0.100, 0.040] | -0.30 [-0.56, 0.18] |
+| condition | d' | criterion c | fitted slope | P(refuse) absent | P(refuse) present |
+|---|---|---|---|---|---|
+| no hint | 3.51 | 0.46 | -0.719 | 0.988 | 0.001 |
+| conflicting hint | 1.45 | 0.62 | -0.171 | 0.577 | 0.082 |
+| correct hint | 3.83 | 0.62 | -0.680 | 0.983 | 0.001 |
 
-Cluster bootstrap over scenes, 2,000 resamples. Paired changes vs no hint:
+Predicted probabilities are at the median no-hint score of absent (z=-8.56)
+and present (z=7.43) items. Cluster bootstrap over scenes, 2,000 resamples.
+Paired changes vs no hint:
 
 - conflict: delta d' = -2.13 [-2.69, -1.66]; delta c = +0.16 [-0.18, +0.39]
 - correct: delta d' = +0.31 [-0.36, +0.93]; delta c = +0.16 [-0.18, +0.46]
 
 Conflict raises refusal on present items (0.011 -> 0.088) and lowers it on
-absent items (0.904 -> 0.542). Both arms move toward the middle, which a
-criterion shift cannot produce. Parametric fit: incidence b0=-1.780, a=-0.719,
-b_conflict=-0.561, a_conflict=+0.160, b_correct=-0.225, a_correct=-0.031.
-Conflict intercept at z=0: -0.561 [-1.264, +0.475] (n.s.). Non-parallel
-likelihood-ratio 6.4, df=2, p=0.041. Correct hint: all changes n.s.
+absent items (0.904 -> 0.542). Parametric fit: b0=-1.780, a=-0.719,
+b_conflict=+0.629, a_conflict=+0.548, b_correct=+0.007, a_correct=+0.039.
+Slope change: +0.548 [0.439, 0.774]; intercept change: +0.629 [0.039, 1.569].
+Non-parallel likelihood-ratio 178.2, df=2, p=2e-39. Correct hint: slope change
++0.039 [-0.074, 0.196] (n.s. for both parameters). The conflict curves cross
+near z=-1.2, so this is a pivot (compression), not a translation.
 
 Reading: the hidden state still encodes evidence (probe 0.998 under conflict),
-but behaviour loses sensitivity to it. The criterion shift is 3B-specific.
-Figure: paper/figures/fig_sdt.pdf.
+but behaviour uses it with a fourfold flatter slope. The criterion shift is
+3B-specific and inconsistent across models. Figure: paper/figures/fig_sdt.pdf.
 
 Cross-model binary SDT (same 261 scenes, 522 absent items under conflict):
 
