@@ -10,5 +10,6 @@ python -m pilot.infer --manifest data/manifest_v5.jsonl --model "$MODEL" \
 python -m pilot.analyze_v5  --run runs/v5_261.jsonl
 python -m pilot.probe      --run runs/v5_261.jsonl --pairs none,hint,correct
 python -m pilot.sdt        --run runs/v5_261.jsonl --out results/sdt.json
+python -m pilot.decompose  --run runs/v5_261.jsonl --out results/decompose.json
 python -m pilot.baselines  --run runs/v5_261.jsonl
 python -m pilot.selective  --run runs/v5_261.jsonl

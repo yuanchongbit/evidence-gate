@@ -10,6 +10,7 @@ them to regenerate the underlying `.jsonl` / `.npz` files and full logs.
 | Main 2x3 behaviour | `pilot/analyze_v5.py` | `runs/repro/main_3b.txt` |
 | Evidence probe | `pilot/probe.py` | `runs/repro/probe_3b.txt` |
 | Signal detection | `pilot/sdt.py` | `results/sdt.json` |
+| Answer decomposition / hint adoption | `pilot/decompose.py` | `results/decompose*.json` |
 | Output-space baselines | `pilot/baselines.py` | `runs/repro/baselines_3b.txt` |
 | Selective gate | `pilot/selective.py` | `runs/repro/selective_3b.txt` |
 | Steering / held-out half | `pilot/steer.py`, `pilot/steer_half.py` | `runs/repro/steer_3b.txt`, `steer_half.txt` |
@@ -100,6 +101,38 @@ The sensitivity collapse replicates in all three; the criterion shift changes
 sign across models (null / negative / positive), so a uniform threshold account
 is ruled out. Under a correct hint d' never falls: 3B +0.31 [-0.36, +0.93],
 7B +0.50 [+0.17, +0.82], LLaVA +0.32 [0.00, +0.68].
+
+## 2c. Failure modes and hint adoption (all models)
+
+Argmax over the 12-way readout; `hint` is the colour named in the prompt.
+For present items the hint is the distractor colour; for absent items hint a
+is the named colour and hint b is its mapped distractor. `other` is any other
+colour. Rows sum to 1 within rounding.
+
+| model | condition | unknown | true colour | hint | other |
+|---|---|---|---|---|---|
+| 3B | present, conflict | 0.088 | 0.383 | 0.448 | 0.080 |
+| 3B | absent, hint a | 0.521 | — | 0.467 | 0.011 |
+| 3B | absent, hint b | 0.563 | — | 0.433 | 0.004 |
+| 7B | present, conflict | 0.556 | 0.249 | 0.176 | 0.019 |
+| 7B | absent, hint a | 0.877 | — | 0.123 | 0.000 |
+| 7B | absent, hint b | 0.958 | — | 0.042 | 0.000 |
+| LLaVA | present, conflict | 0.004 | 0.360 | 0.490 | 0.146 |
+| LLaVA | absent, hint a | 0.088 | — | 0.904 | 0.008 |
+| LLaVA | absent, hint b | 0.188 | — | 0.762 | 0.050 |
+
+The three models fail differently: hint takeover (3B), over-refusal (7B),
+near-total credulity (LLaVA). The sensitivity loss is what they share.
+
+Visual evidence still grades the answer. On the 261 present-conflict items,
+regressing the outcome on the no-hint probe score (logit, cluster bootstrap
+over scenes, 2,000 resamples):
+
+- P(argmax = hint) ~ z: slope -0.213 [-0.325, -0.119]
+- P(argmax = gold) ~ z: slope +0.267 [0.163, 0.401]
+
+So the hint tilts the decision, but a higher pre-hint evidence score makes
+hint adoption less likely and the true colour more likely.
 
 
 ## 3. Controls
