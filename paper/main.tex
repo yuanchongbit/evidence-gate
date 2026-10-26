@@ -284,6 +284,34 @@ Table~\ref{tab:steer} shows that adding $w$ makes the model answer absent-object
 
 The lower block refits $w$ on half the scenes and evaluates on the other half. The dose--response survives with slightly larger amplitudes at the extremes, consistent with a direction that is not overfitted to the evaluation items.
 
+\subsection{The preserved evidence still controls the gate}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Steering the no-hint probe direction during the conflicting-hint pass ($n=261$). ``True'' and ``hint'' are argmax rates on present items; ``hint'' on absent items is the rate of naming the hinted colour, averaged over hints a and b. The first row is the unsteered no-hint baseline from the main run.}
+\label{tab:steer-conflict}
+\begin{tabular}{lccccc}
+\toprule
+ & \multicolumn{3}{c}{present} & \multicolumn{2}{c}{absent} \\
+\cmidrule(lr){2-4}\cmidrule(lr){5-6}
+setting & refusal & true & hint & refusal & hint \\
+\midrule
+no hint, unsteered & 0.011 & 0.762 & --- & 0.904 & --- \\
+conflict, base & 0.088 & 0.383 & 0.448 & 0.542 & 0.450 \\
+ablate $w$ & 0.031 & 0.429 & 0.448 & 0.328 & 0.651 \\
+$-0.50\,w$ & 0.931 & 0.008 & 0.042 & 0.941 & 0.057 \\
+$-0.25\,w$ & 0.759 & 0.073 & 0.134 & 0.874 & 0.125 \\
+$+0.25\,w$ & 0.000 & 0.479 & 0.433 & 0.065 & 0.845 \\
+$+0.50\,w$ & 0.000 & 0.479 & 0.410 & 0.000 & 0.665 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The probe score remains decodable under conflict, but a decoder can read a variable that the decision no longer uses. Table~\ref{tab:steer-conflict} closes that gap causally: the same direction, fitted before any hint and injected during the conflicting pass, moves the decision in both directions and monotonically. Subtracting $w$ raises absent-object refusal from $0.542$ to $0.874$ at $-0.25\,w$ ($+0.331$ $[0.289,0.374]$) and to $0.941$ at $-0.50\,w$, near the $0.904$ no-hint baseline; on present items it raises refusal from $0.088$ to $0.759$ ($+0.670$ $[0.617,0.728]$). Adding $w$ drives refusal toward zero ($0.542\to0.065$ on absent items at $+0.25\,w$ and $0.000$ at $+0.50\,w$; $0.088\to0.000$ on present items). Ablating $w$ has the same partial-necessity signature as under no hint, lowering absent refusal by $0.215$ $[-0.253,-0.176]$ and raising hint adoption by $0.201$ $[0.165,0.236]$.
+
+What the direction does not do is resolve the colour. On present items, $+0.25\,w$ raises true-colour answers from $0.383$ to $0.479$ ($+0.096$ $[0.050,0.142]$) while hint adoption stays at $0.433$ ($-0.015$ $[-0.065,0.034]$). The hint still wins the content of the answer; the direction moves whether the model answers at all. This is the causal analogue of the psychometric result: conflict lowers the gain on the evidence axis, but the axis remains connected to the gate. The information is present, decodable and usable; it is under-weighted rather than erased.
+
 \subsection{The suppression is written in the last few layers}
 
 \begin{figure}[t]

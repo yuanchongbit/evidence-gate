@@ -14,6 +14,7 @@ them to regenerate the underlying `.jsonl` / `.npz` files and full logs.
 | Output-space baselines | `pilot/baselines.py` | `runs/repro/baselines_3b.txt` |
 | Selective gate | `pilot/selective.py` | `runs/repro/selective_3b.txt` |
 | Steering / held-out half | `pilot/steer.py`, `pilot/steer_half.py` | `runs/repro/steer_3b.txt`, `steer_half.txt` |
+| Steering under conflict | `pilot/steer_conflict.py`, `pilot/analyze_steer_conflict.py` | `results/steer_conflict.json` |
 | Layer patching | `pilot/patch3.py`, `pilot/patch4.py` | `runs/repro/patch*.txt` |
 | Task forms | `pilot/task2.py`, `pilot/task3.py` | `runs/repro/task2.txt`, `task3.txt` |
 | External validation | `pilot/ext_analyze.py`, `pilot/ext_vqa_analyze.py` | `runs/ext_*_summary.json` |
@@ -170,6 +171,38 @@ Held-out half (direction fitted on 130 scenes, evaluated on 131):
 | -0.25 w | 0.214 | 0.985 |
 | +0.25 w | 0.000 | 0.305 |
 | +0.50 w | 0.000 | 0.000 |
+
+## 4b. Steering under conflict (3B)
+
+The same no-hint direction, injected during the conflicting pass. `true` and
+`hint` are argmax rates on present items; absent `hint` is the rate of naming
+the hinted colour, averaged over a and b.
+
+| setting | present refusal | present true | present hint | absent refusal | absent hint |
+|---|---|---|---|---|---|
+| no hint, unsteered | 0.011 | 0.762 | — | 0.904 | — |
+| conflict, base | 0.088 | 0.383 | 0.448 | 0.542 | 0.450 |
+| ablate w | 0.031 | 0.429 | 0.448 | 0.328 | 0.651 |
+| -0.50 w | 0.931 | 0.008 | 0.042 | 0.941 | 0.057 |
+| -0.25 w | 0.759 | 0.073 | 0.134 | 0.874 | 0.125 |
+| +0.25 w | 0.000 | 0.479 | 0.433 | 0.065 | 0.845 |
+| +0.50 w | 0.000 | 0.479 | 0.410 | 0.000 | 0.665 |
+
+Paired differences vs the unsteered conflict base, cluster bootstrap over
+scenes (2,000 resamples):
+
+| setting | present refusal | present true | present hint | absent refusal | absent hint |
+|---|---|---|---|---|---|
+| ablate w | -0.057 [-0.084, -0.031] | +0.046 [+0.019, +0.077] | 0.000 [-0.027, +0.023] | -0.215 [-0.253, -0.176] | +0.201 [+0.165, +0.236] |
+| -0.50 w | +0.843 [+0.801, +0.885] | -0.375 [-0.433, -0.322] | -0.406 [-0.464, -0.345] | +0.398 [+0.354, +0.446] | -0.393 [-0.439, -0.351] |
+| -0.25 w | +0.670 [+0.617, +0.728] | -0.310 [-0.368, -0.253] | -0.314 [-0.372, -0.257] | +0.331 [+0.289, +0.374] | -0.326 [-0.368, -0.285] |
+| +0.25 w | -0.088 [-0.123, -0.054] | +0.096 [+0.050, +0.142] | -0.015 [-0.065, +0.034] | -0.477 [-0.523, -0.429] | +0.395 [+0.345, +0.443] |
+| +0.50 w | -0.088 [-0.123, -0.054] | +0.096 [+0.034, +0.153] | -0.038 [-0.103, +0.027] | -0.542 [-0.592, -0.490] | +0.215 [+0.159, +0.270] |
+
+Reading: the direction still gates refusal under conflict, and ablation is
+still partly necessary. It does not resolve the colour: at +0.25 w true-colour
+answers rise by 9.6 pp while hint adoption is unchanged (-1.5 pp, CI spans 0).
+The evidence is under-weighted, not erased. Raw run: `results/runs/steer_conflict.jsonl`.
 
 ## 5. Layer-wise patching
 
