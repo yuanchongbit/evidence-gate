@@ -236,6 +236,30 @@ def binary_sdt(recs, conditions):
     return out
 
 
+def binary_bootstrap(recs, conditions, n_boot=2000, seed=0):
+    """Cluster bootstrap over scenes for d', c and their paired shifts."""
+    ids = sorted({r["sample_id"] for r in recs})
+    by_id = {i: [r for r in recs if r["sample_id"] == i] for i in ids}
+    rng = np.random.default_rng(seed)
+    keys = ["dprime", "criterion"]
+    vals = {c: {k: [] for k in keys} for c in conditions}
+    for _ in range(n_boot):
+        pick = rng.choice(ids, len(ids), replace=True)
+        sample = [r for i in pick for r in by_id[i]]
+        s = binary_sdt(sample, conditions)
+        for c in conditions:
+            for k in keys:
+                vals[c][k].append(s[c][k])
+        for c in conditions[1:]:
+            for k in keys:
+                vals[c][f"{k}_diff"].append(s[c][k] - s["none"][k])
+    return {
+        c: {k: [float(np.quantile(v, 0.025)), float(np.quantile(v, 0.975))]
+            for k, v in d.items()}
+        for c, d in vals.items()
+    }
+
+
 def binned(rows, conditions, nbins=8):
     z = np.array([r["score"] for r in rows])
     edges = np.quantile(z, np.linspace(0, 1, nbins + 1))
@@ -335,6 +359,11 @@ def main():
     for c in conditions:
         print(f"{c}: d'={sdt[c]['dprime']:.2f} c={sdt[c]['criterion']:+.2f} "
               f"(refuse present {sdt[c]['fa_refuse']:.3f}, absent {sdt[c]['hit_refuse']:.3f})")
+    sdt_ci = binary_bootstrap(recs, conditions, n_boot=args.n_boot)
+    for c in conditions[1:]:
+        print(f"{c} binary 95% CI: d' {sdt_ci[c]['dprime']} "
+              f"delta_d' {sdt_ci[c]['dprime_diff']} c {sdt_ci[c]['criterion']} "
+              f"delta_c {sdt_ci[c]['criterion_diff']}")
 
     bins = binned(rows, conditions)
     plot(rows, fit, bins, conditions, args.fig, n_boot=args.n_boot)
@@ -343,7 +372,8 @@ def main():
     payload = {
         "run": args.run, "n_scenes": len(recs), "C": C,
         "auroc_no_hint": auroc_none, "conditions": conditions,
-        "fit": fit, "bootstrap_ci": ci, "binary_sdt": sdt, "bins": bins,
+        "fit": fit, "bootstrap_ci": ci, "binary_sdt": sdt,
+        "binary_ci": sdt_ci, "bins": bins,
     }
     Path(args.out).parent.mkdir(parents=True, exist_ok=True)
     with open(args.out, "w") as f:
