@@ -1,0 +1,10 @@
+n=261
+  absent|a<-same@L18                           p_unknown 0.299  base 0.194  delta +0.105 [+0.086, +0.123]  n=261
+  absent|a<-same@L24                           p_unknown 0.480  base 0.194  delta +0.286 [+0.251, +0.323]  n=261
+  absent|a<-same@L26                           p_unknown 0.550  base 0.194  delta +0.356 [+0.319, +0.396]  n=261
+  absent|a                                     p_unknown 0.194  n=261
+  absent|none                                  p_unknown 0.579  n=261
+  absent|a<-shuf@L18                           p_unknown 0.315  base 0.195  delta +0.120 [+0.099, +0.141]  n=260
+  absent|a<-shuf@L24                           p_unknown 0.513  base 0.195  delta +0.318 [+0.276, +0.361]  n=260
+  absent|a<-shuf@L26                           p_unknown 0.585  base 0.195  delta +0.390 [+0.345, +0.432]  n=260
+DONE262

@@ -331,7 +331,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--run", default=str(ROOT / "runs" / "v5_261.jsonl"))
     ap.add_argument("--conditions", default="none,conflict,correct")
-    ap.add_argument("--Cs", default="0.0003,0.001,0.003,0.01,0.1")
+    ap.add_argument("--Cs", default="0.1",
+                    help="probe regularisation; fixed to the main probe's C")
     ap.add_argument("--n-boot", type=int, default=2000)
     ap.add_argument("--out", default=str(ROOT / "results" / "sdt.json"))
     ap.add_argument("--fig", default=str(ROOT / "paper" / "figures" / "fig_sdt.pdf"))

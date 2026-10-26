@@ -1,0 +1,9 @@
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▋         | 52/824 [00:00<00:01, 508.66it/s]Loading weights:  14%|█▎        | 112/824 [00:00<00:01, 561.39it/s]Loading weights:  21%|██        | 172/824 [00:00<00:01, 571.16it/s]Loading weights:  28%|██▊       | 231/824 [00:00<00:01, 575.29it/s]Loading weights:  35%|███▌      | 291/824 [00:00<00:00, 578.31it/s]Loading weights:  42%|████▏     | 350/824 [00:00<00:00, 574.11it/s]Loading weights:  50%|████▉     | 411/824 [00:00<00:00, 580.28it/s]Loading weights:  70%|██████▉   | 576/824 [00:00<00:00, 911.15it/s]Loading weights:  97%|█████████▋| 796/824 [00:00<00:00, 1306.26it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 879.38it/s] 
+10 / 78
+20 / 78
+30 / 78
+40 / 78
+50 / 78
+60 / 78
+70 / 78
+saved /mnt/workspace/pilot/runs/presence.jsonl

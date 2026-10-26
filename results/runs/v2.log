@@ -1,0 +1,75 @@
+nohup: 忽略输入
+torch 2.13.0+cu130 cuda 13.0
+gpu NVIDIA A10 23.8GB
+model path .cache/modelscope/models/Qwen--Qwen2.5-VL-3B-Instruct/snapshots/master
++ /usr/local/bin/python -m pilot.infer --model .cache/modelscope/models/Qwen--Qwen2.5-VL-3B-Instruct/snapshots/master --limit 78 --grid 3 --out runs/qwen25vl3b_v2.jsonl --resume
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▌         | 51/824 [00:00<00:01, 481.64it/s]Loading weights:  14%|█▎        | 112/824 [00:00<00:01, 549.63it/s]Loading weights:  21%|██        | 172/824 [00:00<00:01, 566.60it/s]Loading weights:  28%|██▊       | 231/824 [00:00<00:01, 575.37it/s]Loading weights:  35%|███▌      | 291/824 [00:00<00:00, 573.59it/s]Loading weights:  43%|████▎     | 351/824 [00:00<00:00, 576.77it/s]Loading weights:  50%|█████     | 412/824 [00:00<00:00, 577.59it/s]Loading weights:  71%|███████▏  | 589/824 [00:00<00:00, 947.67it/s]Loading weights:  98%|█████████▊| 810/824 [00:00<00:00, 1333.70it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 878.63it/s] 
+5/78 3.7s/sample eta 4.6min
+10/78 3.9s/sample eta 4.5min
+15/78 4.1s/sample eta 4.3min
+20/78 4.0s/sample eta 3.9min
+25/78 4.1s/sample eta 3.6min
+30/78 4.1s/sample eta 3.3min
+35/78 4.2s/sample eta 3.0min
+40/78 4.2s/sample eta 2.7min
+45/78 4.3s/sample eta 2.3min
+50/78 4.2s/sample eta 2.0min
+55/78 4.2s/sample eta 1.6min
+60/78 4.2s/sample eta 1.3min
+65/78 4.2s/sample eta 0.9min
+70/78 4.1s/sample eta 0.6min
+75/78 4.2s/sample eta 0.2min
+78/78 4.2s/sample eta 0.0min
+saved runs/qwen25vl3b_v2.jsonl
++ /usr/local/bin/python -m pilot.analyze --run runs/qwen25vl3b_v2.jsonl --out runs/analysis.json
+model .cache/modelscope/models/Qwen--Qwen2.5-VL-3B-Instruct/snapshots/master  n=78
+
+condition                     acc  acc|ans  refuse   conf  hinted
+sufficient|correct          0.872    0.907   0.038  0.879   0.872
+sufficient|wrong            0.346    0.370   0.064  0.797   0.513
+sufficient|none             0.462    0.474   0.026  0.843   0.000
+insufficient|correct        0.885    0.986   0.103  0.823   0.885
+insufficient|wrong          0.051    0.066   0.218  0.708   0.705
+insufficient|none           0.192    0.242   0.205  0.649   0.000
+
+UAR 0.825  OAR 0.043  TCR(sufficient,wrong) 0.548  TCR(insufficient,wrong) 0.902
+EDG[conf    ] AUROC 0.628 CI [0.536, 0.711]
+EDG[occ_max ] AUROC 0.555 CI [0.465, 0.645]
+EDG[occ_gt  ] AUROC 0.781 CI [0.706, 0.851]
+EDG[occ_mean] AUROC 0.428 CI [0.340, 0.518]
+EDG[hss     ] AUROC 0.314 CI [0.234, 0.396]
+
+condition sufficient|wrong
+  conf     accuracy 0.346 AURC 0.819 acc@80 0.339
+  occ_max  accuracy 0.346 AURC 0.524 acc@80 0.419
+  occ_gt   accuracy 0.346 AURC 0.426 acc@80 0.435
+  ces      accuracy 0.346 AURC 0.509 acc@80 0.387
+
+condition insufficient|wrong
+  conf     accuracy 0.051 AURC 0.987 acc@80 0.032
+  occ_max  accuracy 0.051 AURC 0.889 acc@80 0.065
+  occ_gt   accuracy 0.051 AURC 0.866 acc@80 0.065
+  ces      accuracy 0.051 AURC 0.929 acc@80 0.065
+
+condition sufficient|none
+  conf     accuracy 0.462 AURC 0.751 acc@80 0.419
+  occ_max  accuracy 0.462 AURC 0.436 acc@80 0.548
+  occ_gt   accuracy 0.462 AURC 0.404 acc@80 0.484
+  ces      accuracy 0.462 AURC 0.451 acc@80 0.468
+
+condition insufficient|none
+  conf     accuracy 0.192 AURC 0.855 acc@80 0.177
+  occ_max  accuracy 0.192 AURC 0.715 acc@80 0.242
+  occ_gt   accuracy 0.192 AURC 0.735 acc@80 0.194
+  ces      accuracy 0.192 AURC 0.869 acc@80 0.194
+
+EDG diff occ_max - conf: +0.073 CI [-0.073, +0.216]
+ECE (sufficient, none hint): 0.392
+
+image/text quadrants (wrong hint)
+  sufficient     {'no_image+text': 22, 'image+text': 17, 'no_image+no_text': 17, 'image+no_text': 22}
+  insufficient   {'no_image+text': 24, 'image+no_text': 24, 'image+text': 15, 'no_image+no_text': 15}
+
+CES mean 0.763 [0.704, 0.815]  target 0.826  placebo 0.063
+
+saved runs/analysis.json

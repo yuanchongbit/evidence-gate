@@ -1,0 +1,27 @@
+300 colour questions, 277 images
+  none     acc 0.850  p_unk 0.024  maxp 0.865  probe +6.932  probe>0 0.940  pred=unknown 0.017  pred=distractor 0.010
+  correct  acc 0.983  p_unk 0.021  maxp 0.971  probe +6.698  probe>0 0.983  pred=unknown 0.017  pred=distractor 0.000
+  wrong    acc 0.613  p_unk 0.115  maxp 0.722  probe +2.100  probe>0 0.780  pred=unknown 0.057  pred=distractor 0.280
+
+probe stability (image evidence) vs output-signal stability
+  probe    r(none,wrong) 0.537  mean shift -4.831
+  p_unk    r(none,wrong) 0.330  mean shift +0.091
+  maxprob  r(none,wrong) 0.316  mean shift -0.143
+  probe(none)>0 among none-correct: 0.969
+
+AUROC for being correct under the wrong hint
+  none   probe    0.710 [0.644,0.771]
+  none   maxprob  0.831 [0.783,0.875]
+  none   p_unk    0.803 [0.748,0.853]
+  wrong  probe    0.489 [0.419,0.558]
+  wrong  maxprob  0.649 [0.581,0.711]
+  wrong  p_unk    0.563 [0.481,0.641]
+  none   probe - p_known -0.093 [-0.167,-0.021]
+  wrong  probe - p_known -0.074 [-0.145,-0.005]
+
+risk (1-acc) at coverage, no-hint answers
+  probe    0.150  0.111  0.090  0.087
+  maxprob  0.150  0.107  0.029  0.007
+  p_known  0.150  0.107  0.071  0.067
+
+saved runs/ext_vqa_color_summary.json

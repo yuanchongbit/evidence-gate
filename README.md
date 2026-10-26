@@ -43,6 +43,7 @@ pilot/                 model-agnostic experiment code
   infer.py             Qwen2.5-VL scorer, 12-way readout, main run
   infer_gen.py         AutoModelForImageTextToText runner (7B, LLaVA)
   probe.py             final-state linear probe, grouped CV, bootstrap CIs
+  sdt.py               signal detection and psychometric curves on the probe axis
   baselines.py         output-space baselines from the same softmax
   selective.py         risk-coverage gates
   blank.py             gray-image text-only control

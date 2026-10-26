@@ -9,6 +9,7 @@ them to regenerate the underlying `.jsonl` / `.npz` files and full logs.
 |---|---|---|
 | Main 2x3 behaviour | `pilot/analyze_v5.py` | `runs/repro/main_3b.txt` |
 | Evidence probe | `pilot/probe.py` | `runs/repro/probe_3b.txt` |
+| Signal detection | `pilot/sdt.py` | `results/sdt.json` |
 | Output-space baselines | `pilot/baselines.py` | `runs/repro/baselines_3b.txt` |
 | Selective gate | `pilot/selective.py` | `runs/repro/selective_3b.txt` |
 | Steering / held-out half | `pilot/steer.py`, `pilot/steer_half.py` | `runs/repro/steer_3b.txt`, `steer_half.txt` |
@@ -53,6 +54,34 @@ Probe minus p(unknown): no hint +0.002 [-0.003, +0.007]; conflict +0.164
 Transfer, fitted on the no-hint pair and evaluated on the hinted pair:
 none -> conflict 0.969; none -> correct 0.996. Reverse transfer (conflict ->
 none) 0.999.
+
+## 2b. Signal detection / psychometric curves, 3B
+
+The probe score (GroupKFold by scene, applied out of fold; C=0.1, the main
+probe's regularisation) is the evidence axis. 261 scenes, 1,827 item-condition
+observations. Binary SDT uses empirical refusal rates on the paired items.
+
+| condition | d' | criterion c | slope change | ED50 shift |
+|---|---|---|---|---|
+| no hint | 3.51 | 0.46 | — | — |
+| conflicting hint | 1.45 | 0.62 | +0.160 [0.021, 0.404] | -1.71 [-2.55, -0.82] |
+| correct hint | 3.83 | 0.62 | -0.031 [-0.100, 0.040] | -0.30 [-0.56, 0.18] |
+
+Cluster bootstrap over scenes, 2,000 resamples. Paired changes vs no hint:
+
+- conflict: delta d' = -2.13 [-2.69, -1.66]; delta c = +0.16 [-0.18, +0.39]
+- correct: delta d' = +0.31 [-0.36, +0.93]; delta c = +0.16 [-0.18, +0.46]
+
+Conflict raises refusal on present items (0.011 -> 0.088) and lowers it on
+absent items (0.904 -> 0.542). Both arms move toward the middle, which a
+criterion shift cannot produce. Parametric fit: incidence b0=-1.780, a=-0.719,
+b_conflict=-0.561, a_conflict=+0.160, b_correct=-0.225, a_correct=-0.031.
+Conflict intercept at z=0: -0.561 [-1.264, +0.475] (n.s.). Non-parallel
+likelihood-ratio 6.4, df=2, p=0.041. Correct hint: all changes n.s.
+
+Reading: the hidden state still encodes evidence (probe 0.998 under conflict),
+but behaviour loses sensitivity to it without a criterion shift. The failure is
+in the use of evidence, not its representation. Figure: paper/figures/fig_sdt.pdf.
 
 ## 3. Controls
 

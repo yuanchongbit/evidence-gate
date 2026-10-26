@@ -1,0 +1,9 @@
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▋         | 52/824 [00:00<00:01, 511.88it/s]Loading weights:  13%|█▎        | 111/824 [00:00<00:01, 555.45it/s]Loading weights:  21%|██        | 170/824 [00:00<00:01, 565.97it/s]Loading weights:  28%|██▊       | 230/824 [00:00<00:01, 549.31it/s]Loading weights:  36%|███▌      | 293/824 [00:00<00:00, 571.87it/s]Loading weights:  43%|████▎     | 353/824 [00:00<00:00, 578.31it/s]Loading weights:  50%|█████     | 413/824 [00:00<00:00, 583.88it/s]Loading weights:  73%|███████▎  | 604/824 [00:00<00:00, 997.98it/s]Loading weights: 100%|█████████▉| 821/824 [00:00<00:00, 1348.65it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 887.12it/s] 
+10 / 78
+20 / 78
+30 / 78
+40 / 78
+50 / 78
+60 / 78
+70 / 78
+saved pilot/runs/presence.jsonl

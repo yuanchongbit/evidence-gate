@@ -1,0 +1,54 @@
+500 items (250 answerable) from 4319 val questions
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▌         | 50/824 [00:00<00:01, 478.10it/s]Loading weights:  14%|█▎        | 112/824 [00:00<00:01, 549.46it/s]Loading weights:  21%|██        | 169/824 [00:00<00:01, 549.15it/s]Loading weights:  27%|██▋       | 224/824 [00:00<00:01, 547.88it/s]Loading weights:  34%|███▍      | 279/824 [00:00<00:01, 541.87it/s]Loading weights:  41%|████      | 339/824 [00:00<00:00, 556.65it/s]Loading weights:  48%|████▊     | 395/824 [00:00<00:00, 557.05it/s]Loading weights:  61%|██████    | 503/824 [00:00<00:00, 721.11it/s]Loading weights:  87%|████████▋ | 720/824 [00:00<00:00, 1167.65it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 846.86it/s] 
+10/500 2.22s/item eta 18.1min
+20/500 2.10s/item eta 16.8min
+30/500 2.15s/item eta 16.8min
+40/500 2.21s/item eta 16.9min
+50/500 2.15s/item eta 16.1min
+60/500 2.23s/item eta 16.4min
+70/500 2.22s/item eta 15.9min
+80/500 2.22s/item eta 15.5min
+90/500 2.23s/item eta 15.3min
+100/500 2.27s/item eta 15.1min
+110/500 2.28s/item eta 14.8min
+120/500 2.26s/item eta 14.3min
+130/500 2.29s/item eta 14.1min
+140/500 2.29s/item eta 13.8min
+150/500 2.31s/item eta 13.5min
+160/500 2.30s/item eta 13.1min
+170/500 2.32s/item eta 12.7min
+180/500 2.31s/item eta 12.3min
+190/500 2.30s/item eta 11.9min
+200/500 2.30s/item eta 11.5min
+210/500 2.31s/item eta 11.2min
+220/500 2.32s/item eta 10.8min
+230/500 2.31s/item eta 10.4min
+240/500 2.31s/item eta 10.0min
+250/500 2.30s/item eta 9.6min
+260/500 2.30s/item eta 9.2min
+270/500 2.32s/item eta 8.9min
+280/500 2.32s/item eta 8.5min
+290/500 2.33s/item eta 8.1min
+300/500 2.33s/item eta 7.8min
+310/500 2.32s/item eta 7.4min
+320/500 2.33s/item eta 7.0min
+330/500 2.33s/item eta 6.6min
+340/500 2.34s/item eta 6.2min
+350/500 2.33s/item eta 5.8min
+360/500 2.33s/item eta 5.4min
+370/500 2.34s/item eta 5.1min
+380/500 2.33s/item eta 4.7min
+390/500 2.32s/item eta 4.3min
+400/500 2.32s/item eta 3.9min
+410/500 2.32s/item eta 3.5min
+420/500 2.33s/item eta 3.1min
+430/500 2.33s/item eta 2.7min
+440/500 2.33s/item eta 2.3min
+450/500 2.33s/item eta 1.9min
+460/500 2.33s/item eta 1.6min
+470/500 2.34s/item eta 1.2min
+480/500 2.34s/item eta 0.8min
+490/500 2.33s/item eta 0.4min
+500/500 2.33s/item eta 0.0min
+hidden -> runs/ext_vizwiz.npz 1250
+EXIT=0

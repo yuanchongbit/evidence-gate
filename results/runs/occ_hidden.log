@@ -1,0 +1,9 @@
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▌         | 51/824 [00:00<00:01, 504.11it/s]Loading weights:  13%|█▎        | 111/824 [00:00<00:01, 557.18it/s]Loading weights:  21%|██        | 171/824 [00:00<00:01, 556.44it/s]Loading weights:  28%|██▊       | 231/824 [00:00<00:01, 573.08it/s]Loading weights:  35%|███▌      | 289/824 [00:00<00:00, 568.62it/s]Loading weights:  43%|████▎     | 351/824 [00:00<00:00, 579.39it/s]Loading weights:  50%|████▉     | 411/824 [00:00<00:00, 564.65it/s]Loading weights:  74%|███████▍  | 608/824 [00:00<00:00, 990.92it/s]Loading weights: 100%|█████████▉| 820/824 [00:00<00:00, 1326.23it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 881.75it/s] 
+10 / 78
+20 / 78
+30 / 78
+40 / 78
+50 / 78
+60 / 78
+70 / 78
+saved /mnt/workspace/pilot/runs/occ_hidden.npz (156, 2048)

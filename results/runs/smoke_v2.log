@@ -1,0 +1,60 @@
+nohup: 忽略输入
+torch 2.13.0+cu130 cuda 13.0
+gpu NVIDIA A10 23.8GB
+model path .cache/modelscope/models/Qwen--Qwen2.5-VL-3B-Instruct/snapshots/master
++ /usr/local/bin/python -m pilot.infer --model .cache/modelscope/models/Qwen--Qwen2.5-VL-3B-Instruct/snapshots/master --limit 2 --grid 3 --out runs/smoke_v2.jsonl --resume
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▌         | 51/824 [00:00<00:01, 465.54it/s]Loading weights:  14%|█▎        | 113/824 [00:00<00:01, 537.35it/s]Loading weights:  21%|██        | 173/824 [00:00<00:01, 556.13it/s]Loading weights:  28%|██▊       | 232/824 [00:00<00:01, 562.94it/s]Loading weights:  36%|███▌      | 293/824 [00:00<00:00, 570.47it/s]Loading weights:  43%|████▎     | 353/824 [00:00<00:00, 577.88it/s]Loading weights:  50%|█████     | 413/824 [00:00<00:00, 582.24it/s]Loading weights:  73%|███████▎  | 600/824 [00:00<00:00, 981.96it/s]Loading weights: 100%|█████████▉| 821/824 [00:00<00:00, 1333.46it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 880.12it/s] 
+2/2 3.6s/sample eta 0.0min
+saved runs/smoke_v2.jsonl
++ /usr/local/bin/python -m pilot.analyze --run runs/smoke_v2.jsonl --out runs/analysis.json
+model .cache/modelscope/models/Qwen--Qwen2.5-VL-3B-Instruct/snapshots/master  n=2
+
+condition                     acc  acc|ans  refuse   conf  hinted
+sufficient|correct          1.000    1.000   0.000  0.963   1.000
+sufficient|wrong            0.000    0.000   0.500  0.752   0.500
+sufficient|none             0.500    0.500   0.000  0.989   0.000
+insufficient|correct        1.000    1.000   0.000  0.885   1.000
+insufficient|wrong          0.000    0.000   0.000  0.871   1.000
+insufficient|none           0.000    0.000   0.500  0.755   0.000
+
+UAR 0.833  OAR 0.167  TCR(sufficient,wrong) 1.000  TCR(insufficient,wrong) 1.000
+EDG[conf    ] AUROC 0.250 CI [nan, nan]
+EDG[occ_max ] AUROC 0.750 CI [nan, nan]
+EDG[occ_gt  ] AUROC 1.000 CI [nan, nan]
+EDG[occ_mean] AUROC 0.750 CI [nan, nan]
+EDG[hss     ] AUROC 0.250 CI [nan, nan]
+
+condition sufficient|wrong
+  conf     accuracy 0.000 AURC 1.000 acc@80 0.000
+  occ_max  accuracy 0.000 AURC 1.000 acc@80 0.000
+  occ_gt   accuracy 0.000 AURC 1.000 acc@80 0.000
+  ces      accuracy 0.000 AURC 1.000 acc@80 0.000
+
+condition insufficient|wrong
+  conf     accuracy 0.000 AURC 1.000 acc@80 0.000
+  occ_max  accuracy 0.000 AURC 1.000 acc@80 0.000
+  occ_gt   accuracy 0.000 AURC 1.000 acc@80 0.000
+  ces      accuracy 0.000 AURC 1.000 acc@80 0.000
+
+condition sufficient|none
+  conf     accuracy 0.500 AURC 0.750 acc@80 0.500
+  occ_max  accuracy 0.500 AURC 0.250 acc@80 0.500
+  occ_gt   accuracy 0.500 AURC 0.750 acc@80 0.500
+  ces      accuracy 0.500 AURC 0.250 acc@80 0.500
+
+condition insufficient|none
+  conf     accuracy 0.000 AURC 1.000 acc@80 0.000
+  occ_max  accuracy 0.000 AURC 1.000 acc@80 0.000
+  occ_gt   accuracy 0.000 AURC 1.000 acc@80 0.000
+  ces      accuracy 0.000 AURC 1.000 acc@80 0.000
+
+EDG diff occ_max - conf: -0.500 CI [-1.000, +1.000]
+ECE (sufficient, none hint): 0.745
+
+image/text quadrants (wrong hint)
+  sufficient     {'no_image+text': 1, 'image+no_text': 1}
+  insufficient   {'no_image+no_text': 1, 'image+text': 1}
+
+CES mean 0.921 [0.866, 0.976]  target 0.957  placebo 0.036
+
+saved runs/analysis.json

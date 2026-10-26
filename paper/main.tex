@@ -33,7 +33,7 @@ How Vision-Language Models Decide to Answer Without Evidence}
 \maketitle
 
 \begin{abstract}
-Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $93\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A difference-of-means direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
+Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Signal detection locates the failure: under conflict the refusal criterion is unchanged ($c=0.46\to0.62$, n.s.) while sensitivity collapses ($d'=3.51\to1.45$), and a correct hint moves neither. The conflict compresses the evidence axis rather than lowering a threshold. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $93\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A difference-of-means direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
 \end{abstract}
 
 \section{Introduction}
@@ -161,6 +161,7 @@ absent $\cdot$ no hint & 0.904 & 0.799 & --- & --- & 261 \\
 Table~\ref{tab:behaviour} shows the basic pattern. Without hints the model is conservative in the right way: it refuses $90.4\%$ of absent-object questions and only $1.1\%$ of present-object ones. A conflicting hint moves both arms in the direction of the assertion: refusal on the absent arm falls to $52$--$56\%$, and $43$--$47\%$ of answers are the hinted colour. The same hint also makes the present arm refuse more often ($1.1\%\to8.8\%$) and drops accuracy from $76.2\%$ to $38.3\%$. A correct hint does the opposite, raising accuracy to $97.3\%$. The hint is therefore treated as evidence, not as noise: it helps when true and hurts when false, which is what makes the conflicting condition a causal manipulation of the evidence variable.
 
 \subsection{Output signals collapse; the internal representation does not}
+\label{sec:signals}
 
 \begin{table}[t]
 \centering
@@ -181,6 +182,37 @@ present$\cdot$correct vs.\ absent$\cdot$hint & \textbf{0.997} [0.994, 0.999] & 0
 Table~\ref{tab:signals} and Figure~\ref{fig:signals} contain the central result. With no hint, $\punk$ is already an excellent evidence detector ($0.993$), statistically indistinguishable from the probe ($+0.002$ $[-0.003,+0.007]$). The interesting regime is conflict. There $\punk$ loses $0.159$ AUROC, maximum probability loses $0.152$ and ends below chance, and even a learned readout over the entire output distribution loses $0.059$. The hidden-state probe loses $0.003$ in the other direction, and its advantage over $\punk$ becomes $+0.164$ $[+0.132,+0.196]$. Training the probe on no-hint pairs and testing on conflicting pairs gives $0.969$; the reverse transfer is $0.999$.
 
 The same pattern holds under a correct hint, where no signal collapses: the probe reaches $0.997$ and $\punk$ $0.969$. This rules out a trivial explanation in which the probe merely responds to the presence of a hint string. What matters is whether the hint conflicts with the image.
+
+\subsection{Conflict compresses the evidence axis rather than shifting the criterion}
+
+A natural reading of Table~\ref{tab:behaviour} is that a conflicting hint lowers the refusal threshold: the model becomes more willing to answer. Signal detection separates this from a loss of sensitivity. Using the out-of-fold probe score as the evidence axis, we compute $d'$ and criterion $c$ for each condition, and fit the psychometric model $\mathrm{logit}\,P(\text{refuse})=b_0+az+\sum_k d_k(b_k+a_kz)$ over the 1{,}827 item--condition observations.
+
+\begin{table}[t]
+\centering
+\small
+\caption{Signal-detection summary. $d'$ is sensitivity and $c$ the criterion, computed from refusal rates on the paired present/absent items. The last two columns are from the parametric fit on the probe axis: change in slope (logit per $z$) and shift of the 50\% point ($z$ units), with cluster-bootstrap $95\%$ CIs over scenes.}
+\label{tab:sdt}
+\begin{tabular}{lcccc}
+\toprule
+condition & $d'$ & $c$ & slope change & ED50 shift \\
+\midrule
+no hint & 3.51 & 0.46 & --- & --- \\
+conflicting hint & 1.45 & 0.62 & $+0.160$ $[0.021,0.404]$ & $-1.71$ $[-2.55,-0.82]$ \\
+correct hint & 3.83 & 0.62 & $-0.031$ $[-0.100,0.040]$ & $-0.30$ $[-0.56,0.18]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sdt} shows the dissociation. Under conflict, sensitivity falls from $3.51$ to $1.45$ ($\Delta d'=-2.13$ $[-2.69,-1.66]$), while the criterion does not move reliably ($\Delta c=+0.16$ $[-0.18,+0.39]$). A correct hint leaves both unchanged ($\Delta d'=+0.31$ $[-0.36,+0.93]$; $\Delta c=+0.16$ $[-0.18,+0.46]$). The effect is bidirectional: conflict raises refusal on present items ($1.1\%\to8.8\%$) and lowers it on absent items ($90.4\%\to54.2\%$). A criterion shift moves both arms in the same direction, so it cannot produce this pattern.
+
+The parametric fit agrees. The conflict condition flattens the slope ($+0.160$ $[0.021,0.404]$) and moves the 50\% point left ($-1.71$ $[-2.55,-0.82]$), without a reliable intercept change at $z=0$ ($-0.56$ $[-1.26,+0.48]$); the two curves are non-parallel (likelihood-ratio $6.4$, $df=2$, $p=0.041$). The leftward ED50 is a consequence of the pivot: the curve is compressed toward the middle, not translated. This is the behavioural counterpart of Section~\ref{sec:signals}: the evidence is still linearly decodable from the same hidden states at $0.998$ AUROC, but the decision uses it with much lower sensitivity. The failure is in the use of evidence, not in its representation.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.52\linewidth]{figures/fig_sdt.pdf}
+\caption{Refusal probability as a function of the no-hint probe score. Points are binned rates with binomial standard errors; lines are the fitted psychometric curves. The conflicting-hint curve is flatter and pivots left, while the correct-hint curve tracks the no-hint curve.}
+\label{fig:sdt}
+\end{figure}
 
 \subsection{Controls: the probe reads the image, not the prompt}
 

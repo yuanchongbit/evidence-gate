@@ -1,0 +1,19 @@
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   6%|▌         | 49/824 [00:00<00:01, 488.94it/s]Loading weights:  13%|█▎        | 106/824 [00:00<00:01, 536.33it/s]Loading weights:  20%|█▉        | 161/824 [00:00<00:01, 542.08it/s]Loading weights:  27%|██▋       | 220/824 [00:00<00:01, 559.49it/s]Loading weights:  34%|███▍      | 280/824 [00:00<00:00, 566.76it/s]Loading weights:  41%|████▏     | 340/824 [00:00<00:00, 570.60it/s]Loading weights:  49%|████▊     | 400/824 [00:00<00:00, 577.29it/s]Loading weights:  66%|██████▋   | 546/824 [00:00<00:00, 853.65it/s]Loading weights:  92%|█████████▏| 761/824 [00:00<00:00, 1253.88it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 870.81it/s] 
+5/78 2.4s/sample eta 3.0min
+10/78 2.6s/sample eta 2.9min
+15/78 2.7s/sample eta 2.8min
+20/78 2.6s/sample eta 2.5min
+25/78 2.6s/sample eta 2.3min
+30/78 2.6s/sample eta 2.1min
+35/78 2.7s/sample eta 1.9min
+40/78 2.7s/sample eta 1.7min
+45/78 2.7s/sample eta 1.5min
+50/78 2.7s/sample eta 1.3min
+55/78 2.7s/sample eta 1.0min
+60/78 2.7s/sample eta 0.8min
+65/78 2.7s/sample eta 0.6min
+70/78 2.7s/sample eta 0.4min
+75/78 2.7s/sample eta 0.1min
+78/78 2.7s/sample eta 0.0min
+hidden states -> runs/v5.npz (468, 2048)
+saved runs/v5.jsonl

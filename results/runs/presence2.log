@@ -1,0 +1,9 @@
+Loading weights:   0%|          | 0/824 [00:00<?, ?it/s]Loading weights:   5%|▍         | 39/824 [00:00<00:02, 375.00it/s]Loading weights:  12%|█▏        | 99/824 [00:00<00:01, 476.10it/s]Loading weights:  19%|█▉        | 159/824 [00:00<00:01, 529.97it/s]Loading weights:  26%|██▌       | 213/824 [00:00<00:01, 532.45it/s]Loading weights:  32%|███▏      | 267/824 [00:00<00:01, 532.42it/s]Loading weights:  40%|███▉      | 329/824 [00:00<00:00, 556.28it/s]Loading weights:  47%|████▋     | 388/824 [00:00<00:00, 560.55it/s]Loading weights:  63%|██████▎   | 516/824 [00:00<00:00, 783.41it/s]Loading weights:  89%|████████▉ | 736/824 [00:00<00:00, 1219.07it/s]Loading weights: 100%|██████████| 824/824 [00:00<00:00, 847.75it/s] 
+10 / 78
+20 / 78
+30 / 78
+40 / 78
+50 / 78
+60 / 78
+70 / 78
+saved runs/presence.jsonl

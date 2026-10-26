@@ -22,3 +22,5 @@ paper/*.log
 paper/*.out
 paper/*.pdf
 .DS_Store
+!results/runs/
+!results/runs/**
