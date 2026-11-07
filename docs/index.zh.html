@@ -42,28 +42,28 @@
   <h2>一张图，六种提问，不改图</h2>
   <div class="cols">
     <div>
-      <p>每张照片都会出现在 2×3 被试内设计的全部六个格子里：视觉证据 {物体存在，物体标注缺失} × 文本提示 {无，正确，冲突}。</p>
+      <p>每张照片都会出现在 2×3 被试内设计的全部六个格子里：视觉证据 {物体存在，物体标注缺失} × 文本提示 {无，提示 a，提示 b}。存在行里，提示 a 是物体的真实颜色，提示 b 是刻意远离的色相；缺失行里没有“正确颜色”，提示 a 是该缺失类别在 COCO val 中常见的颜色，提示 b 是远端色相。</p>
       <p>“缺失”这一臂不是靠擦除像素做出来的。它询问的物体类别，被 COCO val2017 的穷尽标注判定为<em>不在</em>图中，因此场景本身没有改动。一个独立的 yes/no 探针确认了操纵有效：对缺失类别 p(yes) = 0.095，而原图为 0.95。这里的“缺失”是标注层面的，不等同于模型感知到的缺失。</p>
-      <p>提示被做得“可信”而非“对抗”：它给出该缺失类别在 COCO val 中最常见的颜色。正确提示会<em>帮到</em>模型（准确率 0.762 → 0.973），正因如此，冲突提示才能算因果操纵，而不是噪声。</p>
+      <p>与画面一致的提示会<em>帮到</em>模型（准确率 0.762 → 0.973），正因如此，冲突提示才能算因果操纵，而不是噪声。</p>
     </div>
     <figure class="design">
       <div class="grid">
         <div class="corner"></div>
         <div class="head">无提示</div>
-        <div class="head">正确提示</div>
-        <div class="head conflict">冲突提示</div>
+        <div class="head">提示 a</div>
+        <div class="head conflict">提示 b</div>
 
         <div class="rowlab">物体<br>存在</div>
-        <div class="cell good"><b>0.011</b><span>拒答</span><i>准确率 0.762</i></div>
-        <div class="cell good"><b>0.004</b><span>拒答</span><i>准确率 0.973</i></div>
-        <div class="cell bad"><b>0.088</b><span>拒答</span><i>准确率 0.383</i></div>
+        <div class="cell good"><b>0.011</b><span>拒答</span><i>0.989 给出颜色</i><i>0.762 答对</i></div>
+        <div class="cell good"><b>0.004</b><span>拒答</span><i>0.996 给出颜色</i><i>0.973 答对</i></div>
+        <div class="cell bad"><b>0.088</b><span>拒答</span><i>0.912 给出颜色</i><i>0.383 答对</i><i>0.448 跟了提示</i></div>
 
         <div class="rowlab">物体<br>缺失</div>
-        <div class="cell good"><b>0.904</b><span>拒答</span><i>编造 0.096</i></div>
-        <div class="cell mid"><b>0.521</b><span>拒答 · 提示 a</span><i>编造 0.479</i></div>
-        <div class="cell mid"><b>0.563</b><span>拒答 · 提示 b</span><i>编造 0.437</i></div>
+        <div class="cell good"><b>0.904</b><span>拒答</span><i>0.096 编造</i></div>
+        <div class="cell mid"><b>0.521</b><span>拒答</span><i>0.479 编造</i><i>0.467 复述提示 a</i></div>
+        <div class="cell mid"><b>0.563</b><span>拒答</span><i>0.437 编造</i><i>0.433 复述提示 b</i></div>
       </div>
-      <figcaption>Qwen2.5-VL-3B，n = 261 个经核验样本。“编造”指物体缺失时仍给出颜色答案。</figcaption>
+      <figcaption>Qwen2.5-VL-3B，n = 261 张经核验的图；每个格子是一次独立提问。<strong>粗体</strong>：回答 <em>unknown</em> 的比例；灰字：给出某种颜色的比例——物体缺失时，任何颜色回答都算编造。每个格子里“拒答”与灰字第一行之和为 1；“跟了提示 / 复述提示”指回答了提示给出的颜色；“答对”的分母是全部 261 次，因此拒答也计入错误。</figcaption>
     </figure>
   </div>
 </section>

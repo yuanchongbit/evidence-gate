@@ -42,28 +42,28 @@
   <h2>One image, six prompts, no editing</h2>
   <div class="cols">
     <div>
-      <p>Every photograph appears in all six cells of a 2×3 within-subject design: visual evidence {object present, object annotation-absent} × textual hint {none, correct, conflicting}.</p>
+      <p>Every photograph appears in all six cells of a 2×3 within-subject design: visual evidence {object present, object annotation-absent} × textual hint {none, hint a, hint b}. On the present arm hint a names the object’s true colour and hint b a deliberately far-hue distractor; on the absent arm no colour can be true, so a names a colour the absent category often has in COCO val and b a far-hue one.</p>
       <p>The absent arm is not produced by erasing pixels. It asks about an object category that COCO’s exhaustive val2017 annotations place <em>outside</em> the image, so the scene is untouched. A separate yes/no probe confirms the manipulation: p(yes) = 0.095 for absent categories versus 0.95 for the original images. Absence is annotation-level, not ground-truth visual absence.</p>
-      <p>The hint is made plausible rather than adversarial: it names the absent category’s most frequent colour in COCO val. Correct hints <em>help</em> (accuracy 0.762 → 0.973), which is what makes the conflicting hint a causal manipulation rather than noise.</p>
+      <p>Aligned hints <em>help</em> (accuracy 0.762 → 0.973), which is what makes the conflicting ones a causal manipulation rather than noise.</p>
     </div>
     <figure class="design">
       <div class="grid">
         <div class="corner"></div>
         <div class="head">no hint</div>
-        <div class="head">correct hint</div>
-        <div class="head conflict">conflicting hint</div>
+        <div class="head">hint a</div>
+        <div class="head conflict">hint b</div>
 
         <div class="rowlab">object<br>present</div>
-        <div class="cell good"><b>0.011</b><span>refusal</span><i>acc 0.762</i></div>
-        <div class="cell good"><b>0.004</b><span>refusal</span><i>acc 0.973</i></div>
-        <div class="cell bad"><b>0.088</b><span>refusal</span><i>acc 0.383</i></div>
+        <div class="cell good"><b>0.011</b><span>refusal</span><i>0.989 answered</i><i>0.762 correct</i></div>
+        <div class="cell good"><b>0.004</b><span>refusal</span><i>0.996 answered</i><i>0.973 correct</i></div>
+        <div class="cell bad"><b>0.088</b><span>refusal</span><i>0.912 answered</i><i>0.383 correct</i><i>0.448 took hint</i></div>
 
         <div class="rowlab">object<br>absent</div>
-        <div class="cell good"><b>0.904</b><span>refusal</span><i>fab 0.096</i></div>
-        <div class="cell mid"><b>0.521</b><span>refusal · hint a</span><i>fab 0.479</i></div>
-        <div class="cell mid"><b>0.563</b><span>refusal · hint b</span><i>fab 0.437</i></div>
+        <div class="cell good"><b>0.904</b><span>refusal</span><i>0.096 fabricated</i></div>
+        <div class="cell mid"><b>0.521</b><span>refusal</span><i>0.479 fabricated</i><i>0.467 echoed a</i></div>
+        <div class="cell mid"><b>0.563</b><span>refusal</span><i>0.437 fabricated</i><i>0.433 echoed b</i></div>
       </div>
-      <figcaption>Qwen2.5-VL-3B, n = 261 verified samples. “Fab” is answering when the object is absent.</figcaption>
+      <figcaption>Qwen2.5-VL-3B, n = 261 verified images; every cell is one prompt. <strong>Bold</strong>: share answering <em>unknown</em>. Grey: share naming a colour — on the absent rows every colour answer is a fabrication. Refusal and the first grey number sum to 1 in every cell; “took hint” and “echoed” are shares answering the hinted colour, and “correct” is the share of all 261 that named the true colour, so refusals count against it.</figcaption>
     </figure>
   </div>
 </section>
