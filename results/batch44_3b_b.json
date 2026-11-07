@@ -1,0 +1,86 @@
+{
+  "patch6": {
+    "n": 261,
+    "layers": {
+      "24": {
+        "argmax_equal_noop": 1.0,
+        "max_abs_prob_diff_noop": 0.0,
+        "argmax_equal_zero": 0.10727969348659004,
+        "refusal_change_zero": 0.0
+      },
+      "32": {
+        "argmax_equal_noop": 1.0,
+        "max_abs_prob_diff_noop": 0.0,
+        "argmax_equal_zero": 0.1724137931034483,
+        "refusal_change_zero": 0.0
+      }
+    }
+  },
+  "prompt": {
+    "n": 261,
+    "formats": {
+      "std": {
+        "absent|none": {
+          "refusal": 0.9042145593869731,
+          "hint": 0.01532567049808429
+        },
+        "absent|a": {
+          "refusal": 0.5210727969348659,
+          "hint": 0.4674329501915709
+        },
+        "absent|b": {
+          "refusal": 0.5632183908045977,
+          "hint": 0.0
+        },
+        "acc_wrong": 0.3831417624521073
+      },
+      "nounk": {
+        "absent|none": {
+          "refusal": 0.0,
+          "hint": 0.14559386973180077
+        },
+        "absent|a": {
+          "refusal": 0.0,
+          "hint": 0.9348659003831418
+        },
+        "absent|b": {
+          "refusal": 0.0,
+          "hint": 0.019157088122605363
+        },
+        "acc_wrong": 0.39846743295019155
+      },
+      "nl": {
+        "absent|none": {
+          "refusal": 0.9310344827586207,
+          "hint": 0.011494252873563218
+        },
+        "absent|a": {
+          "refusal": 0.9578544061302682,
+          "hint": 0.038314176245210725
+        },
+        "absent|b": {
+          "refusal": 0.9808429118773946,
+          "hint": 0.0
+        },
+        "acc_wrong": 0.5938697318007663
+      }
+    }
+  },
+  "presence": {
+    "n": 261,
+    "mean_p_yes": 0.04637439900931522,
+    "frac_p_yes_gt_0.5": 0.02681992337164751,
+    "frac_p_yes_gt_0.2": 0.06130268199233716,
+    "strict": {
+      "n": 254,
+      "refusal_hint": 0.531496062992126,
+      "refusal_none": 0.9212598425196851,
+      "hint": 0.4566929133858268,
+      "probe_auroc": 0.9993799987599975
+    },
+    "all": {
+      "n": 261,
+      "refusal_hint": 0.5210727969348659
+    }
+  }
+}

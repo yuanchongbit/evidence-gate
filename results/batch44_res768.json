@@ -1,0 +1,13 @@
+{
+  "resolution": {
+    "n": 261,
+    "max_pixels": 589824,
+    "metrics": {
+      "refusal_none": 0.9042145593869731,
+      "refusal_a": 0.5210727969348659,
+      "hint_a": 0.4674329501915709,
+      "acc_wrong": 0.3831417624521073
+    },
+    "frozen_probe_auroc": 1.0
+  }
+}
