@@ -1,0 +1,55 @@
+Loading weights:   0%|          | 0/883 [00:00<?, ?it/s]Loading weights:   3%|▎         | 30/883 [00:00<00:03, 282.59it/s]Loading weights:  10%|█         | 89/883 [00:00<00:01, 457.78it/s]Loading weights:  17%|█▋        | 147/883 [00:00<00:01, 500.61it/s]Loading weights:  23%|██▎       | 205/883 [00:00<00:01, 530.77it/s]Loading weights:  30%|██▉       | 264/883 [00:00<00:01, 540.67it/s]Loading weights:  36%|███▌      | 319/883 [00:00<00:01, 541.17it/s]Loading weights:  43%|████▎     | 380/883 [00:00<00:00, 557.86it/s]Loading weights:  49%|████▉     | 436/883 [00:00<00:00, 550.55it/s]Loading weights:  88%|████████▊ | 776/883 [00:00<00:00, 1416.23it/s]Loading weights: 100%|██████████| 883/883 [00:00<00:00, 923.53it/s] 
+model class: Gemma3ForConditionalGeneration
+5/261 1.4s/sample eta 5.8min
+10/261 1.3s/sample eta 5.4min
+15/261 1.3s/sample eta 5.1min
+20/261 1.2s/sample eta 5.0min
+25/261 1.2s/sample eta 4.9min
+30/261 1.2s/sample eta 4.8min
+35/261 1.2s/sample eta 4.6min
+40/261 1.2s/sample eta 4.5min
+45/261 1.2s/sample eta 4.4min
+50/261 1.2s/sample eta 4.3min
+55/261 1.2s/sample eta 4.2min
+60/261 1.2s/sample eta 4.1min
+65/261 1.2s/sample eta 4.0min
+70/261 1.2s/sample eta 3.9min
+75/261 1.2s/sample eta 3.8min
+80/261 1.2s/sample eta 3.7min
+85/261 1.2s/sample eta 3.6min
+90/261 1.2s/sample eta 3.5min
+95/261 1.2s/sample eta 3.4min
+100/261 1.2s/sample eta 3.3min
+105/261 1.2s/sample eta 3.2min
+110/261 1.2s/sample eta 3.1min
+115/261 1.2s/sample eta 3.0min
+120/261 1.2s/sample eta 2.9min
+125/261 1.2s/sample eta 2.8min
+130/261 1.2s/sample eta 2.7min
+135/261 1.2s/sample eta 2.6min
+140/261 1.2s/sample eta 2.5min
+145/261 1.2s/sample eta 2.4min
+150/261 1.2s/sample eta 2.3min
+155/261 1.2s/sample eta 2.2min
+160/261 1.2s/sample eta 2.1min
+165/261 1.2s/sample eta 2.0min
+170/261 1.2s/sample eta 1.9min
+175/261 1.2s/sample eta 1.8min
+180/261 1.2s/sample eta 1.7min
+185/261 1.2s/sample eta 1.6min
+190/261 1.2s/sample eta 1.5min
+195/261 1.2s/sample eta 1.3min
+200/261 1.2s/sample eta 1.2min
+205/261 1.2s/sample eta 1.1min
+210/261 1.2s/sample eta 1.0min
+215/261 1.2s/sample eta 0.9min
+220/261 1.2s/sample eta 0.8min
+225/261 1.2s/sample eta 0.7min
+230/261 1.2s/sample eta 0.6min
+235/261 1.2s/sample eta 0.5min
+240/261 1.2s/sample eta 0.4min
+245/261 1.2s/sample eta 0.3min
+250/261 1.2s/sample eta 0.2min
+255/261 1.2s/sample eta 0.1min
+260/261 1.2s/sample eta 0.0min
+saved runs/v5_261_gemma.jsonl (1566, 2560)

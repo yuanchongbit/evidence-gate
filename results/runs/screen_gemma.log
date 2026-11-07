@@ -1,0 +1,11 @@
+Loading weights:   0%|          | 0/883 [00:00<?, ?it/s]Loading weights:   0%|          | 1/883 [00:00<04:26,  3.31it/s]Loading weights:  11%|█         | 94/883 [00:00<00:02, 289.05it/s]Loading weights:  16%|█▌        | 143/883 [00:00<00:02, 343.15it/s]Loading weights:  22%|██▏       | 191/883 [00:00<00:01, 371.03it/s]Loading weights:  27%|██▋       | 237/883 [00:00<00:01, 383.14it/s]Loading weights:  32%|███▏      | 281/883 [00:00<00:01, 396.22it/s]Loading weights:  37%|███▋      | 328/883 [00:00<00:01, 410.93it/s]Loading weights:  43%|████▎     | 378/883 [00:01<00:01, 430.91it/s]Loading weights:  48%|████▊     | 424/883 [00:01<00:01, 421.46it/s]Loading weights:  77%|███████▋  | 679/883 [00:01<00:00, 1026.09it/s]Loading weights: 100%|██████████| 883/883 [00:01<00:00, 658.49it/s] 
+model class: Gemma3ForConditionalGeneration
+5/40 1.8s/sample eta 1.0min
+10/40 1.5s/sample eta 0.7min
+15/40 1.4s/sample eta 0.6min
+20/40 1.3s/sample eta 0.4min
+25/40 1.3s/sample eta 0.3min
+30/40 1.3s/sample eta 0.2min
+35/40 1.3s/sample eta 0.1min
+40/40 1.3s/sample eta 0.0min
+saved runs/screen_gemma40.jsonl (240, 2560)

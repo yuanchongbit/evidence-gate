@@ -808,8 +808,8 @@ bootstrap draws):
 | condition | d' | c | Δd' [95% CI] | Δc [95% CI] |
 |---|---|---|---|---|
 | none | 2.63 | +0.31 | — | — |
-| conflict | 2.19 | +1.25 | -0.44 [-0.78, +0.16] | +1.25 [+0.75, +1.25] |
-| correct | 3.53 | +0.76 | +0.90 [+0.52, +1.40] | +0.45 [+0.25, +0.70] |
+| conflict | 2.19 | +1.25 | -0.44 [-0.88, +0.17] | +1.25 [+0.72, +1.26] |
+| correct | 3.53 | +0.76 | +0.90 [+0.53, +1.39] | +0.45 [+0.27, +0.70] |
 
 Unlike 3B (d' 3.51 -> 1.45), Gemma shows a criterion shift without a detectable
 sensitivity loss on this coarse statistic, which is consistent with its milder
@@ -817,6 +817,9 @@ rotation (24-29 deg) leaving the fixed axis comparatively intact. The
 decision-level decomposition is therefore model-specific too; only the geometry
 survives in all four.
 
-Raw run: `runs/v5_261_gemma.jsonl` + `.npz` and `results/geometry_gemma.json` are
-on the GPU instance (regenerate with `scripts/run_nonqwen.sh`, about 6 minutes);
-the tables above quote that output.
+Raw run and analyses are archived: `results/runs/v5_261_gemma.jsonl` + `.npz`,
+the four analysis logs, `results/geometry_gemma.json` and
+`results/sdt_binary_gemma.json`. The tables above quote that output; the run
+takes about 6 minutes to regenerate with `scripts/run_nonqwen.sh`. The
+screen run used to pick the model (`results/runs/screen_gemma40.*`) is archived
+as well.

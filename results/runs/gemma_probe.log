@@ -1,0 +1,23 @@
+n=261 samples, hidden dim (2560,), cv groups=sample
+
+pair=none (sufficient|none vs absent|none)  n=522  groups=261
+  probe  AUROC 0.986 [0.975, 0.995]  (C=0.1)
+  maxprob AUROC 0.627   probe-maxprob +0.359 [+0.306, +0.408]
+  p_known AUROC 0.961   probe-p_known +0.025 [+0.013, +0.037]
+  by C: 0.0003:0.974, 0.001:0.981, 0.003:0.983, 0.01:0.985, 0.1:0.986
+
+pair=hint (sufficient|wrong vs absent|a)  n=522  groups=261
+  probe  AUROC 0.989 [0.982, 0.996]  (C=0.1)
+  maxprob AUROC 0.701   probe-maxprob +0.288 [+0.244, +0.333]
+  p_known AUROC 0.891   probe-p_known +0.098 [+0.071, +0.128]
+  by C: 0.0003:0.980, 0.001:0.985, 0.003:0.987, 0.01:0.988, 0.1:0.989
+
+pair=correct (sufficient|correct vs absent|a)  n=522  groups=261
+  probe  AUROC 0.991 [0.985, 0.996]  (C=0.1)
+  maxprob AUROC 0.868   probe-maxprob +0.123 [+0.094, +0.154]
+  p_known AUROC 0.928   probe-p_known +0.062 [+0.044, +0.084]
+  by C: 0.0003:0.980, 0.001:0.984, 0.003:0.988, 0.01:0.990, 0.1:0.991
+
+transfer none->hint: probe 0.982  maxprob 0.701  p_known 0.891
+
+transfer none->correct: probe 0.991  maxprob 0.868  p_known 0.928

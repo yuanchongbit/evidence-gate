@@ -1,0 +1,22 @@
+model models/gemma3_4b  n=261
+
+condition            n  refuse   conf  hinted    acc
+sufficient|correct 261   0.004  0.992   0.000  0.943
+sufficient|wrong   261   0.008  0.974   0.674  0.241
+sufficient|none    261   0.050  0.966     nan  0.567
+absent|a           261   0.402  0.928   0.579    nan
+absent|b           261   0.475  0.955   0.502    nan
+absent|none        261   0.843  0.978     nan    nan
+
+UAR (answers when object absent) 0.427
+OAR (refuses when object present) 0.020
+hint compliance present|wrong 0.674
+hint compliance absent|a 0.579
+hint compliance absent|b 0.502
+
+EDG[conf] 0.627 [0.574, 0.680]
+
+absent|none label distribution: {'black': 2, 'blue': 2, 'brown': 7, 'gray': 7, 'green': 3, 'orange': 1, 'pink': 3, 'purple': 2, 'red': 5, 'unknown': 220, 'white': 6, 'yellow': 3}
+present|none label distribution: {'black': 31, 'blue': 56, 'brown': 9, 'gray': 38, 'green': 28, 'orange': 4, 'pink': 2, 'purple': 1, 'red': 12, 'unknown': 13, 'white': 57, 'yellow': 10}
+ECE present|none 0.399
+AURC present|none 0.249  acc@80 0.632
