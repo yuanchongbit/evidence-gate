@@ -1,6 +1,7 @@
 """Generate the paper figures and the web SVGs from the recorded numbers.
 
-Numbers come from results/summary.md and the per-run logs under results/runs/.
+Most numbers are transcribed from results/summary.md and the per-run logs under
+results/runs/; the injection panel reads results/control_causal_3b.json.
 Keeping them here in one place makes it easy to audit the figures against
 those files.
 """
@@ -54,16 +55,19 @@ def save(fig, name):
 def fig_signals():
     conds = ["no hint", "correct hint", "conflicting hint"]
     x = [0, 1, 2]
-    probe = [0.995, 0.997, 0.998]
+    frozen = [0.995, 0.995, 0.957]
+    refit = [0.995, 1.000, 0.997]
     punk = [0.993, 0.969, 0.834]
     maxp = [0.615, 0.916, 0.463]
 
     fig, ax = plt.subplots(figsize=(3.5, 2.5))
     ax.axhline(0.5, color=GREY, lw=0.7, ls=(0, (2, 3)))
-    ax.plot(x, probe, "-o", color=NAVY, lw=1.8, ms=4.5, label="final-state probe")
+    ax.plot(x, refit, ":", color=NAVY, lw=1.3, label="probe, refit on condition")
+    ax.plot(x, frozen, "-o", color=NAVY, lw=1.8, ms=4.5,
+            label="probe, frozen from no hint")
     ax.plot(x, punk, "-o", color=TEAL, lw=1.8, ms=4.5, label="p(unknown)")
     ax.plot(x, maxp, "-o", color=ORANGE, lw=1.8, ms=4.5, label="max probability")
-    for yy, color in ((probe, NAVY), (punk, TEAL), (maxp, ORANGE)):
+    for yy, color in ((frozen, NAVY), (punk, TEAL), (maxp, ORANGE)):
         ax.annotate(f"{yy[-1]:.3f}", (2, yy[-1]), xytext=(6, 0),
                     textcoords="offset points", color=color, fontsize=8, va="center")
     ax.set_xticks(x)
@@ -76,12 +80,19 @@ def fig_signals():
 
 
 def fig_depth():
+    import json
+
+    cc = json.load(open(ROOT / "results" / "control_causal_3b.json"))
+    st = cc["steer"]["diff_vs_base"]
     models = [
         ("Qwen2.5-VL-3B", [66.7, 88.9], [22, 80], NAVY, "o"),
         ("Qwen2.5-VL-7B", [64.3, 85.7, 92.9], [0, 69, 90], TEAL, "s"),
         ("LLaVA-OneVision-7B", [64.3, 85.7, 92.9], [36, 80, 96], ORANGE, "^"),
     ]
-    fig, ax = plt.subplots(figsize=(3.5, 2.5))
+    fig, axes = plt.subplots(1, 2, figsize=(6.8, 2.5),
+                             gridspec_kw={"width_ratios": [1.1, 1]})
+
+    ax = axes[0]
     for name, xs, ys, color, marker in models:
         ax.plot(xs, ys, "-", color=color, lw=1.6, marker=marker, ms=4.5, label=name)
     ax.set_xlim(50, 100)
@@ -92,22 +103,52 @@ def fig_depth():
     ax.legend(loc="upper left", frameon=False, handlelength=1.6)
     ax.grid(axis="y", color=LIGHT, lw=0.7)
     ax.set_axisbelow(True)
+    ax.set_title("(a) no-hint state pasted back", loc="left", fontsize=8.5)
+
+    ax = axes[1]
+    depths = [8 / 36 * 100, 16 / 36 * 100, 24 / 36 * 100, 32 / 36 * 100, 100]
+    series = [
+        ("$-0.25\\,w$ (close gate)", [f"L{L}-0.25" for L in (8, 16, 24, 32)] + ["w-0.25"],
+         NAVY, "o"),
+        ("$+0.25\\,w$ (open gate)", [f"L{L}+0.25" for L in (8, 16, 24, 32)] + ["w+0.25"],
+         ORANGE, "s"),
+    ]
+    for name, keys, color, marker in series:
+        ys = [st[k]["absent_refusal"]["diff"] for k in keys]
+        cis = [st[k]["absent_refusal"]["ci"] for k in keys]
+        err = [[y - c[0] for y, c in zip(ys, cis)], [c[1] - y for y, c in zip(ys, cis)]]
+        ax.errorbar(depths, ys, yerr=err, color=color, lw=1.6, marker=marker,
+                    ms=4.5, capsize=2, elinewidth=0.8, label=name)
+    ax.axhline(0, color=GREY, lw=0.7, ls=(0, (2, 3)))
+    ax.set_xlim(15, 106)
+    ax.set_ylim(-0.56, 0.42)
+    ax.set_xticks([22, 44, 67, 89, 100])
+    ax.set_xticklabels(["22", "44", "67", "89", "head"])
+    ax.set_xlabel("relative depth of the injected layer (%)")
+    ax.set_ylabel("change in absent-object refusal")
+    ax.legend(loc="lower left", frameon=False, handlelength=1.6)
+    ax.grid(axis="y", color=LIGHT, lw=0.7)
+    ax.set_axisbelow(True)
+    ax.set_title("(b) probe direction injected", loc="left", fontsize=8.5)
+
+    fig.tight_layout(w_pad=1.4)
     save(fig, "fig_depth")
 
 
 def fig_risk():
     cov = [0.9, 0.7, 0.5]
     series = [
-        ("probe", [0.801, 0.398, 0.011], NAVY, "o"),
-        ("p(unknown)", [0.801, 0.456, 0.249], TEAL, "s"),
-        ("max probability", [0.985, 0.762, 0.510], ORANGE, "^"),
+        ("probe, frozen", [0.801, 0.398, 0.069], NAVY, "o", "-"),
+        ("probe, refit", [0.801, 0.398, 0.011], NAVY, "o", ":"),
+        ("p(unknown)", [0.801, 0.456, 0.249], TEAL, "s", "-"),
+        ("max probability", [0.985, 0.762, 0.510], ORANGE, "^", "-"),
     ]
     fig, ax = plt.subplots(figsize=(3.5, 2.5))
-    for name, ys, color, marker in series:
-        ax.plot(cov, ys, "-", color=color, lw=1.6, marker=marker, ms=4.5, label=name)
+    for name, ys, color, marker, ls in series:
+        ax.plot(cov, ys, ls, color=color, lw=1.6, marker=marker, ms=4.5, label=name)
     ax.set_ylim(-0.02, 1.02)
-    for name, ys, color, marker in series:
-        ax.annotate(f"{name}  {ys[-1]:.3f}", (0.5, ys[-1]), xytext=(6, 0),
+    for name, ys, color, marker, ls in series:
+        ax.annotate(f"{ys[-1]:.3f}", (0.5, ys[-1]), xytext=(6, 0),
                     textcoords="offset points", color=color, fontsize=7.4, va="center")
     ax.set_xlim(0.95, 0.40)
     ax.set_xlabel("coverage (fraction answered)")
@@ -116,6 +157,7 @@ def fig_risk():
     ax.set_yticks([0, 0.25, 0.5, 0.75, 1.0])
     ax.grid(axis="y", color=LIGHT, lw=0.7)
     ax.set_axisbelow(True)
+    ax.legend(loc="upper left", frameon=False, handlelength=1.6)
     save(fig, "fig_risk")
 
 

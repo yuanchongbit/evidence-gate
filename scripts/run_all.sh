@@ -9,3 +9,5 @@ bash scripts/run_main.sh
 bash scripts/run_causal.sh
 bash scripts/run_cross_model.sh
 bash scripts/run_controls.sh
+bash scripts/run_control_causal.sh
+python scripts/make_figures.py

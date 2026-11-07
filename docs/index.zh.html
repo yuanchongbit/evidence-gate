@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>证据之门 — 视觉语言模型如何在没有证据时作出回答</title>
-<meta name="description" content="用 2×3 设计把“视觉证据缺失”与“被提示的答案”分开。冲突提示破坏的是拒答读出，而不是模型内部的证据表征。">
+<title>提示压缩证据轴 — 证据之门</title>
+<meta name="description" content="用 2×3 设计把“视觉证据缺失”与“被提示的答案”分开。冲突提示通过压缩内部证据轴破坏拒答读出，而不是抹掉证据。">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="alternate" hreflang="en" href="https://yuanchongbit.github.io/evidence-gate/">
 <link rel="alternate" hreflang="zh-Hans" href="https://yuanchongbit.github.io/evidence-gate/index.zh.html">
@@ -20,7 +20,7 @@
     </nav>
     <p class="kicker">预印本 · 2026</p>
     <h1>证据之门</h1>
-    <p class="subtitle">视觉语言模型如何在没有证据时<br>作出回答</p>
+    <p class="subtitle">提示压缩内部证据轴，并覆盖<br>后段的弃答门</p>
     <p class="authors">yuanchongbit</p>
     <nav class="links">
       <a class="primary" href="https://github.com/yuanchongbit/evidence-gate">代码</a>
@@ -35,15 +35,15 @@
 <main class="wrap">
 
 <section class="tldr">
-  <p><strong>一句话。</strong>问视觉语言模型一个图中并不存在的物体，它通常回答<em>不确定</em>。只要加一句话——“提示：雨伞是黑色的。”——它就会回答<em>黑色</em>。我们表明，这不是“没看见”：证据在模型内部仍然线性可解码，坏掉的是把证据转成拒答的那道<em>门</em>。这道门写得很晚，位于最后几层，可以被读出，也可以沿单一方向推回去。</p>
+  <p><strong>一句话。</strong>问视觉语言模型一个图中并不存在的物体，它通常回答<em>不确定</em>。只要加一句话——“提示：雨伞是黑色的。”——它就会回答<em>黑色</em>。我们表明，这不是“没看见”：证据在模型内部仍然可解码，但提示把它的轴压缩了一半；坏掉的是把证据转成拒答的那道<em>门</em>。这道门写得很晚，位于最后几层，可以被读出，也可以沿单一方向推回去。</p>
 </section>
 
 <section id="idea">
   <h2>一张图，六种提问，不改图</h2>
   <div class="cols">
     <div>
-      <p>每张照片都会出现在 2×3 被试内设计的全部六个格子里：视觉证据 {物体存在，物体经核验不存在} × 文本提示 {无，正确，冲突}。</p>
-      <p>“缺失”这一臂不是靠擦除像素做出来的。它询问的物体类别，被 COCO val2017 的穷尽标注判定为<em>不在</em>图中，因此场景本身没有改动。一个独立的 yes/no 探针确认了操纵有效：对缺失类别 p(yes) = 0.095，而原图为 0.95。</p>
+      <p>每张照片都会出现在 2×3 被试内设计的全部六个格子里：视觉证据 {物体存在，物体标注缺失} × 文本提示 {无，正确，冲突}。</p>
+      <p>“缺失”这一臂不是靠擦除像素做出来的。它询问的物体类别，被 COCO val2017 的穷尽标注判定为<em>不在</em>图中，因此场景本身没有改动。一个独立的 yes/no 探针确认了操纵有效：对缺失类别 p(yes) = 0.095，而原图为 0.95。这里的“缺失”是标注层面的，不等同于模型感知到的缺失。</p>
       <p>提示被做得“可信”而非“对抗”：它给出该缺失类别在 COCO val 中最常见的颜色。正确提示会<em>帮到</em>模型（准确率 0.762 → 0.973），正因如此，冲突提示才能算因果操纵，而不是噪声。</p>
     </div>
     <figure class="design">
@@ -69,8 +69,8 @@
 </section>
 
 <section id="results">
-  <h2>读出坍塌，表征不动</h2>
-  <p class="lead">在冲突提示下，任何由模型输出分布计算出的信号，都失去了区分“有证据”与“无证据”的能力。而最终隐状态上的线性探针纹丝不动。</p>
+  <h2>读出坍塌，证据轴收缩</h2>
+  <p class="lead">在冲突提示下，任何由模型输出分布计算出的信号，都失去了区分“有证据”与“无证据”的能力。最终隐状态上的线性探针保住了大部分排序（冻结迁移 0.958），但它区分存在与缺失的间隔从 15.9 缩到 7.3。信息是被重新编码，而不是被抹掉。</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 320" role="img" aria-label="三种提示条件下证据检测的 AUROC">
@@ -100,25 +100,26 @@
         <circle class="maxp" cx="70" cy="195.5" r="5"></circle><circle class="maxp" cx="395" cy="105.2" r="5"></circle><circle class="maxp" cx="720" cy="241.1" r="5"></circle>
       </g>
       <g class="legend">
-        <circle class="probe" cx="470" cy="22" r="5"></circle><text x="484" y="26">最终隐状态探针</text>
+        <circle class="probe" cx="470" cy="22" r="5"></circle><text x="484" y="26">重拟合最终隐状态探针</text>
         <circle class="punk" cx="600" cy="22" r="5"></circle><text x="614" y="26">p(unknown)</text>
         <circle class="maxp" cx="470" cy="308" r="5"></circle><text x="484" y="312">最大概率</text>
       </g>
     </svg>
-    <figcaption>把 522 个配对样本分类为“有证据 vs. 无证据”的 AUROC。分组 bootstrap 95% 置信区间见论文；冲突提示下探针与 p(unknown) 的差距为 +0.164 [0.132, 0.196]。</figcaption>
+    <figcaption>把 522 个配对样本分类为“有证据 vs. 无证据”的 AUROC。分组 bootstrap 95% 置信区间见论文；图中探针在每种条件内部重新拟合；只在无提示对上拟合的冻结探针迁移到冲突对时为 0.958（3B）与 0.923（LLaVA）。</figcaption>
   </figure>
 
   <div class="cards">
-    <div class="card"><span class="num">0.998</span><span class="lab">冲突下的探针 AUROC</span></div>
+    <div class="card"><span class="num">0.958</span><span class="lab">冲突下的冻结探针 AUROC</span></div>
     <div class="card"><span class="num">0.834</span><span class="lab">冲突下 p(unknown) 的 AUROC</span></div>
-    <div class="card"><span class="num">0.463</span><span class="lab">最大概率 AUROC——低于随机</span></div>
-    <div class="card"><span class="num">0.969</span><span class="lab">探针迁移：无提示 → 冲突</span></div>
+    <div class="card"><span class="num">0.463</span><span class="lab">最大概率 AUROC——随机水平（CI [0.413, 0.514]）</span></div>
+    <div class="card"><span class="num">0.46</span><span class="lab">冲突下探针间隔比（15.9 → 7.3）</span></div>
+    <div class="card"><span class="num">0.998</span><span class="lab">重拟合探针：无提示 → 冲突（上界）</span></div>
   </div>
 </section>
 
 <section id="mechanism">
-  <h2>抑制是一次“晚写”</h2>
-  <p class="lead">我们在未被污染的“无提示”前向传播中取出末位 token 的状态，把它粘贴到带提示传播的第 L 层。如果后续层仍然产生拒答，就说明证据是被带过去的，而不是被重新计算的。</p>
+  <h2>抑制发生在后段，证据被压缩</h2>
+  <p class="lead">冲突下，探针区分存在与缺失的间隔从 15.9 缩到 7.3，而类内离散度基本不变。冻结的无提示方向仍能把两组排到 0.958；在冲突对上重新拟合的探针达到 0.998，说明证据是被重新编码，而不是被摧毁。这解释了为什么 p(unknown) 会失效——它读的是绝对尺度——而基于排序的门仍然有效。</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 330" role="img" aria-label="逐层激活替换后拒答的恢复情况">
@@ -152,45 +153,49 @@
         <circle class="llava" cx="390" cy="22" r="5"></circle><text x="404" y="26">LLaVA-OneVision-7B</text>
       </g>
     </svg>
-    <figcaption>用 p(unknown) 衡量的、冲突下丢失的拒答的恢复程度。每个来源都是同一样本的无提示状态；随机打乱来源的对照表现相近，说明定位到的是“门”，而不是某个样本专属的编码。</figcaption>
+    <figcaption>在未被污染的“无提示”前向传播中取出末位 token 的状态，粘贴到带提示传播的第 L 层，用 p(unknown) 衡量丢失的拒答恢复程度。每个来源都是同一样本的无提示状态；标签匹配的打乱来源对照（上一样本，同为缺失）表现相近，说明它携带的是类别层面的状态，但无法与一般先验区分。</figcaption>
   </figure>
 
-  <p>两个对照干预闭合了因果链。沿探针方向 <em>w</em>，加上 +0.5·‖h‖ 会把“物体缺失”时的拒答从 0.904 压到 0.000；减去 0.5·‖h‖ 会把“物体存在”时的拒答从 0.011 抬到 0.352。剂量–响应是单调的，并且当方向在一半场景上拟合、在另一半上评估时依然成立。</p>
+  <p>两个干预检验这一分离的因果地位。沿探针方向 <em>w</em>，加上 +0.5·‖h‖ 会把“物体缺失”时的拒答从 0.904 压到 0.000；减去 0.5·‖h‖ 会把“物体存在”时的拒答从 0.011 抬到 0.352。剂量–响应是单调的，并且当方向在一半场景上拟合、在另一半上评估时依然成立。</p>
 
-  <p>同一方向在提示存在时依然有效。在冲突提示的前向过程中，−0.25·‖h‖ 把“物体缺失”时的拒答从 0.542 抬到 0.874；+0.25·‖h‖ 把答对真实颜色的比例从 0.383 提到 0.479，而采纳提示的比例仍为 0.433。冲突削弱的是证据的权重，而不是证据与决策之间的连接。</p>
+  <p>同一方向在提示存在时依然有效。在冲突提示的前向过程中，−0.25·‖h‖ 把“物体缺失”时的拒答从 0.542 抬到 0.874；+0.25·‖h‖ 把答对真实颜色的比例从 0.383 提到 0.479，而采纳提示的比例仍为 0.433。冲突压缩并削弱证据的权重，但没有切断它与决策的连接。由于向量在 unembedding 之前注入，这是读出层面的因果证据。</p>
+
+  <p>两个控制限定了这一结论。去掉 <em>w</em> 使缺失项拒答下降 0.215 / 0.211 / 0.102（3B / 7B / LLaVA）、提示采纳上升 0.201 / 0.209 / 0.113，而去掉三个随机方向时所有指标的变化不超过 0.015。但这个比值不能解释为方向特异性：两种投影去掉的状态量不同。平均绝对投影比例为 <em>w</em> 的 0.055，随机方向为 0.019 / 0.004 / 0.008，相差 5.4 倍；与类别结构对齐的方向去掉的能量相当（类均值 0.052，第一主成分 0.066）。把去除能量对齐之后，大部分效应消失：把 <em>w</em> 缩放到随机方向的能量，缺失拒答只变化 −0.073（3B）和 −0.018（7B）；把随机方向放大到 <em>w</em> 的能量，3B 无效应（+0.010），7B 反而比 <em>w</em> 更大（−0.044）；类均值与第一主成分在对齐能量后使 3B 上升 +0.083、对 7B 无影响（+0.004）。注入同样不特异：同范数随机方向也能把门推开。因此可辩护的结论是读出层面的充分性、<em>w</em> 是一条高效的读出方向，而不是已识别的回路。</p>
 
   <p>这一效应在另外两个冲突策略完全相反的模型上同样成立。Qwen2.5-VL-7B 过度拒答（缺失时拒答 0.918），−0.25·‖h‖ 把它抬到 1.000，+0.25·‖h‖ 压到 0.057；LLaVA-OneVision-7B 几乎不拒答（缺失 0.138，存在 0.004），同样的扫描得到 0.734 和 0.000。打开这道门并不等于给出答案：LLaVA 更采纳提示（缺失项 0.833 → 0.990），但存在项的真实颜色率没有统计上显著变化（+0.019）；7B 恢复了部分真实答案（0.249 → 0.421），但提示采纳也上升（0.176 → 0.425）。这个方向控制的是一道“是否弃答”的门，而不是答案选择。</p>
+
+  <p>因果控制同样跨模型复现。剂量匹配的层注入在第 16 层（3B）和第 20 层（7B）之前都不起作用，只在第 32 / 26 层显著；LLaVA 的起点更早（第 20 层），但仍落在最后 30% 的深度内。同图、反问题的替换控制在 L24/L26 给出配对恢复差：3B +0.51 / +0.83，7B +0.84 / +0.86，LLaVA +0.74 / +0.80；而打乱来源的恢复量至少一样多——末层状态携带的是它所对应问题的策略，而不是这张图证据的编码。</p>
 </section>
 
 <section id="gate">
   <h2>把机制变成一道门</h2>
-  <p class="lead">编造 = 被问物体不存在时仍回答出一种颜色。在固定 50% 覆盖率下，用探针而不是模型自身的置信度来排序，能去掉大部分编造——但只在提示被污染时成立。</p>
+  <p class="lead">编造 = 被问物体不存在时仍回答出一种颜色。在固定 50% 覆盖率下，用探针而不是模型自身的置信度来排序，能去掉大部分编造——但只在提示被污染时成立。把三种提示条件合并后，优势从 23× 缩到 3×（0.064 vs. 0.193）；而固定分数阈值会因轴收缩而在冲突下变得过于保守。</p>
   <div class="tablewrap">
     <table>
       <thead><tr><th>50% 覆盖率</th><th>探针</th><th>p(unknown)</th><th>最大概率</th></tr></thead>
       <tbody>
         <tr><td>无提示</td><td class="best">0.031</td><td>0.042</td><td>0.425</td></tr>
         <tr><td>正确提示</td><td class="best">0.027</td><td>0.088</td><td>0.119</td></tr>
-        <tr><td class="conflict">冲突提示</td><td class="best">0.011</td><td class="warn">0.249</td><td class="warn">0.510</td></tr>
+        <tr><td class="conflict">冲突提示</td><td class="best">0.069</td><td class="warn">0.249</td><td class="warn">0.510</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">同样的模式也出现在 Qwen2.5-VL-7B（探针 0.019 vs. p(unknown) 0.268）和 LLaVA-OneVision-7B（0.019 vs. 0.295）上。</p>
+  <p class="small">同样的模式也出现在 Qwen2.5-VL-7B（冻结探针 0.126 vs. p(unknown) 0.268）和 LLaVA-OneVision-7B（0.111 vs. 0.295）上。探针的优势来自隐状态本身：对同样的 12 维输出概率做逻辑回归读出，冲突下 50% 覆盖率的编造率为 0.142。重拟合探针在 3B 上达到 0.011，但这是上界而非可部署分数。优势在 5%–50% 的不可答比例下保持；10% 的保形风险证书在 3B 与 LLaVA 上成立，5% 在 130 个校准场景下不可行。</p>
 </section>
 
 <section id="models">
   <h2>三个模型，同一种深度剖面</h2>
   <div class="tablewrap">
     <table>
-      <thead><tr><th>模型</th><th>探针<br>无提示</th><th>探针<br>冲突</th><th>p(unknown)<br>无提示</th><th>p(unknown)<br>冲突</th><th>替换恢复</th></tr></thead>
+      <thead><tr><th>模型</th><th>探针<br>无提示</th><th>冻结探针<br>冲突</th><th>p(unknown)<br>无提示</th><th>p(unknown)<br>冲突</th><th>轴间隔比</th><th>替换恢复</th></tr></thead>
       <tbody>
-        <tr><td>Qwen2.5-VL-3B（36 层）</td><td>0.995</td><td>0.998</td><td>0.993</td><td>0.834</td><td>22% @ 67%，80% @ 89%</td></tr>
-        <tr><td>Qwen2.5-VL-7B（28 层）</td><td>0.995</td><td>0.998</td><td>0.984</td><td>0.797</td><td>~0% @ 64%，69% @ 86%，90% @ 93%</td></tr>
-        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.996</td><td>0.999</td><td>0.991</td><td>0.781</td><td>36% @ 64%，80% @ 86%，96% @ 93%</td></tr>
+        <tr><td>Qwen2.5-VL-3B（36 层）</td><td>0.995</td><td>0.958</td><td>0.993</td><td>0.834</td><td>0.47</td><td>22% @ 67%，80% @ 89%</td></tr>
+        <tr><td>Qwen2.5-VL-7B（28 层）</td><td>0.995</td><td>0.947</td><td>0.984</td><td>0.797</td><td>0.42</td><td>~0% @ 64%，69% @ 86%，90% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.994</td><td>0.923</td><td>0.991</td><td>0.781</td><td>0.34</td><td>36% @ 64%，80% @ 86%，96% @ 93%</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">LLaVA 对提示的敏感性高得多：冲突下它的拒答率从 0.820 跌到 0.088，而 Qwen2.5-VL-7B 只从 0.958 动到 0.877。但抑制写在相同的相对深度上。敏感性与作用位点可以分离：更容易被带偏的模型，拥有的是同一道门，只是被推得更开。</p>
+  <p class="small">LLaVA 对提示的敏感性高得多：冲突下它的存在项拒答率为 0.004、缺失项为 0.138，而 Qwen2.5-VL-7B 分别为 0.556 与 0.918。但恢复集中在相同的相对深度上，且三个模型的轴都在收缩。敏感性与作用位点可以分离：更容易被带偏的模型，拥有的是同一道门，只是被推得更开。</p>
 </section>
 
 <section id="limits">
@@ -209,8 +214,16 @@
       <p>探针回答的是“证据在不在？”，而不是“答案对不对？”。无提示时判断答案正确性，最大概率是更好的信号。</p>
     </div>
     <div>
+      <h3>“缺失”不等于“不合场景”</h3>
+      <p>缺失类别采样时没有约束场景合理性，而基于 COCO 共现的打分能预测无提示拒答（更匹配的一半拒答分别低 0.116 / 0.069 / 0.132，对应 3B / 7B / LLaVA）。类别频率与它只有弱相关（Spearman 0.23），也解释不了它：两者联合拟合后，场景匹配在三个模型里都保持负向，频率只在 7B 有额外贡献。两半内部的证据判别都还在：p(unknown) AUROC 至少 0.976，探针至少 0.989。场景匹配改变的是门的水平，不是证据的排序。</p>
+    </div>
+    <div>
       <h3>颜色才是深度检验</h3>
       <p>左右与计数任务复现了“门被打开”，但没有复现完整的读出坍塌；它们是边界条件。机制层面的结论在颜色任务上最强。</p>
+    </div>
+    <div>
+      <h3>读出层面的因果证据</h3>
+      <p>干预在 unembedding 之前注入，替换对照的打乱来源是标签匹配的。我们主张的是读出层面的充分性与恢复位点，而不是完整的上游机制。</p>
     </div>
   </div>
 </section>
@@ -219,8 +232,8 @@
   <h2>引用</h2>
   <p class="small">论文正文为英文，BibTeX 如下。</p>
 <pre><code>@misc{yuanchongbit2026evidencegate,
-  title  = {The Evidence Gate: How Vision-Language Models
-            Decide to Answer Without Evidence},
+  title  = {Hints Compress the Evidence Axis and Override a Late
+            Abstention Gate in Vision-Language Models},
   author = {yuanchongbit},
   year   = {2026},
   note   = {Preprint in preparation},

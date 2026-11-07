@@ -1,6 +1,6 @@
-\documentclass[11pt]{article}
+\documentclass[10pt]{article}
 
-\usepackage[margin=1in]{geometry}
+\usepackage[margin=0.9in]{geometry}
 \usepackage{lmodern}
 \usepackage[T1]{fontenc}
 \usepackage{amsmath,amssymb}
@@ -14,26 +14,31 @@
 \usepackage{enumitem}
 \usepackage{xcolor}
 
-\captionsetup{font=small,labelfont=bf}
+\captionsetup{font=small,labelfont=bf,skip=3pt}
 \setlist[itemize]{leftmargin=1.4em,itemsep=1pt,topsep=2pt}
+\setlength{\textfloatsep}{9pt plus 2pt minus 2pt}
+\setlength{\emergencystretch}{2em}
+\setlength{\floatsep}{7pt plus 1pt minus 1pt}
+\setlength{\intextsep}{7pt plus 1pt minus 1pt}
 
 \newcommand{\unknown}{\texttt{unknown}}
 \newcommand{\punk}{p(\unknown)}
 \newcommand{\ie}{i.e.,\ }
 \newcommand{\eg}{e.g.,\ }
+\newcommand{\wdir}{w}
 
-\title{\bfseries The Evidence Gate:\\[2pt]
-How Vision-Language Models Decide to Answer Without Evidence}
+\title{\bfseries Hints Compress the Evidence Axis and Override\\[2pt]
+a Late Abstention Gate in Vision-Language Models}
 
 \author{yuanchongbit}
 
-\date{October 2026}
+\date{November 2026}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Vision-language models often assert an answer when the image does not contain the queried evidence, yet retract a correct answer as soon as a sentence in the prompt contradicts it. Are these failures of seeing, or of reporting what was seen? We introduce a $2\times3$ within-subject design---visual evidence $\{$present, verified absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a single pixel: ``absent'' is an object category that COCO's instance annotations and an independent presence probe both place outside the photograph. Across 261 verified samples and three models, the model's native output signals collapse under conflict ($\punk$ AUROC $0.993\to0.834$ on Qwen2.5-VL-3B; maximum probability falls below chance), while a linear probe on the final hidden state is unchanged ($0.995\to0.998$) and transfers across hints ($0.969$). A learned readout over the full 12-way distribution degrades less ($0.982\to0.923$), so the collapse is specific to the signals the model itself exposes, not to every function of its logits. Signal detection locates the failure: under conflict sensitivity collapses in all three models ($d'=3.51\to1.45$, $2.98\to1.24$, $3.44\to1.44$), while criterion shifts are inconsistent in sign; a correct hint never reduces sensitivity. The conflict compresses the evidence axis rather than lowering a threshold. Layer-wise activation patching locates the suppression late: restoring the unpolluted state recovers $80\%$ of the lost refusal at $89\%$ depth in the 3B model, $90\%$ at $93\%$ in the 7B model, and $96\%$ at $93\%$ in LLaVA-OneVision-7B, a second model family. A probe direction is causally sufficient and partly necessary, with a monotone dose--response on held-out scenes and in all three models. As a consequence, a training-free probe gate reduces fabrication at $50\%$ coverage from $0.249$ to $0.011$. External validation on VizWiz and VQA-v2 reproduces the behavioural asymmetry and bounds the claim: on naturally unanswerable images the model's own $\punk$ is as good as the probe, so internal gating helps specifically when a hint attacks the refusal gate. The code, the frozen benchmark and all result summaries are released.
+Vision-language models often answer when the image lacks the queried evidence, yet retract a correct answer as soon as a prompt sentence contradicts it. Are these failures of seeing or of reporting? We use a $2\times3$ within-subject design---visual evidence $\{$present, annotation-absent$\}$ $\times$ textual hint $\{$none, correct, conflicting$\}$---built without editing a pixel: ``absent'' is a category that COCO annotations place outside the photograph, checked by a presence probe. Across 261 images and three VLMs, conflict collapses native signals: $\punk$ falls from AUROC $0.993$ to $0.834$ in Qwen2.5-VL-3B, and maximum probability reaches chance ($0.463$). A probe fitted only on the no-hint pair keeps its ranking (frozen transfer $0.96$ on 3B, $0.92$ on LLaVA) while its present--absent gap contracts to $0.34$--$0.49$ of the original: the hint compresses rather than erases evidence. Signal detection separates compression from criterion shift: sensitivity falls in all three models ($d'$ $3.51\to1.45$, $2.98\to1.24$, $3.44\to1.44$), criterion shifts are inconsistent, most of the flattened curve is contraction. Patching localises recovery to the last few layers ($80\%$ at $89\%$ depth in 3B; $90\%$ and $96\%$ at $93\%$ in 7B and LLaVA). Steering shows readout-level sufficiency; energy-matched removal shows no direction-specific necessity, so we claim an efficient readout direction, not a circuit. A frozen gate cuts conflict fabrication at $50\%$ coverage from $0.249$ to $0.069$ (3B), $0.268$ to $0.126$ (7B) and $0.295$ to $0.111$ (LLaVA); conformal certification at $10\%$ risk holds for two of three models; on naturally unanswerable VizWiz questions $\punk$ matches the probe. Code is released.
 \end{abstract}
 
 \section{Introduction}
@@ -42,44 +47,41 @@ Ask a vision-language model (VLM) \emph{``What color is the umbrella?''} about a
 
 Two literatures describe adjacent phenomena. Work on hallucination measures objects a model reports but the image does not contain \citep{rohrbach2018object,li2023pope}. Work on sycophancy measures answers that follow a user's stated belief rather than the input \citep{sharma2023sycophancy,turpin2023language,hong2026tosee}. Both describe behaviour; neither separates two questions that the behaviour confounds: \emph{is the evidence represented?} and \emph{is the decision to abstain driven by that representation?} A model that answers \emph{black} may have lost the evidence, or it may still represent ``no umbrella'' while a later stage overrides abstention.
 
-We separate the two with a design in which the image is held fixed and only the \emph{epistemic status} of the question changes. Each of 261 photographs appears in six cells: the queried object is present or annotated-absent, crossed with no hint, a correct hint, or a conflicting hint. The absent arm requires no image editing: it asks about an object category that COCO's instance annotations place outside the image. Every cell therefore shares the same pixels, and the six prompts differ only in what they assert. A separate yes/no probe confirms that the absent objects really are absent.
+We separate the two with a design in which the image is held fixed and only the \emph{epistemic status} of the question changes. Each of 261 photographs appears in six cells: the queried object is present or annotated-absent, crossed with no hint, a correct hint, or a conflicting hint. The absent arm requires no image editing: it asks about a category that COCO's instance annotations place outside the image. Every cell shares the same pixels, and the six prompts differ only in what they assert. A separate yes/no probe assigns mean $p(\text{yes})=0.095$ to the absent images versus $0.95$ to the originals; annotation absence is independently checked, but it is not identical to model-perceived absence.
 
-The design yields a sharp dissociation (Figure~\ref{fig:signals}). With no hint, the model's own $\punk$ detects evidence availability almost perfectly (AUROC $0.993$), so there is no room for a better internal signal. Under a conflicting hint, every output-space signal degrades: $\punk$ drops to $0.834$, maximum probability to $0.463$---below chance---and a learned readout over the full 12-way distribution reaches only $0.923$. A linear probe on the final-token hidden state, trained only on the no-hint pair, does not move ($0.998$) and transfers to the conflicting pair at $0.969$. The conflict changes what the model \emph{says about its evidence}, not what it \emph{knows about its evidence}.
-
-Two causal interventions show that this is not a correlational artefact. Along the probe direction, adding or ablating a single vector changes abstention bidirectionally and dose-monotonically, including on scenes held out from fitting. Pasting the no-hint state back at intermediate layers recovers the lost refusal, and the recovery profile is steep and late: little at two-thirds depth, most of it in the final few layers. The same profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B. The last model is far more hint-sensitive than either Qwen model, yet the suppression is written at the same relative depth---sensitivity and locus are separable. The steering effect also replicates in all three models, whose base policies range from near-total credulity to over-refusal: the same construction restores refusal when subtracted and removes it when added.
-
-Finally, we turn the mechanism into a training-free gate: rank items by the internal probe and answer only the top fraction. At $50\%$ coverage under conflict, fabrication falls from $0.249$ ($\punk$) to $0.011$ (probe). The benefit is specific to the polluted regime. On naturally unanswerable VizWiz questions the model's own $\punk$ matches the frozen probe, and on VQA-v2 colour questions the probe's ordering is preserved but its calibration is not. We report both boundaries rather than hiding them.
+The design yields a dissociation (Figure~\ref{fig:signals}). With no hint, the model's own $\punk$ detects evidence availability almost perfectly (AUROC $0.993$). Under conflict every output-space signal degrades ($\punk$ $0.834$, maximum probability $0.463$, 12-way readout $0.923$), while a probe fitted only on the no-hint pair keeps its ranking ($0.995$ refitted, $0.958$ frozen) but loses more than half of its present--absent gap. The hint compresses the axis on which evidence is represented; it does not erase it. Three tests follow. Signal detection shows a sensitivity loss with inconsistent criterion shifts, most of the flattened refusal curve being predicted by the contraction. Patching restores most of the lost abstention only in the final few layers, and a direction injected at the readout controls abstention bidirectionally; we claim sufficiency at the readout, not an identified circuit, because removal at matched energy shows no direction-specific necessity. A frozen gate trained only on the no-hint pair then cuts fabrication under conflict by a factor of two to four at half coverage, a gain that survives prevalence shift but not the move to naturally unanswerable images.
 
 \paragraph{Contributions.}
 \begin{itemize}
-\item \textbf{A controlled construction.} A $2\times3$ within-subject benchmark with no image editing, in which ``evidence absent'' is verified by annotations and by an independent presence probe, and in which the hint is plausible rather than adversarial. The 261-item manifest and verified labels are frozen and released.
-\item \textbf{A mechanistic dissociation with causal support.} The model's native output signals collapse under conflict while the internal evidence representation remains linearly decodable. Steering and layer-wise patching establish sufficiency, partial necessity, and a late-write locus, replicated on three models from two families.
-\item \textbf{A deployable consequence and its boundary.} A training-free probe gate reduces fabrication under conflict by more than an order of magnitude, and external validation identifies when this advantage disappears.
+\item \textbf{A controlled construction.} A $2\times3$ within-subject benchmark with no image editing, in which ``evidence absent'' is annotation-absent and independently checked by a presence probe, and in which the conflicting hint is plausibility-matched to the present arm. The 261-item manifest and labels are frozen and released.
+\item \textbf{A rank--scale dissociation with a bounded causal claim.} Native output signals collapse under conflict while the internal evidence representation remains rank-decodable but contracts. We separate rank from scale, report frozen transfer rather than refitted performance as the headline, and downgrade the causal claim to readout-level sufficiency after an energy-matched removal audit.
+\item \textbf{A deployment result and its boundary.} A frozen linear gate reduces fabrication by $2.1$--$3.6\times$ across three models at $50\%$ coverage, survives prevalence shifts from $5\%$ to $50\%$, is conformally certifiable at $10\%$ risk in two models, and loses its advantage on naturally unanswerable images.
 \end{itemize}
 
 \section{Related Work}
 
 \paragraph{Sycophancy and prompt-induced error.}
-Language models shift answers toward a user's stated view \citep{sharma2023sycophancy}, and their explanations can diverge from the evidence that actually drove the answer \citep{turpin2023language}. Recent work documents the multimodal version: VLMs change visual answers to agree with textual assertions, sometimes while still encoding the original content, and \citet{hong2026tosee} establish this representation--output dissociation correlationally across nine VLMs. Our contribution is not another measurement of the effect but a causal decomposition: steering and patching establish which stage the hint acts on, and the resulting direction supports a training-free gate.
+Language models shift answers toward a user's stated view \citep{sharma2023sycophancy}, and their explanations can diverge from the evidence that drove the answer \citep{turpin2023language}. Recent work documents the multimodal version: VLMs change visual answers to agree with textual assertions, sometimes while still encoding the original content \citep{hong2026tosee}; the phenomenon is also described as blind faith in text \citep{deng2025words}. These studies are behavioural or input-level. We intervene on hidden states, decompose the decision into sensitivity and criterion, and use the resulting direction to build a gate.
 
 \paragraph{Abstention and selective prediction.}
-Selective prediction trades coverage for risk using a confidence score \citep{geifman2017selective}. For VQA, learned abstention and selective answering have been studied under distribution shift and on unanswerable questions \citep{whitehead2022reliable,srinivasan2024selective}. These methods ask \emph{which} scalar to threshold. We ask \emph{which representation} the scalar should be computed from, and show that the model's own abstention probability is the wrong representation precisely when a hint is present.
+Selective prediction trades coverage for risk using a confidence score \citep{geifman2017selective}, and has been studied for VQA under distribution shift and on unanswerable questions \citep{whitehead2022reliable}. ReCoVERR reduces over-abstention by acquiring more evidence \citep{srinivasan2024selective}, black-box consistency identifies unreliable answers \citep{khan2024identifying}, and Rep2Act trains a representation-to-action router that turns latent answerability into an explicit abstention action \citep{he2026rep2act}. These methods change the decision procedure or the training objective. We hold both fixed and ask \emph{which representation} the scalar should be computed from, and show that the model's own abstention probability is the wrong representation when a hint is present.
+
+\paragraph{Distribution-free risk control.}
+Conformal prediction and conformal risk control give finite-sample guarantees for a chosen loss under exchangeability \citep{angelopoulos2024conformal,bates2021distributionfree}. We use split conformal risk control with a binomial upper confidence bound to certify a fabrication rate, and report where the calibration set is too small to certify the requested level. BCEA couples conformal filtering with evidence acquisition \citep{xu2026bcea}, and A$^2$Safe grounds VQA safety decisions in a multi-agent evidence board \citep{xu2026a2safe}; we certify a fabrication rate under prompt pollution without new evidence or an agent layer.
 
 \paragraph{Probing and steering internal states.}
-Linear probes recover truthfulness, knowledge and uncertainty from hidden states \citep{alain2016understanding,azaria2023internal,burns2023discovering,kadavath2022language,marks2024geometry}. Difference-of-means directions can steer behaviour \citep{turner2023activation,rimsky2024steering,zou2023representation,li2023inference}, and refusal in chat models is mediated by a low-dimensional direction \citep{arditi2024refusal}, though not exclusively so \citep{joad2026more}. Activation steering has also been applied to VLM refusal \citep{yang2026steering}. We study a different axis---whether the \emph{evidence} needed to answer is available---and connect the direction to a layer-resolved account of where the hint overrides it.
+Linear probes recover truthfulness, knowledge and uncertainty from hidden states \citep{alain2016understanding,azaria2023internal,burns2023discovering,kadavath2022language,marks2024geometry}. Difference-of-means directions can steer behaviour \citep{turner2023activation,rimsky2024steering,zou2023representation,li2023inference}, and chat-model refusal is mediated by a low-dimensional direction \citep{arditi2024refusal,joad2026more}. Activation steering has been applied to VLM refusal \citep{yang2026steering}. We study a different axis---whether the evidence needed to answer is available---and pair steering with a projection audit that bounds what the ablation can show.
 
-\paragraph{Localisation.}
-Activation patching replaces a state in one forward pass with a state from another and measures the effect on the output \citep{meng2022locating}. We use it with a same-sample source and a shuffled-source control to locate, not to quantify, the stage at which the conflict is written.
-
-\paragraph{Hallucination in VLMs.}
-Object hallucination is typically measured by asking about objects that are absent \citep{rohrbach2018object,li2023pope}. We adopt the logic of absent-object questions but make the comparison within-image and within-question, vary only the textual assertion, and add an internal readout. The resulting benchmark is small by hallucination standards (261 items) but densely observed: six conditions per image plus probes and interventions.
+\paragraph{Localisation and hallucination.}
+Activation patching replaces a state in one forward pass with a state from another and measures the effect on the output \citep{meng2022locating}. Object hallucination is typically measured by asking about absent objects \citep{rohrbach2018object,li2023pope}. We adopt the logic of absent-object questions but make the comparison within-image and within-question, vary only the textual assertion, and add an internal readout.
 
 \section{Design and Data}
 
 \subsection{The $2\times3$ design}
 
-Each sample is a photograph, a queried category $c$, and a gold colour $g$. The six conditions are shown in Figure~\ref{fig:design}.
+Each sample is a photograph, a queried category $c$, and a gold colour $g$. The six conditions are:
 \begin{center}
+\small
 \begin{tabular}{llll}
 \toprule
  & \multicolumn{3}{c}{textual hint} \\
@@ -91,423 +93,263 @@ object absent & \texttt{absent|none} & \texttt{absent|a} & \texttt{absent|b} \\
 \bottomrule
 \end{tabular}
 \end{center}
-In the present arm the correct hint states $g$ and the conflicting hint states a fixed far-hue distractor. In the absent arm there is no correct colour; \texttt{a} is the absent category's most frequent colour in COCO val, and \texttt{b} applies the same far-hue mapping to that colour. The two absent hints therefore differ in plausibility but both assert a colour for an object that is not in the image. Every image appears in all six cells, so all comparisons are within-image and within-question.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_design.pdf}
-\caption{The $2\times3$ design. Each image appears in all six cells; the absent arm asks about a category with no annotation in the image. Numbers are refusal rates from Table~\ref{tab:behaviour}.}
-\label{fig:design}
-\end{figure}
-
+In the present arm the correct hint states $g$ and the conflicting hint states a fixed far-hue distractor. In the absent arm there is no correct colour: \texttt{a} is the absent category's most frequent colour in COCO val (plausible for the category), and \texttt{b} applies the same far-hue mapping to that colour. \texttt{b} is therefore plausibility-matched to \texttt{sufficient|wrong}, which also uses a far hue; we use \texttt{b} for the compression contrast and report \texttt{a} separately throughout. The plausible hint \texttt{a} is the harder deployment case (it induces more credulity) and is the one used for the gate. Every image appears in all six cells, so all comparisons are within-image and within-question.
 
 \subsection{Construction without image editing}
 
-Starting from COCO val2017 \citep{lin2014coco}, we retain single annotated instances with box short side $\ge 44$ px, area fraction $1.5$--$35\%$, and mask/box fill $\ge 0.45$. Colour is proposed as the area-dominant colour inside the instance mask, with purity and margin gates, then verified by hand on contact sheets. Of 1447 geometric candidates, 413 passed the automatic colour gate and 261 survived manual verification (blue 88, white 79, black 45, green 25, red 15, yellow 9).
+Starting from COCO val2017 \citep{lin2014coco}, we retain single annotated instances with box short side $\ge 44$ px, area fraction $1.5$--$35\%$, and mask/box fill $\ge 0.45$. Colour is proposed as the area-dominant colour inside the instance mask, with purity and margin gates, then verified by hand on contact sheets. Of 1447 geometric candidates, 413 passed the automatic colour gate and 261 survived manual verification (blue 88, white 79, black 45, green 25, red 15, yellow 9; Appendix~\ref{app:colour}).
 
-For the absent arm we sample a category with no annotation in the image (74 distinct categories) and use that category's $\{$first, second$\}$ most frequent colour in val as the hint. The hint is thus something a knowledgeable annotator might say, not an impossible string. No pixel is edited; the same JPEG is used in all six cells.
+For the absent arm we sample a category with no annotation in the image (74 distinct categories appear) and use that category's $\{$first, second$\}$ most frequent colour in val as the hint. The colour is plausible for the category; we do not constrain the category to be plausible for the scene. No pixel is edited; the same JPEG is used in all six cells.
 
 \paragraph{Manipulation check.}
-A separate yes/no question (``Is there a $c$ in this image?'') yields mean $p(\text{yes})=0.095$ on 260 category-matched negative images versus $p(\text{yes})=0.95$ on the original images. The absent arm is verified absent independently of the colour question, which presupposes the object.
+A separate yes/no question (``Is there a $c$ in this image?'') yields mean $p(\text{yes})=0.095$ on 260 category-matched negative images versus $0.95$ on the originals. The absent arm is therefore annotation-absent and independently checked. Because $6.5\%$ of these negatives are judged present with probability above $0.5$, we report a strict-absent sensitivity analysis in Appendix~\ref{app:controls} and treat ``absent'' as annotation-level throughout.
 
-\subsection{Prompts and readout}
+Absence is also not the only difference between the arms: a category that fits the scene is refused less often than one that does not. Scoring each absent category by its COCO train co-occurrence with the objects annotated in the image and splitting the items at the median, no-hint refusal is lower in the better-fitting half by $0.116$ $[0.047,0.185]$ (3B), $0.069$ $[0.023,0.115]$ (7B) and $0.132$ $[0.039,0.224]$ (LLaVA). The evidence axis is unaffected: within each half, $\punk$ still separates present from absent images at AUROC $\ge0.976$ and the internal probe at $\ge0.989$ (Appendix~\ref{app:controls}). Scene fit moves the level of refusal, not the ordering of present against absent. The effect survives a control for category frequency, which is only weakly related to it.
+
+\subsection{Prompts, readout and signals}
 
 The system prompt asks for one word and instructs the model to answer \unknown\ when the image does not contain enough information. The user prompt is
-\begin{quote}\small
-\ttfamily
+\begin{quote}\small\ttfamily
 [Hint: the \{category\} is \{colour\}.]\newline
 What color is the \{category\}?\newline
 Answer with one word.
 \end{quote}
-where the hint line is omitted in the no-hint condition. The readout is a distribution over the eleven colour words plus \unknown; all twelve candidates are single tokens in every tokenizer used. Probabilities are the softmax over their logits at the first answer position.
+where the hint line is omitted in the no-hint condition. The readout is a distribution over eleven colour words plus \unknown; all twelve candidates are single tokens in every tokenizer used. Probabilities are the softmax over their logits at the first answer position.
 
-\subsection{Signals}
+\paragraph{Output signals.} We compute $\punk$, maximum probability over the twelve candidates, the top-two gap, negative entropy, and a 12-dimensional logistic readout over the full candidate distribution. These use the same forward pass as the answer.
 
-\paragraph{Output signals.} We compute $\punk$, maximum probability, the top-two gap, negative entropy, and a 12-dimensional logistic readout over the full candidate distribution. These use exactly the same forward pass as the answer.
+\paragraph{Internal probe.} A logistic regression on the final-token hidden state ($2048$-d for 3B, $3584$-d for the two 7B models), with standardised features and $C=0.1$. It is trained on the no-hint pair \texttt{sufficient|none} vs.\ \texttt{absent|none}. Cross-validation is grouped by scene (five folds) so a scene never appears in both train and test; a second analysis groups by queried category to test a category$\to$colour shortcut. The \emph{frozen} protocol fits on all no-hint data and applies the same scaler and weights to hinted conditions. The \emph{refit} protocol retrains inside each condition and is reported only as an upper bound. The direction used for steering uses $C=0.01$ because it is injected at a fixed norm; Appendix~\ref{app:prompts} records both settings.
 
-\paragraph{Internal probe.} A logistic regression on the final-token hidden state (2048-d for the 3B model, 3584-d for the 7B models), trained on the no-hint pair \texttt{sufficient|none} vs.\ \texttt{absent|none} and evaluated on hinted pairs. Cross-validation is grouped by sample (five folds) so a scene never appears in both train and test; a second analysis groups by queried category to test for a category$\to$colour shortcut. Regularisation strength is chosen by cross-validation. The probe is frozen when transferred to external data.
+\paragraph{Steering and patching.} The direction $\wdir$ is the logistic-regression probe direction fitted on the no-hint pair. We inject $\alpha\lVert h\rVert\wdir$ at the final position, where $\lVert h\rVert$ is the median hidden-state norm and $\alpha\in\{\pm0.25,\pm0.5\}$, and ablate by projecting $\wdir$ out of the state. A split-half check fits $\wdir$ on 130 scenes and evaluates on the remaining 131. For patching, layer $L$ receives the final-token state from a no-hint pass and the remaining layers run; a shuffled-source control pastes another sample's no-hint state at the same layer.
 
-\paragraph{Steering.} The direction $w$ is the logistic-regression probe direction fitted on the no-hint pair (standardised features, $C=0.01$). We inject $\alpha\lVert h\rVert w$ at the final position, where $\lVert h\rVert$ is the median hidden-state norm and $\alpha\in\{\pm0.25,\pm0.5\}$, and ablate by projecting $w$ out of the state. A split-half check fits $w$ on 130 scenes and evaluates on the remaining 131.
+\paragraph{Metrics.} Evidence detection is AUROC over the 522 paired items, with scene-grouped bootstrap confidence intervals (2000 resamples) and paired bootstrap intervals for differences. Selective answering is reported as the fabrication rate among answered items at fixed coverage; fabrication at $50\%$ coverage is the primary operating point. We report unadjusted $95\%$ intervals and treat them as descriptive: the primary contrasts exclude zero by wide margins, while the own-axis residual reported below is marginal and is labelled as such.
 
-\paragraph{Patching.} For layer $L$ we capture the final-token state from a no-hint forward pass and paste it into the hinted pass at the same layer, letting the remaining layers run. A shuffled-source control pastes another sample's no-hint state at the same layer. Since pasting changes the state distribution, we use patching for localisation and rely on steering for quantitative effect size.
-
-\paragraph{Metrics.} Evidence detection is AUROC over the 522 paired items, with grouped bootstrap confidence intervals (2000 resamples, groups = samples) and paired bootstrap intervals for differences between signals. Selective answering is reported as fabrication rate at fixed coverage: among the top-$k$ items ranked by an evidence score, the fraction that are absent-object items answered with a colour. Fabrication at $50\%$ coverage is the primary operating point.
-
-\paragraph{Models.} Qwen2.5-VL-3B and 7B \citep{bai2025qwen25vl} in bfloat16 with SDPA attention and at most $1024^2$ pixels, and LLaVA-OneVision-7B \citep{li2024llavaov} with the longest image side at most $512$ px, loaded through \texttt{AutoModelForImageTextToText}. All LLaVA stages---behaviour, patching and steering---use the same $512$ px preprocessing. All experiments ran on a single 24 GB A10.
+\paragraph{Models.} Qwen2.5-VL-3B and 7B \citep{bai2025qwen25vl} in bfloat16 with SDPA attention and at most $1024^2$ pixels, and LLaVA-OneVision-7B \citep{li2024llavaov} with the longest image side at most $512$ px, loaded through \texttt{AutoModelForImageTextToText}. All LLaVA stages use the same $512$ px preprocessing. All experiments ran on a single 24 GB A10.
 
 \section{Results}
 
-\subsection{Behaviour: hints move both arms in opposite directions}
+\subsection{Behaviour: a hint moves both arms in opposite directions}
 
 \begin{table}[t]
 \centering
 \small
-\caption{Behaviour on 261 verified samples (Qwen2.5-VL-3B). ``Adopts hint'' is the fraction whose argmax equals the hinted colour. UAR is answering when the object is absent; OAR is refusing when it is present.}
+\caption{Behaviour on 261 verified samples (Qwen2.5-VL-3B). ``Adopts hint'' is the fraction whose argmax equals the hinted colour. On absent rows, $1-\text{refusal}$ is the unanswerable answer rate (UAR); on present rows, refusal is the over-refusal rate (OAR). Cross-model refusal is reported in the text.}
 \label{tab:behaviour}
-\begin{tabular}{lccccc}
+\begin{tabular}{lcccc}
 \toprule
-condition & refusal & mean conf. & adopts hint & accuracy & $n$ \\
+condition & refusal & mean conf. & adopts hint & accuracy \\
 \midrule
-present $\cdot$ correct hint & 0.004 & 0.943 & --- & 0.973 & 261 \\
-present $\cdot$ conflicting hint & 0.088 & 0.674 & 0.448 & 0.383 & 261 \\
-present $\cdot$ no hint & 0.011 & 0.836 & --- & 0.762 & 261 \\
-absent $\cdot$ hint a & 0.521 & 0.699 & 0.467 & --- & 261 \\
-absent $\cdot$ hint b & 0.563 & 0.707 & 0.433 & --- & 261 \\
-absent $\cdot$ no hint & 0.904 & 0.799 & --- & --- & 261 \\
+present $\cdot$ correct hint & 0.004 & 0.943 & --- & 0.973 \\
+present $\cdot$ conflicting hint & 0.088 & 0.674 & 0.448 & 0.383 \\
+present $\cdot$ no hint & 0.011 & 0.836 & --- & 0.762 \\
+absent $\cdot$ hint a (plausible) & 0.521 & 0.699 & 0.467 & --- \\
+absent $\cdot$ hint b (far hue) & 0.563 & 0.707 & 0.433 & --- \\
+absent $\cdot$ no hint & 0.904 & 0.799 & --- & --- \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:behaviour} shows the basic pattern. Without hints the model is conservative in the right way: it refuses $90.4\%$ of absent-object questions and only $1.1\%$ of present-object ones. A conflicting hint moves both arms in the direction of the assertion: refusal on the absent arm falls to $52$--$56\%$, and $43$--$47\%$ of answers are the hinted colour. The same hint also makes the present arm refuse more often ($1.1\%\to8.8\%$) and drops accuracy from $76.2\%$ to $38.3\%$. A correct hint does the opposite, raising accuracy to $97.3\%$. The hint is therefore treated as evidence, not as noise: it helps when true and hurts when false, which is what makes the conflicting condition a causal manipulation of the evidence variable.
+Table~\ref{tab:behaviour} shows the basic pattern. Without hints the models are conservative in the right way: 3B refuses $90.4\%$ of absent-object questions and $1.1\%$ of present-object ones. A conflicting hint moves both arms toward the assertion: refusal on the absent arm falls to $52.1\%$ (hint a) and $56.3\%$ (hint b), and $43$--$47\%$ of answers name the hinted colour. On the present arm the same hint raises refusal from $1.1\%$ to $8.8\%$ and drops accuracy from $76.2\%$ to $38.3\%$. A correct hint does the opposite, raising accuracy to $97.3\%$. The hint is therefore treated as evidence, not noise: it helps when true and hurts when false. The two absent hints differ in effect size but not in sign, and the far-hue hint \texttt{b} is the closer match to the present-arm manipulation.
 
-\subsection{Output signals collapse; the internal representation does not}
+The base policies differ sharply. Qwen2.5-VL-7B over-refuses under conflict ($55.6\%$ on present items) and adopts the hint on only $17.6\%$; LLaVA-OneVision is close to fully credulous (present refusal $0.4\%$, absent-hint adoption $76$--$90\%$). All three share the compression documented next, which is why we treat the compression as the invariant and the behavioural form as model-specific.
+
+\subsection{Native confidence collapses; the evidence axis contracts}
 \label{sec:signals}
 
 \begin{table}[t]
 \centering
 \small
-\caption{Evidence detection (AUROC over 522 paired items) for signals computed from the same forward pass. The probe is a linear classifier on the final hidden state. Brackets are grouped bootstrap $95\%$ CIs.}
+\setlength{\tabcolsep}{4pt}
+\caption{Evidence detection (AUROC over 522 paired items, Qwen2.5-VL-3B) from the same forward pass. ``Frozen'' transfers the no-hint probe to each condition; ``refit'' retrains inside the condition and is an upper bound. For $\punk$ the AUROC is oriented so that higher means better evidence detection. Brackets are scene-grouped bootstrap $95\%$ CIs.}
 \label{tab:signals}
-\begin{tabular}{lcccc}
+\begin{tabular}{lccc}
 \toprule
-condition pair & final-state probe & $\punk$ & max probability & 12-d logit probe \\
+signal & no hint & conflict (\texttt{b}) & correct \\
 \midrule
-present vs.\ absent, no hint & 0.995 [0.989, 0.999] & \textbf{0.993} & 0.615 & 0.982 \\
-present$\cdot$conflict vs.\ absent$\cdot$hint & \textbf{0.998} [0.994, 1.000] & 0.834 & 0.463 & 0.923 \\
-present$\cdot$correct vs.\ absent$\cdot$hint & \textbf{0.997} [0.994, 0.999] & 0.969 & 0.916 & 0.974 \\
+frozen final-state probe & 0.995 [0.989, 0.999] & 0.958 [0.940, 0.973] & 0.995 [0.987, 0.999] \\
+refit final-state probe & 0.995 [0.989, 0.999] & 0.995 [0.990, 0.999] & 1.000 [1.000, 1.000] \\
+$\punk$ & \textbf{0.993} & 0.834 & 0.969 \\
+maximum probability & 0.615 & 0.463 [0.413, 0.514] & 0.916 \\
+12-d logit readout & 0.982 & 0.923 & 0.974 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:signals} and Figure~\ref{fig:signals} contain the central result. With no hint, $\punk$ is already an excellent evidence detector ($0.993$), statistically indistinguishable from the probe ($+0.002$ $[-0.003,+0.007]$). The interesting regime is conflict. There $\punk$ loses $0.159$ AUROC, maximum probability loses $0.152$ and ends below chance, and even a learned readout over the entire output distribution loses $0.059$. The hidden-state probe loses $0.003$ in the other direction, and its advantage over $\punk$ becomes $+0.164$ $[+0.132,+0.196]$. Training the probe on no-hint pairs and testing on conflicting pairs gives $0.969$; the reverse transfer is $0.999$.
+Table~\ref{tab:signals} and Figure~\ref{fig:signals} contain the central result. With no hint, $\punk$ is already an excellent evidence detector ($0.993$), statistically indistinguishable from the probe ($+0.002$ $[-0.003,+0.007]$). The interesting regime is conflict. There $\punk$ loses $0.159$ AUROC, maximum probability loses $0.152$ and falls to chance, and even a learned readout over the entire output distribution loses $0.059$. The frozen probe loses $0.037$ and transfers at $0.958$; the refit probe reaches $0.995$, which shows that a decoder can still read the evidence from the conflict state but does not by itself show that the no-hint decoder does.
 
-The same pattern holds under a correct hint, where no signal collapses: the probe reaches $0.997$ and $\punk$ $0.969$. This rules out a trivial explanation in which the probe merely responds to the presence of a hint string. What matters is whether the hint conflicts with the image.
+The distinction between frozen and refit matters for the claim. The refit number answers ``is the evidence still linearly decodable?'' and the answer is yes. The frozen number answers ``does the direction the model would have used before the hint still rank the arms?'' and the answer is yes, but less well. We report the frozen number in the abstract and use the refit number only as an upper bound. Under a correct hint no signal collapses: the frozen probe reaches $0.995$ and $\punk$ $0.969$, ruling out an explanation in which the probe merely responds to the presence of a hint string.
 
-\subsection{Conflict compresses the evidence axis}
+The invariance is a statement about rank, not geometry. In probe-score units the present-minus-absent gap shrinks from $15.9$ to $7.7$ for the plausible hint and to $7.3$ for the far-hue hint, contractions to $0.485$ $[0.460,0.511]$ and $0.463$ $[0.438,0.488]$ respectively. Within-arm standard deviations are almost unchanged ($2.8$ and $3.1$, then $2.6$ and $2.9$), so in pooled-SD units the separation falls from $5.1$ to $2.6$. The contraction replicates in 7B ($0.416$ $[0.386,0.448]$ and $0.424$ $[0.393,0.457]$) and LLaVA ($0.361$ $[0.337,0.384]$ and $0.344$ $[0.324,0.365]$). A conflicting hint pulls the two class means together along the evidence direction without widening the within-class distributions. This is the representational fact behind the output collapse: $\punk$ and maximum probability are absolute, scale-dependent readings of a distribution whose scale has moved, whereas rank-based readouts keep most of their accuracy.
 
-A natural reading of Table~\ref{tab:behaviour} is that a conflicting hint lowers the refusal threshold: the model becomes more willing to answer. Signal detection separates this from a loss of sensitivity. Using the out-of-fold probe score as the evidence axis, we compute $d'$ and criterion $c$ for each condition, and fit the psychometric model $\mathrm{logit}\,P(\text{refuse})=b_0+az+\sum_k d_k(b_k+a_kz)$ over the 1{,}827 item--condition observations. For the fit, $z$ is taken from the \emph{no-hint} forward pass of the same item, so the hint cannot move the axis it is compared on.
-
-\begin{table}[t]
+\begin{figure}[t]
 \centering
-\small
-\caption{Signal detection. $d'$ and $c$ are computed from refusal rates on the paired present/absent items. The last three columns are from the parametric fit: logit slope on the no-hint probe score, and predicted refusal at the median no-hint score of absent ($z=-8.56$) and present ($z=7.43$) items.}
-\label{tab:sdt}
-\begin{tabular}{lccccc}
-\toprule
-condition & $d'$ & $c$ & slope & $P(\text{refuse})$ absent & present \\
-\midrule
-no hint & 3.51 & 0.46 & $-0.719$ & 0.988 & 0.001 \\
-conflicting hint & 1.45 & 0.62 & $-0.171$ & 0.577 & 0.082 \\
-correct hint & 3.83 & 0.62 & $-0.680$ & 0.983 & 0.001 \\
-\bottomrule
-\end{tabular}
-\end{table}
+\includegraphics[width=0.84\linewidth]{figures/fig_signals.pdf}
+\caption{Evidence detection under three hint conditions (Qwen2.5-VL-3B). Native output signals degrade under conflict; the frozen final-state probe's ranking degrades much less, although its present--absent separation contracts. Values are AUROC over the 522 paired items; the dotted line is chance.}
+\label{fig:signals}
+\end{figure}
 
-Table~\ref{tab:sdt} shows the dissociation. Under conflict, sensitivity falls from $3.51$ to $1.45$ ($\Delta d'=-2.13$ $[-2.69,-1.66]$), while the criterion does not move reliably ($\Delta c=+0.16$ $[-0.18,+0.39]$). A correct hint leaves both unchanged ($\Delta d'=+0.31$ $[-0.36,+0.93]$; $\Delta c=+0.16$ $[-0.18,+0.46]$). The behavioural effect is bidirectional: conflict raises refusal on present items ($1.1\%\to8.8\%$) and lowers it on absent items ($90.4\%\to54.2\%$). A criterion shift moves both arms in the same direction, so it cannot produce this pattern.
+\subsection{Compression, not a criterion shift}
+\label{sec:sdt}
 
-The parametric fit makes the compression explicit. The conflict slope is $-0.171$ against $-0.719$ (change $+0.548$ $[0.439,0.774]$; likelihood-ratio $178.2$, $df=2$, $p<10^{-38}$), a fourfold flattening. The fitted curve reproduces both arms: at the median evidence of absent items, refusal falls from $98.8\%$ to $57.7\%$; at the median of present items, it rises from $0.1\%$ to $8.2\%$. A correct hint leaves the curve intact (slope change $+0.039$ $[-0.074,0.196]$). The change is a pivot, not a translation: the two curves cross near $z=-1.2$. This is the behavioural counterpart of Section~\ref{sec:signals}: the evidence is still linearly decodable from the same hidden states at $0.998$ AUROC, but the decision uses it with much lower sensitivity. The failure is in the use of evidence, not in its representation.
+A natural reading of Table~\ref{tab:behaviour} is that the hint lowers the refusal threshold. Signal detection separates this from a loss of sensitivity. Using the out-of-fold probe score as the evidence axis, we compute $d'$ and criterion $c$ for each condition (Appendix Table~\ref{tab:sdt}), and fit the psychometric model $\mathrm{logit}\,P(\text{refuse})=b_0+az+\sum_k d_k(b_k+a_kz)$ over the 1{,}827 item--condition observations. The fit is run twice: on the \emph{fixed} axis, $z$ is the no-hint state of the same item; on the \emph{own} axis, $z$ is the condition's own state projected on the same no-hint direction.
 
-\begin{table}[t]
-\centering
-\small
-\caption{Sensitivity and criterion under conflict in the three models ($n=261$ scenes each; 522 absent items in the conflict condition). Paired differences versus the no-hint condition, with cluster-bootstrap $95\%$ CIs over scenes.}
-\label{tab:sdt-cross}
-\begin{tabular}{lcccc}
-\toprule
-model & $d'$ no hint & $d'$ conflict & $\Delta d'$ & $\Delta c$ \\
-\midrule
-Qwen2.5-VL-3B & 3.51 & 1.45 & $-2.13$ $[-2.69,-1.66]$ & $+0.16$ $[-0.18,+0.39]$ \\
-Qwen2.5-VL-7B & 2.98 & 1.24 & $-1.80$ $[-2.14,-1.39]$ & $-0.54$ $[-0.73,-0.35]$ \\
-LLaVA-OneVision-7B & 3.44 & 1.44 & $-2.06$ $[-2.71,-1.32]$ & $+1.00$ $[+0.66,+1.33]$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+Under conflict, sensitivity falls from $3.51$ to $1.45$ ($\Delta d'=-2.13$ $[-2.69,-1.66]$), while the criterion does not move reliably in this model ($\Delta c=+0.16$ $[-0.18,+0.39]$). A correct hint leaves both unchanged ($\Delta d'=+0.31$ $[-0.36,+0.93]$). The behavioural effect is bidirectional---conflict raises refusal on present items and lowers it on absent items---and a criterion shift moves both arms in the same direction, so the criterion account cannot produce the pattern.
 
-The sensitivity collapse replicates in all three models (Table~\ref{tab:sdt-cross}). The criterion does not: its shift is null in the 3B model, negative in the 7B model and positive in LLaVA. A uniform lowering of the refusal threshold predicts a common direction, so the cross-model pattern argues against a criterion account. It also warns against over-reading $c$: the equal-variance estimate is biased when $d'$ changes, which is why we treat the consistent $d'$ loss, not the sign of $\Delta c$, as the invariant. Under a correct hint $d'$ never falls ($\Delta d'=+0.31$ $[-0.36,+0.93]$, $+0.50$ $[+0.17,+0.82]$, $+0.32$ $[0.00,+0.68]$), so the loss is specific to conflict.
+On the fixed axis the conflict slope is $-0.171$ against $-0.719$ (change $+0.548$ $[0.439,0.774]$; likelihood-ratio $178.2$, $df=2$, $p<10^{-38}$), a $4.2$-fold flattening. Most of that is the axis. The hint contracts the evidence axis by about half, so a one-unit change on the fixed axis corresponds to about half a unit on the axis the decision uses. Applying the condition's own slope to the contracted axis predicts a $2.1$-fold flattening; the remainder comes from imperfect coupling between the pre- and post-hint projections (correlation $0.86$). When $z$ is taken from the conflict state itself, the slope change is $+0.160$ $[0.013,0.429]$ (LR $6.4$, $p=0.041$): in its own coordinates the decision is $22\%$ flatter. That residual is small but nonzero, and we report it as a real sensitivity change rather than absorbed by compression.
 
-The failure itself takes different forms in the three models. On present items under conflict, the 3B and LLaVA models mostly answer, choosing the hinted colour on $44.8\%$ and $49.0\%$ of trials against the true colour on $38.3\%$ and $36.0\%$; LLaVA refuses on only $0.4\%$. The 7B model instead refuses on $55.6\%$ and adopts the hint on $17.6\%$. On absent items, the hint is adopted on $43$--$47\%$ of trials by the 3B model, $4$--$12\%$ by the 7B model, and $76$--$90\%$ by LLaVA. These are three different policies---hint takeover, over-refusal, and near-total credulity---but they share the compressed evidence axis. The compression is graded by the image rather than a fixed prompt bias: on present-conflict items, a higher no-hint probe score predicts less hint adoption (logit slope $-0.213$ $[-0.325,-0.119]$) and more true-colour answers ($+0.267$ $[0.163,+0.401]$). The hint tilts the decision, but the evidence still moves it.
+The sensitivity collapse replicates in all three models; the criterion does not. Its shift is null in 3B, negative in 7B ($-0.54$ $[-0.73,-0.35]$) and positive in LLaVA ($+1.00$ $[+0.66,+1.33]$). A uniform lowering of the refusal threshold predicts a common direction, so the cross-model pattern argues against a criterion account. It also warns against over-reading $c$: the equal-variance estimate is biased when $d'$ changes, which is why we treat the consistent $d'$ loss, not the sign of $\Delta c$, as the invariant. Under a correct hint $d'$ never falls ($\Delta d'=+0.31$, $+0.50$, $+0.32$ for 3B/7B/LLaVA), so the loss is specific to conflict. The flattening is $4.2$-fold in 3B; we do not use the word ``fourfold'' for the other models, where the fixed-axis changes are $+0.332$ (LR $164.8$) and $+0.286$ (LR $40.8$). On each condition's own axis those fall to $+0.113$ $[0.025,0.232]$ (LR $22.0$) and $+0.053$ $[-0.057,0.185]$ (LR $1.6$, n.s.), residual gain losses of $24\%$ and $12\%$.
 
 \begin{figure}[t]
 \centering
 \includegraphics[width=0.52\linewidth]{figures/fig_sdt.pdf}
-\caption{Refusal probability as a function of the no-hint probe score, which is measured before the hint is applied. Points are binned rates with binomial standard errors; lines are the fitted psychometric curves. The conflicting-hint curve is four times flatter and pivots around $z\approx-1.2$; the correct-hint curve tracks the no-hint curve.}
+\caption{Refusal probability versus the no-hint probe score, measured before the hint is applied. Points are binned rates with binomial standard errors; lines are fitted psychometric curves. The conflicting-hint curve is flatter on this fixed axis and pivots around $z\approx-1.2$; most of the flattening is the contraction of the axis, with a $22\%$ residual on the condition's own axis. The correct-hint curve tracks the no-hint curve.}
 \label{fig:sdt}
 \end{figure}
 
-\subsection{Controls: the probe reads the image, not the prompt}
+\subsection{Causal evidence: sufficiency at the readout, localisation late}
+\label{sec:causal}
 
-Three controls address the concern that the probe separates the two arms from text alone. First, a gray image with the same prompts and the same dimensions yields probe AUROC $0.849$ / $0.981$ / $0.930$ under no / conflicting / correct hints, and $\punk$ $0.700$ / $0.325$ / $0.433$. Text alone carries some category$\to$common-colour prior, enough to reach $0.85$ on the no-hint pair. But the direction learned from gray images transfers across hints at only $0.540$ / $0.603$, whereas the direction learned from real images transfers at $0.969$ / $0.996$. The real-image direction is shared across prompts; the text-prior direction is not.
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4.5pt}
+\caption{Steering and ablation during the conflicting-hint pass ($n=261$ per model). The direction is fitted separately on each model's no-hint states and injected at the unembedding input; positive $\alpha$ pushes toward ``evidence present''. The two absent-arm columns average hints a (plausible) and b (far-hue); the base refusal rate is $0.521$ and $0.467$ hint adoption for hint a alone in 3B. ``Rand-ablate'' is the largest effect of projecting out any of three random directions at their own energy.}
+\label{tab:causal}
+\begin{tabular}{llcccc}
+\toprule
+model & setting & present refusal & present true & absent refusal & absent hint \\
+\midrule
+3B & base & 0.088 & 0.383 & 0.542 & 0.450 \\
+   & $-0.25\,\wdir$ & 0.759 & 0.073 & 0.874 & 0.125 \\
+   & $+0.25\,\wdir$ & 0.000 & 0.479 & 0.065 & 0.845 \\
+   & ablate $\wdir$ & 0.031 & 0.429 & 0.328 & 0.651 \\
+   & rand-ablate (max) & 0.091 & 0.391 & 0.548 & 0.461 \\
+\midrule
+7B & base & 0.556 & 0.249 & 0.918 & 0.082 \\
+   & $-0.25\,\wdir$ & 0.950 & 0.011 & 1.000 & 0.000 \\
+   & $+0.25\,\wdir$ & 0.004 & 0.421 & 0.057 & 0.870 \\
+   & ablate $\wdir$ & 0.368 & 0.345 & 0.707 & 0.291 \\
+   & rand-ablate (max) & 0.566 & 0.253 & 0.921 & 0.088 \\
+\midrule
+LLaVA & base & 0.004 & 0.360 & 0.138 & 0.833 \\
+   & $-0.25\,\wdir$ & 0.345 & 0.149 & 0.734 & 0.241 \\
+   & $+0.25\,\wdir$ & 0.000 & 0.379 & 0.000 & 0.990 \\
+   & ablate $\wdir$ & 0.000 & 0.356 & 0.036 & 0.946 \\
+   & rand-ablate (max) & 0.004 & 0.364 & 0.145 & 0.827 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
-Second, we construct category-matched pairs. Each present image is paired with another image from the same pool in which the queried category is annotated absent; both sides receive exactly the same prompt, and one side is the positive. The two sides come from the same geometric filter, so scene statistics are matched. Cross-validation groups by category, so a held-out fold contains categories never seen during fitting. The probe reaches $0.985$ with no hint and $0.973$ under conflict; $\punk$ drops from $0.983$ to $0.817$ and maximum probability from $0.701$ to $0.468$. On these 260 negative images, the presence probe gives mean $p(\text{yes})=0.095$. A pure category prior cannot explain a probe that generalises to unseen categories with the question held fixed.
+Table~\ref{tab:causal} closes the gap between ``decodable'' and ``used'' at the readout. The direction is fitted before any hint and injected during the conflicting pass. In 3B, subtracting $\wdir$ raises absent-object refusal from $0.542$ to $0.874$ at $-0.25\,\wdir$ ($+0.331$ $[0.289,0.374]$) and to $0.941$ at $-0.50\,\wdir$, near the $0.904$ no-hint baseline; on present items it raises refusal from $0.088$ to $0.759$. Adding $\wdir$ drives absent refusal to $0.065$ at $+0.25\,\wdir$ and to $0.000$ at $+0.50\,\wdir$. The effect is monotone and saturates. The held-out split-half fit reproduces it, and the other two models move in the same directions from base policies as different as $91.8\%$ and $13.8\%$ absent refusal. The same direction also opens the gate in LLaVA, which is already credulous, and closes it in 7B, which over-refuses. Sufficiency at the readout is therefore established in all three models.
 
-Third, the main probe analysis grouped by sample already prevents scene leakage. Repeating it with folds grouped by queried category gives $0.995$ / $0.997$ / $0.996$ for the three condition pairs and transfers of $0.969$ / $0.996$, essentially unchanged.
+The direction does not resolve the colour. In 3B, $+0.25\,\wdir$ raises true-colour answers from $0.383$ to $0.479$ ($+0.096$ $[0.050,0.142]$) while hint adoption stays at $0.433$ ($-0.015$ $[-0.065,0.034]$). In LLaVA, $+0.25\,\wdir$ leaves true-colour answers statistically unchanged ($0.360\to0.379$, $+0.019$ $[-0.011,0.050]$) while raising hint adoption on absent items from $0.833$ to $0.990$. The gate decides whether the model answers; the hint still wins the content. This is the causal analogue of the psychometric result: the axis remains connected to the gate, but it is compressed and under-weighted.
+
+\paragraph{Removal is not direction-specific.}
+Sufficiency does not imply necessity, and the raw necessity test is biased. Projecting out $\wdir$ lowers absent refusal by $0.214$ (3B), $0.211$ (7B) and $0.102$ (LLaVA), but $\wdir$ carries $5.4\times$ more absolute projection energy than a random direction on average (mean fraction $0.055$ against $0.019$, $0.004$ and $0.008$; $5.3\times$ in LLaVA), so the raw comparison pits directions that remove different amounts of the state. We therefore match the removed energy in both directions (Table~\ref{tab:matched}). Scaling $\wdir$ down to the energy of a random direction reduces its effect to $-0.073$ $[-0.096,-0.052]$ in 3B and $-0.018$ $[-0.031,-0.008]$ in 7B. Scaling a random direction up to the energy of $\wdir$ is null in 3B ($+0.010$ $[-0.004,+0.025]$) but not in 7B ($-0.044$ $[-0.063,-0.027]$), where it is larger than the matched effect of $\wdir$. The class-mean and first-PC directions, scaled to the same energy, leave refusal unchanged in 7B ($+0.004$ $[-0.011,+0.019]$) and raise it in 3B ($+0.083$ $[+0.052,+0.111]$). In LLaVA the gate is already near the floor (base refusal $0.138$), and there the matched effect of $\wdir$ ($-0.011$ $[-0.021,-0.004]$) is smaller than that of a matched random direction ($-0.029$ $[-0.046,-0.013]$) and of the matched class-mean direction ($-0.063$ $[-0.088,-0.042]$). No direction is necessary in a direction-specific sense: most of the raw removal effect is removed energy, and the residual effect of $\wdir$ is no larger than that of a matched random direction. What survives is sufficiency. Injecting $\wdir$ at the readout moves the gate monotonically, including when the dose is scaled to each prompt's own final-state norm (absent refusal $1.000\to0.134$ in 3B and $1.000\to0.073$ in 7B between $-0.25$ and $+0.25$), so the dose--response is not an artifact of a fixed absolute norm. We describe $\wdir$ as an efficient readout direction for evidence availability, not as an identified circuit element.
+
+\begin{table}[t]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Energy-matched removal during the conflicting-hint pass ($n=261$). ``Base'' is refusal on absent items, averaged over hints a and b. Each ablation removes a direction rescaled so that its mean removed energy matches the stated target: $\wdir{\to}r$ scales $\wdir$ to a random direction's energy, $r{\to}\wdir$ scales a random direction to $\wdir$'s energy, and $cm{\to}\wdir$, $pc1{\to}\wdir$ do the same for the class-mean and first-PC directions. Brackets are 95\% scene-bootstrap intervals on the change from base. The raw $\wdir$ column removes $5.4\times$ more energy than a random direction.}
+\label{tab:matched}
+\begin{tabular}{lcccccc}
+\toprule
+model & base & $\wdir$ (raw) & $\wdir{\to}r$ & $r{\to}\wdir$ & $cm{\to}\wdir$ & $pc1{\to}\wdir$ \\
+\midrule
+3B & 0.542 & 0.328 & 0.469 & 0.552 & 0.625 & 0.625 \\
+   & & $[-.253,-.180]$ & $[-.096,-.052]$ & $[-.004,.025]$ & $[.052,.111]$ & $[.052,.111]$ \\
+\midrule
+7B & 0.918 & 0.707 & 0.900 & 0.874 & 0.921 & 0.921 \\
+   & & $[-.247,-.178]$ & $[-.031,-.008]$ & $[-.063,-.027]$ & $[-.011,.019]$ & $[-.011,.019]$ \\
+\midrule
+LLaVA & 0.138 & 0.036 & 0.126 & 0.109 & 0.075 & 0.100 \\
+      & & $[-.130,-.075]$ & $[-.021,-.004]$ & $[-.046,-.013]$ & $[-.088,-.042]$ & $[-.057,-.021]$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.62\linewidth]{figures/fig_signals.pdf}
-\caption{Evidence detection under three hint conditions. All output-space signals degrade under conflict; the final-state probe does not. Values are AUROC over the 522 paired items; the dotted line is chance.}
-\label{fig:signals}
-\end{figure}
-
-\subsection{The direction is causally sufficient and partly necessary}
-
-\begin{table}[t]
-\centering
-\small
-\caption{Steering along the probe direction $w$. $\alpha$ is a fraction of the median hidden norm; positive $\alpha$ pushes toward ``evidence present''. The lower block refits the direction on 130 scenes and evaluates only on the held-out 131.}
-\label{tab:steer}
-\begin{tabular}{lcccc}
-\toprule
- & \multicolumn{2}{c}{present} & \multicolumn{2}{c}{absent} \\
-\cmidrule(lr){2-3}\cmidrule(lr){4-5}
-setting & refusal & top-1 conf. & refusal & fabricates \\
-\midrule
-\multicolumn{5}{l}{\emph{In-sample direction ($n=261$)}}\\
-base & 0.011 & 0.836 & 0.904 & 0.096 \\
-ablate $w$ & 0.004 & 0.838 & 0.759 & 0.241 \\
-$-0.50\,w$ & 0.352 & 0.741 & 0.989 & 0.011 \\
-$-0.25\,w$ & 0.130 & 0.760 & 0.973 & 0.027 \\
-$+0.25\,w$ & 0.000 & 0.878 & 0.330 & 0.670 \\
-$+0.50\,w$ & 0.000 & 0.876 & 0.000 & 1.000 \\
-\midrule
-\multicolumn{5}{l}{\emph{Held-out half ($n=131$)}}\\
-base & 0.015 & --- & 0.908 & --- \\
-ablate $w$ & 0.008 & --- & 0.786 & --- \\
-$-0.50\,w$ & 0.450 & --- & 0.992 & --- \\
-$+0.25\,w$ & 0.000 & --- & 0.305 & --- \\
-$+0.50\,w$ & 0.000 & --- & 0.000 & --- \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:steer} shows that adding $w$ makes the model answer absent-object questions and subtracting it makes the model refuse present-object questions. The effect is monotone in $\alpha$ and saturates at both ends. Ablating $w$ lowers absent-object refusal from $0.904$ to $0.759$, so the direction is not merely sufficient: when the model has no hint to rely on, removing it removes part of the refusal. At the same time, present-object top-1 confidence stays between $0.741$ and $0.878$ across the sweep. The intervention moves the answer/refuse decision, not the entire representation.
-
-The lower block refits $w$ on half the scenes and evaluates on the other half. The dose--response survives with slightly larger amplitudes at the extremes, consistent with a direction that is not overfitted to the evaluation items.
-
-\subsection{The preserved evidence still controls the gate}
-
-\begin{table}[t]
-\centering
-\small
-\caption{Steering the no-hint probe direction during the conflicting-hint pass ($n=261$). ``True'' and ``hint'' are argmax rates on present items; ``hint'' on absent items is the rate of naming the hinted colour, averaged over hints a and b. The first row is the unsteered no-hint baseline from the main run.}
-\label{tab:steer-conflict}
-\begin{tabular}{lccccc}
-\toprule
- & \multicolumn{3}{c}{present} & \multicolumn{2}{c}{absent} \\
-\cmidrule(lr){2-4}\cmidrule(lr){5-6}
-setting & refusal & true & hint & refusal & hint \\
-\midrule
-no hint, unsteered & 0.011 & 0.762 & --- & 0.904 & --- \\
-conflict, base & 0.088 & 0.383 & 0.448 & 0.542 & 0.450 \\
-ablate $w$ & 0.031 & 0.429 & 0.448 & 0.328 & 0.651 \\
-$-0.50\,w$ & 0.931 & 0.008 & 0.042 & 0.941 & 0.057 \\
-$-0.25\,w$ & 0.759 & 0.073 & 0.134 & 0.874 & 0.125 \\
-$+0.25\,w$ & 0.000 & 0.479 & 0.433 & 0.065 & 0.845 \\
-$+0.50\,w$ & 0.000 & 0.479 & 0.410 & 0.000 & 0.665 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The probe score remains decodable under conflict, but a decoder can read a variable that the decision no longer uses. Table~\ref{tab:steer-conflict} closes that gap causally: the same direction, fitted before any hint and injected during the conflicting pass, moves the decision in both directions and monotonically. Subtracting $w$ raises absent-object refusal from $0.542$ to $0.874$ at $-0.25\,w$ ($+0.331$ $[0.289,0.374]$) and to $0.941$ at $-0.50\,w$, near the $0.904$ no-hint baseline; on present items it raises refusal from $0.088$ to $0.759$ ($+0.670$ $[0.617,0.728]$). Adding $w$ drives refusal toward zero ($0.542\to0.065$ on absent items at $+0.25\,w$ and $0.000$ at $+0.50\,w$; $0.088\to0.000$ on present items). Ablating $w$ has the same partial-necessity signature as under no hint, lowering absent refusal by $0.215$ $[-0.253,-0.176]$ and raising hint adoption by $0.201$ $[0.165,0.236]$.
-
-What the direction does not do is resolve the colour. On present items, $+0.25\,w$ raises true-colour answers from $0.383$ to $0.479$ ($+0.096$ $[0.050,0.142]$) while hint adoption stays at $0.433$ ($-0.015$ $[-0.065,0.034]$). The hint still wins the content of the answer; the direction moves whether the model answers at all. This is the causal analogue of the psychometric result: conflict lowers the gain on the evidence axis, but the axis remains connected to the gate. The information is present, decodable and usable; it is under-weighted rather than erased.
-
-\begin{table}[t]
-\centering
-\small
-\caption{Conflict-condition steering in all three models ($n=261$ each). The direction is fitted separately on each model's no-hint states and injected during the conflicting pass; no vector is shared across models. Conventions follow Table~\ref{tab:steer-conflict}. Unsteered no-hint refusal (present/absent): 3B $0.011$/$0.904$, 7B $0.100$/$0.958$, LLaVA $0.004$/$0.820$.}
-\label{tab:steer-conflict-cross}
-\begin{tabular}{llccccc}
-\toprule
- & & \multicolumn{3}{c}{present} & \multicolumn{2}{c}{absent} \\
-\cmidrule(lr){3-5}\cmidrule(lr){6-7}
-model & setting & refusal & true & hint & refusal & hint \\
-\midrule
-3B & base & 0.088 & 0.383 & 0.448 & 0.542 & 0.450 \\
-   & $-0.25\,w$ & 0.759 & 0.073 & 0.134 & 0.874 & 0.125 \\
-   & $+0.25\,w$ & 0.000 & 0.479 & 0.433 & 0.065 & 0.845 \\
-\addlinespace
-7B & base & 0.556 & 0.249 & 0.176 & 0.918 & 0.082 \\
-   & $-0.25\,w$ & 0.950 & 0.011 & 0.038 & 1.000 & 0.000 \\
-   & $+0.25\,w$ & 0.004 & 0.421 & 0.425 & 0.057 & 0.870 \\
-\addlinespace
-LLaVA & base & 0.004 & 0.360 & 0.490 & 0.138 & 0.833 \\
-      & $-0.25\,w$ & 0.345 & 0.149 & 0.253 & 0.734 & 0.241 \\
-      & $+0.25\,w$ & 0.000 & 0.379 & 0.533 & 0.000 & 0.990 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:steer-conflict-cross} repeats the base, $-0.25\,w$ and $+0.25\,w$ conditions on the other two models, fitting the direction anew in each. Their base policies are as different as the benchmark allows: 7B refuses $91.8\%$ of absent and $55.6\%$ of present conflict items, LLaVA $13.8\%$ and $0.4\%$. The intervention moves both in the same directions. Subtracting $w$ raises absent refusal to $100.0\%$ in 7B and to $73.4\%$ in LLaVA ($+0.596$ $[0.550,0.640]$); adding $w$ lowers it to $5.7\%$ and $0.0\%$. Present refusal follows the same order. The gate is bidirectionally controllable in every model, including one that starts out refusing almost everything and one that starts out refusing almost nothing.
-
-Opening the gate does not supply the answer. In LLaVA, which is already credulous, $+0.25\,w$ raises absent hint adoption from $0.833$ to $0.990$ ($+0.157$ $[0.123,0.192]$); on present items it leaves true-colour answers statistically unchanged ($0.360\to0.379$, $+0.019$ $[-0.011,0.050]$) while nudging hint adoption up ($+0.042$ $[0.004,0.084]$). In 7B the gate is closed too far: opening it recovers true-colour answers on present items from $0.249$ to $0.421$ ($+0.172$ $[0.111,0.234]$), but also raises hint adoption from $0.176$ to $0.425$ ($+0.249$ $[0.188,0.307]$). In 3B, $+w$ leaves hint adoption on present items unchanged ($0.448\to0.433$) while true-colour answers rise modestly; the hint already wins the content. The same direction thus controls abstention across three models and two families; what the model says once it stops abstaining is set elsewhere. This is why the probe gate is useful and why it is not a solution to sycophancy: it detects whether evidence is available, not which of two available answers is true.
-
-\subsection{The suppression is written in the last few layers}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.62\linewidth]{figures/fig_depth.pdf}
-\caption{Recovery of the refusal lost under conflict when the no-hint state is pasted back at layer $L$. Depth is relative to the model's decoder depth. The profile is late and steep in all three models; LLaVA is more hint-sensitive but not earlier.}
+\includegraphics[width=0.90\linewidth]{figures/fig_depth.pdf}
+\caption{Localisation by restoration and by injection. (a) Recovery of the refusal lost under conflict when the no-hint state is pasted back at layer $L$, in three models; depth is relative to decoder depth. (b) Change in absent-object refusal when the probe direction is injected at layer $L$ of the 3B model with the dose matched to each layer's median norm; ``head'' is the unembedding input. Both profiles are late and steep.}
 \label{fig:depth}
 \end{figure}
 
+\paragraph{Localisation.}
+Patching answers where restoring the unpolluted state reopens the gate. In 3B, patching at layer 24 ($67\%$ depth) recovers $22\%$ of the lost refusal and $\punk$, and layer 32 ($89\%$) recovers $80\%$. In 7B the corresponding values are $0\%$, $69\%$ and $90\%$ at layers 18, 24 and 26 ($64$, $86$, $93\%$); in LLaVA they are $36\%$, $80\%$ and $96\%$. Recovery is concentrated in the last few layers. A shuffled-source control recovers as much or more (3B L32 $0.927$; 7B L26 $0.965$; LLaVA L26 $0.842$), so the restored state carries a category-level ``no evidence'' status, not a sample-specific code, and the comparison cannot separate evidence from a generic no-hint prior. A same-image control does separate the question: with the image fixed, patching the image's own absent-question state at L32 raises refusal from $0.521$ to $0.839$, whereas its present-question state drives refusal to $0.008$ (paired difference $+0.83$ $[0.79,0.87]$), with the same contrast in 7B ($+0.84$) and LLaVA ($+0.74$). The late state therefore encodes a question-conditioned answer/refuse policy. A no-op patch that pastes the same pass's own state returns the base distribution exactly (argmax agreement $1.00$ and maximum probability change $0$ at both probed layers in 3B and 7B, and in LLaVA), whereas a zero paste changes the argmax in $10.7\%$/$17.2\%$ of absent items in 3B, $38.7\%$/$6.1\%$ in 7B and $72.4\%$/$99.6\%$ in LLaVA. The hook is therefore active and the pasted vector, not the instrumentation, drives the change, so the recovery profile can be read quantitatively; the caveat is that pasting a foreign state still shifts the input distribution. The claim is that the gate is written late, not that we have identified the computation.
+
+LLaVA-OneVision-7B provides the strongest available generality test. It uses a different vision encoder and training recipe but shares the Qwen language backbone. Its present-item refusal under conflict is $0.004$, against $0.556$ in Qwen-7B: the same hint is much more effective on this model. Yet the recovery profile has the same shape and depth, so a model that is easier to fool does not have an earlier gate; its gate is pushed further open at the same place.
+
+\subsection{A frozen gate, and where it stops helping}
+\label{sec:deploy}
+
 \begin{table}[t]
 \centering
 \small
-\caption{Layer-wise patching. ``Same'' pastes this sample's no-hint state at layer $L$; refusal and $\punk$ are measured after the remaining layers run. Recovery is relative to the no-hint and conflicting baselines of the same run.}
-\label{tab:patch}
+\setlength{\tabcolsep}{4pt}
+\caption{Deployment under conflicting hints (hint \texttt{a}), out-of-fold and frozen scores. Panel A: fabrication at $50\%$ coverage. Panel B: fabrication among answered items after applying the 3B $50\%$-coverage threshold to unanswerable prevalences of $5$--$50\%$ (probe rows; $\punk$ in parentheses). Panel C: split conformal risk control with $130$ calibration scenes; ``---'' marks infeasible levels.}
+\label{tab:deploy}
 \begin{tabular}{llccc}
 \toprule
-model & source & refusal & $\punk$ & recovery \\
+\multicolumn{5}{l}{\emph{A: fabrication at $50\%$ coverage}}\\
+model & probe & $\punk$ & max prob. & \\
 \midrule
-Qwen2.5-VL-3B (36 layers) & no hint & 0.904 & 0.762 & 100\% \\
- & conflict & 0.521 & 0.470 & 0\% \\
- & same, L24 (67\%) & 0.594 & 0.535 & 22\% \\
- & same, L32 (89\%) & 0.839 & 0.704 & 80\% \\
+3B & \textbf{0.069} & 0.249 & 0.510 & \\
+7B & \textbf{0.126} & 0.268 & 0.648 & \\
+LLaVA & \textbf{0.111} & 0.295 & 0.655 & \\
 \midrule
-Qwen2.5-VL-7B (28 layers) & no hint & 0.958 & 0.899 & 100\% \\
- & conflict & 0.877 & 0.783 & 0\% \\
- & same, L18 (64\%) & 0.893 & 0.782 & 0\% \\
- & same, L24 (86\%) & 0.962 & 0.863 & 69\% \\
- & same, L26 (93\%) & 0.962 & 0.888 & 90\% \\
+\multicolumn{5}{l}{\emph{B: fabrication among answered, prevalence sweep}}\\
+model & 5\% & 10\% & 25\% & 50\% \\
 \midrule
-LLaVA-OneVision-7B (28 layers) & no hint & 0.820 & 0.655 & 100\% \\
- & conflict & 0.088 & 0.134 & 0\% \\
- & same, L18 (64\%) & 0.330 & 0.324 & 36\% \\
- & same, L24 (86\%) & 0.743 & 0.549 & 80\% \\
- & same, L26 (93\%) & 0.808 & 0.633 & 96\% \\
+3B & 0.007 (0.032) & 0.016 (0.066) & 0.045 (0.174) & 0.125 (0.387) \\
+7B & 0.028 (0.050) & 0.058 (0.100) & 0.155 (0.250) & 0.355 (0.500) \\
+LLaVA & 0.007 (0.023) & 0.014 (0.048) & 0.042 (0.132) & 0.116 (0.314) \\
+\midrule
+\multicolumn{5}{l}{\emph{C: conformal risk control (probe)}}\\
+model & $\alpha=5\%$ & $\alpha=10\%$ & coverage & test fab. \\
+\midrule
+3B & infeasible (UCB 0.061) & certified & 0.519 & 0.088 \\
+7B & certified & --- & 0.340 & 0.067 \\
+LLaVA & infeasible (UCB 0.059) & certified & 0.511 & 0.127 \\
 \bottomrule
 \end{tabular}
 \end{table}
 
-If the conflict erased the evidence, restoring an early state should not help. If it overrides a late decision, restoring a late state should. Table~\ref{tab:patch} and Figure~\ref{fig:depth} show the latter. In the 3B model, patching at layer 24 (67\% depth) recovers $22\%$ of the lost refusal; patching at layer 32 (89\%) recovers $80\%$. In the 7B model, layer 18 (64\%) recovers essentially nothing, layer 24 (86\%) recovers $69\%$, and layer 26 (93\%) recovers $90\%$. The suppression is concentrated in the final few layers, not spread through the network.
+Table~\ref{tab:deploy} evaluates the gate. At $50\%$ coverage under conflict, ranking by the frozen probe reduces fabrication from $0.249$ to $0.069$ in 3B ($3.6\times$), from $0.268$ to $0.126$ in 7B ($2.1\times$), and from $0.295$ to $0.111$ in LLaVA ($2.7\times$); maximum probability is far worse in every model. The refit probe reaches $0.011$ in 3B, but that number uses a decoder fitted on the same condition and is not deployable; we report it only to show that the frozen score is not at the decodability ceiling. A logistic gate over the 12 output probabilities reaches $0.142$ at the same coverage, so the gain is not merely a learned readout of the output distribution.
 
-The shuffled-source control recovers as much or more (3B L32: $0.927$ refusal; 7B L26: $0.965$; LLaVA L26: $0.842$). Pasting another sample's no-hint state works, which means the patched state carries a category-level ``no evidence'' status rather than a sample-specific code. It also means the control cannot be used to estimate a clean effect size: replacing a state with a differently distributed one perturbs the residual stream. We therefore use patching to locate the stage and steering to quantify the effect.
+The advantage survives prevalence shift: applying the 3B threshold to unanswerable prevalences of $5$, $10$, $25$ and $50\%$ yields fabrication among answered of $0.007$, $0.016$, $0.045$ and $0.125$, against $0.032$, $0.066$, $0.174$ and $0.387$ for $\punk$, with the same ordering in 7B and LLaVA. Conformal risk control gives a finite-sample certificate, but a loose one at this sample size. With $130$ calibration scenes a $5\%$ target is infeasible for 3B and LLaVA (minimum upper bound $0.061$ and $0.059$), and a $10\%$ target is certified at coverage $0.519$ and $0.511$. In 7B the $5\%$ certificate does not transfer: it yields $0.067$ on the held-out half, above target, and we report this rather than selecting the favourable split. A pollution detector built as $\text{probe}-\punk$ is not useful: its AUROC is $0.97$/$0.95$/$0.96$, but at $50\%$ coverage it selects the same items as the probe alone.
 
-LLaVA-OneVision-7B is the strongest test of generality. Its refusal under conflict is $0.088$, far lower than Qwen-7B's $0.877$: the same kind of hint is much more effective on this model. Yet the recovery profile is the same shape and the same depth ($36\%$, $80\%$, $96\%$). A model that is easier to fool does not have an earlier gate; its gate is pushed further open at the same place. This separates hint sensitivity from the locus of suppression.
+\subsection{External validation and task form}
 
-\subsection{A training-free gate}
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.62\linewidth]{figures/fig_risk.pdf}
-\caption{Fabrication rate versus coverage under conflicting hints (Qwen2.5-VL-3B). Ranking by the internal probe removes most fabrications at moderate coverage; the model's own $\punk$ and maximum probability do not.}
-\label{fig:risk}
-\end{figure}
-
-\begin{table}[t]
-\centering
-\small
-\caption{Fabrication rate at fixed coverage under conflicting hints (Qwen2.5-VL-3B, out-of-fold scores). ``Probe'' ranks by the internal evidence score.}
-\label{tab:gate}
-\begin{tabular}{lccc}
-\toprule
-coverage & probe & $\punk$ & max probability \\
-\midrule
-50\% & \textbf{0.011} & 0.249 & 0.510 \\
-70\% & \textbf{0.398} & 0.456 & 0.762 \\
-90\% & 0.801 & 0.801 & 0.985 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-The mechanistic result suggests a simple gate: answer only if an internal evidence score is high. Table~\ref{tab:gate} and Figure~\ref{fig:risk} evaluate this with out-of-fold probe scores. At $50\%$ coverage under conflict, fabrication falls from $0.249$ to $0.011$, a $23\times$ reduction; maximum probability is worse than chance, at $0.510$. At $70\%$ coverage the probe hits the structural floor: answering $70\%$ of a set that is half absent requires answering at least $40\%$ of absent items, which is exactly what it achieves ($0.398$). The gate is therefore most useful at moderate coverage, where abstention is still allowed to be selective.
-
-The same pattern appears on the other models: at $50\%$ coverage under conflict, probe $0.019$ versus $\punk$ $0.268$ on Qwen2.5-VL-7B, and $0.019$ versus $0.295$ on LLaVA-OneVision-7B.
-
-\subsection{Task-form boundaries}
-
-\begin{table}[t]
-\centering
-\small
-\caption{The same images and absent categories with three question forms. The gate opens in all three; the output readout collapses only for colour.}
-\label{tab:tasks}
-\begin{tabular}{llccccc}
-\toprule
-task & condition & refusal & adopts hint & probe & $\punk$ & max prob. \\
-\midrule
-colour & present, no hint & 0.011 & --- & 0.995 & 0.993 & 0.615 \\
- & present, conflict & 0.088 & 0.448 & 0.997 & 0.834 & 0.463 \\
- & absent, no hint & 0.904 & --- & & & \\
- & absent, hint & 0.521 & 0.467 & & & \\
-\midrule
-side & present, no hint & 0.000 & --- & 0.993 & 0.989 & 0.791 \\
- & present, conflict & 0.000 & 0.268 & 0.991 & 0.966 & 0.744 \\
- & absent, no hint & 0.621 & --- & & & \\
- & absent, hint & 0.111 & 0.743 & & & \\
-\midrule
-count & present, no hint & 0.682 & --- & 0.996 & 0.986 & 0.014 \\
- & present, conflict & 0.870 & 0.115 & 0.995 & 0.946 & 0.055 \\
- & absent, no hint & 1.000 & --- & & & \\
- & absent, hint & 0.996 & 0.004 & & & \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:tasks} replaces the colour question with a left/right question and a count question while holding the images, absent categories and four conditions fixed. The gate opens in all three tasks: on the absent arm, a hint cuts refusal from $0.621$ to $0.111$ for side and from $1.000$ to $0.996$ for count (the count task is already at ceiling). But the output readout collapses only for colour: $\punk$ loses $0.159$ there, versus $0.023$ for side and $0.040$ for count. Maximum probability is already near chance on the count task ($0.014$ with no hint), so its collapse there is uninformative; on colour it falls from a strong $0.615$ to $0.463$, below chance. The internal probe remains at or above $0.991$ everywhere, and transfers across hints at $0.969$--$0.994$.
-
-The dissociation is therefore not one effect but two. A hint can open the refusal gate without corrupting the evidence readout (side), and it can do both at once (colour). A plausible explanation is answer granularity: a hint supplies one of eleven colour candidates and redistributes the answer distribution, whereas the side task has two candidates and weak visual evidence, so the hint mostly acts on whether to answer. The deployment consequence is that the probe's advantage over the model's own confidence shrinks with the readout damage: $23\times$ fabrication reduction for colour, $2$--$2.4\times$ for side and count.
-
-\subsection{Cross-model replication}
-
-\begin{table}[t]
-\centering
-\small
-\caption{Evidence detection on the same 261 samples (AUROC). The probe is trained on each model's own no-hint states.}
-\label{tab:models}
-\begin{tabular}{lcccc}
-\toprule
-model & probe, no hint & probe, conflict & $\punk$, no hint & $\punk$, conflict \\
-\midrule
-Qwen2.5-VL-3B & 0.995 & 0.998 & 0.993 & 0.834 \\
-Qwen2.5-VL-7B & 0.995 & 0.998 & 0.984 & 0.797 \\
-LLaVA-OneVision-7B & 0.996 & 0.999 & 0.991 & 0.781 \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-Table~\ref{tab:models} repeats the main analysis on Qwen2.5-VL-7B and LLaVA-OneVision-7B. The probe is unchanged in all three ($\ge0.995$ without hints, $\ge0.998$ under conflict), while $\punk$ loses more on the larger Qwen model ($-0.187$) and on LLaVA ($-0.210$) than on the 3B model ($-0.159$). The output-space 12-dimensional readout under conflict is $0.896$ for 7B and $0.909$ for LLaVA, still far below the hidden-state probe. Selectivity follows the same ordering: at $50\%$ coverage under conflict, probe fabrication is $0.011$ / $0.019$ / $0.019$ and $\punk$ fabrication is $0.249$ / $0.268$ / $0.295$ for 3B / 7B / LLaVA.
-
-\subsection{External validation}
-
-\paragraph{VizWiz.} We sample 250 answerable and 250 unanswerable questions from VizWiz val \citep{gurari2018vizwiz}, discard 38 answerable items whose majority answer is itself a refusal, and add a hint drawn from another question in the same answer category. The model is Qwen2.5-VL-3B; the probe is frozen from the 261-item set and never refitted.
-
-The behavioural asymmetry reproduces. On unanswerable questions, refusal falls from $0.704$ with no hint to $0.636$ with a hint; on answerable questions, a conflicting hint raises refusal from $0.099$ to $0.193$ and drops VQA accuracy from $0.580$ to $0.451$, while a correct hint raises accuracy to $0.816$. The magnitude is smaller than in the constructed benchmark ($90.4\%\to52$--$56\%$ refusal on the absent arm), as expected for natural images and open-ended answers, but the sign is the same.
-
-The frozen probe transfers: AUROC $0.827$ $[0.789,0.862]$ without hints and $0.720$ $[0.671,0.766]$ with hints, far above maximum probability ($0.437$ / $0.367$). But it does \emph{not} beat the model's own $\punk$ ($0.878$ / $0.793$). This is the key boundary. VizWiz's unanswerable questions are heterogeneous natural failures, and the hint does not systematically attack a refusal gate; under those conditions $\punk$ is already a strong evidence signal. The probe's advantage in our benchmark comes from a specific regime---a hint that is treated as evidence---not from being a universally better confidence score. Risk--coverage at $50\%$ coverage still favours the probe over maximum probability ($0.457$ vs.\ $0.655$), but not over $\punk$ ($0.449$).
-
-\paragraph{VQA-v2.} From VQA-v2 val \citep{goyal2017vqa} we keep questions whose majority answer is one of the eleven colours and whose image is in COCO val2017, yielding 1985 candidates, and sample 300. The probe is frozen. Accuracy is $0.850$ with no hint, $0.983$ with a correct hint and $0.613$ with a conflicting hint; $28.0\%$ of conflicting answers adopt the hinted colour. The frozen probe marks $94.0\%$ of no-hint items as evidence-present and still $78.0\%$ under conflict, while $\punk>0.5$ on only $5.7\%$ of conflicting items. The ordering survives even though the mean probe score moves from $+6.93$ to $+2.10$ ($r=0.54$ between the two conditions). We therefore claim \emph{rank} invariance, not calibration invariance.
-
-Two further cautions follow from the same data. First, the probe is an evidence detector, not a correctness predictor: ranking conflicting items by whether the answer is correct gives AUROC $0.710$ with the no-hint score and $0.489$ with the conflicting score, below maximum probability ($0.831$ / $0.649$). Second, on fully answerable colour questions, calibrated confidence is the right tool: at $50\%$ coverage the error rate is $0.007$ for maximum probability versus $0.087$ for the probe. The probe's role is to detect missing evidence, not to replace confidence when evidence is present.
+On VizWiz \citep{gurari2018vizwiz} (462 items; Appendix Table~\ref{tab:vizwiz}) conflict lowers unanswerable refusal from $0.704$ to $0.636$ and raises answerable refusal from $0.099$ to $0.193$ while dropping accuracy from $0.580$ to $0.451$. The frozen probe transfers at $0.827$/$0.720$, above maximum probability but below $\punk$ ($0.878$/$0.793$): natural unanswerable questions fail for heterogeneous reasons, and the hint does not attack the refusal gate. On VQA-v2 colour questions the ordering survives but calibration does not: the score shifts from $+6.93$ to $+2.10$ ($r=0.54$), and maximum probability has lower error at $50\%$ coverage ($0.007$ vs.\ $0.087$). A task-form swap (Appendix Table~\ref{tab:task}) leaves the gate intact but collapses the output readout mainly for colour ($\punk$ loses $0.159$, vs.\ $0.023$ and $0.040$), and the gate's advantage tracks that damage ($3.6\times$ vs.\ about $2\times$).
 
 \section{Discussion}
 
 \paragraph{What the hint does.}
-The hint does not erase the evidence. It changes a late decision about whether to report it. Three observations support this reading: the internal probe is unchanged under conflict; the direction that separates present from absent states can be added or removed to move the decision; and patching the unpolluted state back into the last few layers restores refusal. The most parsimonious account is a gate whose input is an evidence-availability representation computed upstream and whose output is written late, after the prompt has been integrated.
-
-\paragraph{Why output confidence fails.}
-$\punk$ is an excellent evidence detector when nothing contests it. But it is a \emph{readout} of the same late computation that the hint acts on. Under conflict the model's uncertainty is redistributed across the eleven colour candidates: the probability mass that would have gone to \unknown\ is partly reassigned to the hinted colour. The internal probe, trained on the no-hint pair, reads the upstream state before this reassignment, which is why it transfers.
+The hint does not erase the evidence; it compresses it and changes a late decision about whether to report it. A fresh readout still ranks the arms, but the no-hint direction loses more than half its separation, and a direction added at the readout moves the decision. The most parsimonious account is a gate whose input is an evidence-availability representation computed upstream, whose separation is attenuated by the assertion, and whose output is written late. It is not yet a mechanism: the steering is at the readout, and energy-matched removal shows that no single direction is necessary.
 
 \paragraph{When the gate helps.}
-The external results draw the boundary sharply. In the constructed regime the hint attacks the refusal gate and $\punk$ is corrupted; there the probe gate is worth an order of magnitude. On naturally unanswerable images the failure is heterogeneous and $\punk$ is already good; there the probe adds little over $\punk$, though it still beats maximum probability. A practical system should therefore use the internal gate when it suspects prompt pollution, not as a universal replacement for confidence.
+In the constructed regime the hint attacks the refusal gate and $\punk$ is corrupted; there the frozen probe buys a factor of two to four. On naturally unanswerable images the failure is heterogeneous and $\punk$ is already good, so the probe adds little. A practical system should use the internal gate when it suspects prompt pollution, operate it by coverage rather than a fixed threshold, and fall back to calibrated confidence when evidence is present.
 
 \paragraph{Limitations.}
-The benchmark is small (261 images) but densely observed. The images come from COCO val2017, so the scenes are natural photographs with a single large annotated instance; heavily cluttered scenes and small objects are excluded by construction. The mechanistic claims are strongest for colour; side and count are boundary conditions, not full replications. The probe requires white-box hidden states; for closed models only the output signals are available, and those are exactly the signals that fail. Patching involves a distribution shift, and we use it for localisation rather than effect size. Finally, the invariance we demonstrate is rank invariance, not calibration invariance: on external colour questions the probe's mean score moves even when its ordering is preserved.
+The benchmark is small ($261$ images) but densely observed. Absent categories are sampled without requiring scene plausibility, and ``absent'' is annotation-level; a co-occurrence score for the absent category against the image's own objects predicts no-hint refusal (Appendix~\ref{app:controls}), so the gate partly tracks scene fit, though evidence detection survives within both strata ($\punk$ AUROC $\ge0.976$) and the effect survives a control for category frequency. On the main absent arm a yes/no presence probe gives mean $p(\text{yes})=0.046$ and judges $2.7\%$ of items present above $0.5$; restricting to the $254$ items it judges absent leaves refusal under conflict at $0.531$ (against $0.521$ on all items), hint adoption at $0.457$, and probe AUROC at $0.999$. LLaVA's own presence readout is weak (mean $p(\text{yes})=0.403$), so for LLaVA absence rests on the annotation, though its strict subset gives the same picture (refusal $0.104$, adoption $0.891$, probe $1.000$). The main prompts offer an explicit \unknown\ option and a bracketed hint. Removing the \unknown\ option removes abstention by construction (refusal $0$) and raises hint adoption from $0.467$ to $0.935$ in 3B and $0.123$ to $0.977$ in 7B; phrasing the hint as a sentence rather than a bracket restores refusal to $0.958$/$0.989$ and all but eliminates hint adoption ($0.038$/$0.004$), while accuracy under the wrong hint rises from $0.383$ to $0.594$ in 3B and $0.249$ to $0.498$ in 7B. LLaVA moves the same way from a lower baseline: sentence phrasing raises conflict refusal from $0.088$ to $0.559$, cuts adoption from $0.904$ to $0.333$ and raises wrong-hint accuracy from $0.360$ to $0.548$. The conflict effect is therefore specific to a prefixed assertion with an available abstention token; we do not claim it for conversational hints or for readouts without \unknown. The mechanistic claims are strongest for colour. The probe requires white-box states. Energy-matched removal shows no direction-specific necessity, so we claim readout-level sufficiency, not a circuit. LLaVA shares the Qwen language backbone, so architecture and training recipe remain confounded; input resolution is not the driver, since moving the 3B model from its native $589{,}824$ to $262{,}144$ pixels changes absent refusal only from $0.521$ to $0.556$ and leaves the frozen probe at AUROC $0.997$. The conformal certificate is marginal at $130$ calibration scenes. The invariance is rank invariance, not calibration invariance. Labels were verified by a single annotator on contact sheets; we did not run a second-annotator agreement study.
 
 \section{Conclusion}
 
-A conflicting hint does not make a vision-language model blind to the image. It overrides a late decision to abstain, while the evidence remains linearly readable in the hidden state. The override is concentrated in the last few layers, is reproduced across three models from two families, and can be reversed by a single direction or by restoring an unpolluted state. The practical consequence is a training-free gate that removes most fabrication under prompt conflict, and the scientific consequence is a sharper question for future work: what writes the gate, and can it be trained to ignore assertions that the image contradicts?
+A conflicting hint does not make a vision-language model blind to the image. It compresses the internal evidence axis, roughly halving the separation between evidence-present and evidence-absent states, and overrides a late decision to abstain. The ranking survives; the scale does not, which is why the model's own confidence collapses while a frozen linear probe does not. The override is localised to the last few layers, replicates across three models and two vision stacks, and is bidirectionally controllable at the readout. The practical consequence is a gate fitted without model training that cuts fabrication by a factor of two to four at moderate coverage, with the boundary that on naturally unanswerable images $\punk$ is already as good. The scientific question is what writes the gate, and whether it can be trained to ignore assertions that the image contradicts.
 
 \section*{Reproducibility statement}
 
-The repository at \url{https://github.com/yuanchongbit/evidence-gate} contains the full pipeline: COCO and VizWiz download scripts, the frozen 261-item manifest with verified labels, all model runners, probes, steering and patching code, and the exact commands used for every table. Result summaries are versioned under \texttt{results/summary.md}, with per-run raw logs under \texttt{results/runs/}. All experiments use public data and a single 24 GB GPU.
+The repository at \url{https://github.com/yuanchongbit/evidence-gate} contains the frozen manifest with verified labels, all runners, probes, steering and patching code, and the commands for every table. Raw logs are under \texttt{results/runs/}; all experiments use public data and one 24 GB GPU.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
 
 \appendix
 
-\section{Prompt templates}
+\section{Prompts, readout and regularisation}
+\label{app:prompts}
 
 System prompt:
 \begin{quote}\small\ttfamily\raggedright\emergencystretch=1em
@@ -519,13 +361,227 @@ User prompt for the colour task:
 What color is the \{category\}?\newline
 Answer with one word.
 \end{quote}
-The side task asks ``Is the \{category\} on the left or on the right? Answer with one word.''; the count task asks ``How many \{category\} are in this image? Answer with one word.'' with candidates \texttt{one}, \texttt{two}, \texttt{three}, \unknown.
+The side task asks ``Is the \{category\} on the left or on the right? Answer with one word.''; the count task asks ``How many \{category\} are in this image? Answer with one word.'' with candidates \texttt{one}, \texttt{two}, \texttt{three}, \unknown. All twelve colour candidates are single tokens under each tokenizer's leading-space convention.
+
+The AUROC probe uses standardised features and $C=0.1$ with scene-grouped five-fold cross-validation. The steering direction uses $C=0.01$ on the same pair, because it is injected at a fixed norm and a less regularised direction is dominated by high-variance dimensions; the two settings differ only in shrinkage and are stated wherever a number depends on them. The 12-dimensional logit readout is logistic regression on the twelve candidate probabilities with $C=1.0$.
+
+\section{Per-colour breakdown}
+\label{app:colour}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Verified samples by gold colour. Counts are the 261 manifest items; the absent arm uses the category's most frequent colour, so it is not restricted to this set.}
+\begin{tabular}{lcccccc}
+\toprule
+colour & blue & white & black & green & red & yellow \\
+\midrule
+$n$ & 88 & 79 & 45 & 25 & 15 & 9 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Blue and white dominate the manifest. A per-colour AUROC is not estimable at useful precision for red and yellow ($n=15$ and $9$), and we do not report one. The colour distribution is a property of COCO val2017 under our geometric filter, not a design choice; the absent hint uses each category's own colour distribution.
+
+\section{Controls for text priors and strict absence}
+\label{app:controls}
+
+A gray image with the same prompts and dimensions yields probe AUROC $0.849$/$0.981$/$0.930$ under no/conflicting/correct hints, and $\punk$ $0.700$/$0.325$/$0.433$. Text alone carries some category-to-colour prior, enough to reach $0.85$ on the no-hint pair. But the direction learned from gray images transfers across hints at only $0.540$/$0.603$, whereas the real-image direction transfers at $0.958$/$0.995$ frozen ($0.969$/$0.996$ refitted). The real-image direction is shared across prompts; the text-prior direction is not.
+
+Category-matched pairs hold the question fixed and pair each present image with another image in which the category is annotated absent. Cross-validation groups by category, so a held-out fold contains categories never seen during fitting. The probe reaches $0.985$ with no hint and $0.973$ under conflict; $\punk$ drops from $0.983$ to $0.817$ and maximum probability from $0.701$ to $0.468$. Excluding the $17$ of $260$ negatives that the presence probe judges present above $0.5$ leaves this unchanged: $\punk$ is $0.992$ without hints and $0.851$ under conflict, and maximum probability $0.692$ and $0.473$. The main absent arm is checked the same way: per-item presence probabilities on all $261$ absent images give mean $p(\text{yes})=0.046$, and $7$ items are judged present above $0.5$. On the remaining $254$, refusal under the conflicting hint is $0.531$ (against $0.521$ on all items), refusal with no hint is $0.921$, hint adoption is $0.457$, and the evidence probe reaches AUROC $0.999$; the strict-absence restriction therefore does not change the main result. For LLaVA the presence check is much weaker (mean $p(\text{yes})=0.403$, $73$ items above $0.5$), so its yes/no readout is not a reliable absence detector; on the $183$ items it judges absent, conflict refusal moves only from $0.088$ to $0.104$, adoption is $0.891$ and the probe remains at $1.000$. For LLaVA, ``absent'' therefore rests on the annotation rather than on the probe.
+
+\paragraph{A model without an abstention behaviour.}
+We also ran the main battery on SmolVLM-Instruct (2B; Idefics3 vision encoder, SmolLM2 language model) as a non-Qwen backbone. It never emits \unknown: refusal is $0$ in all six cells, and it adopts the stated colour on $0.985$ (hint a) and $0.989$ (hint b) of absent items, so there is no behavioural gate to study and we do not use it as a replication. Its final state nonetheless separates present from absent items, at probe AUROC $0.989$ with no hint and $0.993$ under the conflicting hint ($p(\text{known})$ $0.921$ and $0.598$; maximum probability $0.877$ and $0.257$). A decodable evidence axis can therefore exist in a model that never abstains. Because the conflict-pair probe for this model could also pick up hint--image mismatch rather than evidence, we treat this as a boundary observation about the axis, not as evidence about the gate.
+
+\paragraph{Scene fit of the absent category.}
+The absent category is sampled without regard to whether it fits the scene, so abstention could track implausibility rather than missing evidence. For each item we score the absent category by its COCO train co-occurrence with the categories annotated in that image, $s=\mathrm{mean}_c\,P(\text{absent}\mid c)/P(\text{absent})$, and split at the median (Table~\ref{tab:scenefit}). The score predicts no-hint refusal in every model, so the absent arm does carry a scene-fit component: the better-fitting half refuses less by $0.116$ $[0.047,0.185]$ in 3B, $0.069$ $[0.023,0.115]$ in 7B and $0.132$ $[0.039,0.224]$ in LLaVA. Category frequency is a rival explanation, since frequent categories are also refused less in 7B ($0.073$ $[0.025,0.128]$) and LLaVA ($0.100$ $[0.008,0.195]$), though not detectably in 3B ($0.062$ $[-0.014,0.133]$). The two scores are only weakly related (Spearman $\rho=0.23$). Fitting no-hint refusal on both jointly with a scene bootstrap, scene fit remains negative in all three models, at $-0.81$ $[-1.26,-0.37]$ (3B), $-0.68$ $[-1.24,-0.29]$ (7B) and $-0.44$ $[-0.78,-0.16]$ (LLaVA) per standard deviation, while frequency is negative only in 7B ($-0.45$ $[-0.98,-0.14]$) and indistinguishable from zero in 3B ($-0.29$ $[-0.76,+0.11]$) and LLaVA ($-0.01$ $[-0.34,+0.37]$). The scene-fit difference is also present within each frequency half (Table~\ref{tab:scenefit2x2}). It does not account for the evidence signal. Within each half $\punk$ still separates present from absent images, at AUROC $0.988$--$0.998$ in 3B, $0.976$--$0.991$ in 7B and $0.986$--$0.995$ in LLaVA, and the probe at $0.992$--$0.999$, $0.989$--$1.000$ and $0.993$--$0.997$. Under the conflicting hint the stratum difference is not significant in 7B ($-0.047$ $[-0.124,+0.037]$) or LLaVA ($+0.024$ $[-0.045,+0.093]$) and remains in 3B ($-0.165$ $[-0.287,-0.050]$), where hint adoption is $0.157$ $[0.042,0.280]$ higher in the better-fitting half. The same conclusion therefore holds in both strata: plausibility moves the level of the gate, not the ranking of evidence.
+
+\begin{table}[h]
+\centering
+\small
+\setlength{\tabcolsep}{4pt}
+\caption{Scene-fit stratification of the absent arm ($n=261$ per model, median split). ``lo''/``hi'' are the lower and upper halves of $s=\mathrm{mean}_c\,P(\text{absent}\mid c)/P(\text{absent})$, computed from COCO train co-occurrence with the categories annotated in the image. ``AUROC'' is $\punk$ separating present from absent under no hint; ``probe'' is the internal probe on the same pairs. Refusal and adoption use hint $a$.}
+\label{tab:scenefit}
+\begin{tabular}{lcccccc}
+\toprule
+model & half & $n$ & refuse, none & refuse, a & adopt, a & AUROC / probe \\
+\midrule
+3B & lo & 131 & 0.962 & 0.603 & 0.389 & 0.998 / 0.999 \\
+   & hi & 130 & 0.846 & 0.438 & 0.546 & 0.988 / 0.992 \\
+\midrule
+7B & lo & 131 & 0.992 & 0.901 & 0.099 & 0.991 / 1.000 \\
+   & hi & 130 & 0.923 & 0.854 & 0.146 & 0.976 / 0.989 \\
+\midrule
+LLaVA & lo & 131 & 0.885 & 0.076 & 0.916 & 0.995 / 0.997 \\
+      & hi & 130 & 0.754 & 0.100 & 0.892 & 0.986 / 0.993 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{No-hint refusal in the $2\times2$ of scene fit $s$ (rows) and category frequency (columns), both median-split; cell sizes are $80$, $51$, $56$ and $74$ items from top to bottom. Scene fit lowers refusal in every frequency stratum.}
+\label{tab:scenefit2x2}
+\begin{tabular}{lccc}
+\toprule
+cell & 3B & 7B & LLaVA \\
+\midrule
+$s$ lo, freq lo & 0.963 & 1.000 & 0.887 \\
+$s$ lo, freq hi & 0.961 & 0.980 & 0.882 \\
+$s$ hi, freq lo & 0.893 & 0.982 & 0.839 \\
+$s$ hi, freq hi & 0.811 & 0.878 & 0.689 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Prompt format.}
+The main battery offers an explicit \unknown\ option and a bracketed hint, which could overstate abstention or hint uptake. We rerun the absent arm three ways in all three models (Table~\ref{tab:promptfmt}). Removing the \unknown\ option makes abstention impossible by construction (refusal is $0$ in every condition) and raises adoption of the plausible hint from $0.467$ to $0.935$ in 3B, from $0.123$ to $0.977$ in 7B and from $0.904$ to $0.992$ in LLaVA. Phrasing the hint as a sentence rather than a bracket leaves refusal under conflict at $0.958$/$0.989$ in 3B/7B, and raises it from $0.088$ to $0.559$ in LLaVA, while reducing hint adoption to $0.038$/$0.004$/$0.333$; accuracy under the wrong hint rises from $0.383$ to $0.594$ in 3B, from $0.249$ to $0.498$ in 7B and from $0.360$ to $0.548$ in LLaVA. The conflict effect is thus tied to a prefixed assertion and to the availability of an abstention token; a conversational hint does not reproduce it.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Prompt-format robustness ($n=261$ absent items per model). ``std'' is the main battery; ``no \unknown'' removes the \unknown\ option from the system prompt; ``sentence'' phrases the hint as a sentence. Hint adoption for absent $b$ is measured against the far-hue colour actually stated.}
+\label{tab:promptfmt}
+\begin{tabular}{llccccc}
+\toprule
+model & format & refuse, none & refuse, hint a & refuse, hint b & adopt a & adopt b \\
+\midrule
+3B & std & 0.904 & 0.521 & 0.563 & 0.467 & 0.433 \\
+   & no \unknown & 0.000 & 0.000 & 0.000 & 0.935 & 0.908 \\
+   & sentence & 0.931 & 0.958 & 0.981 & 0.038 & 0.011 \\
+\midrule
+7B & std & 0.958 & 0.877 & 0.958 & 0.123 & 0.042 \\
+   & no \unknown & 0.000 & 0.000 & 0.000 & 0.977 & 0.973 \\
+   & sentence & 0.958 & 0.989 & 0.992 & 0.004 & 0.000 \\
+\midrule
+LLaVA & std & 0.820 & 0.088 & 0.188 & 0.904 & 0.762 \\
+      & no \unknown & 0.000 & 0.000 & 0.000 & 0.992 & 0.946 \\
+      & sentence & 0.793 & 0.559 & 0.736 & 0.333 & 0.088 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Input resolution.}
+LLaVA runs at a different input resolution from the Qwen models, so we rerun the 3B battery at $262{,}144$ and $589{,}824$ pixels. At $262{,}144$, absent refusal is $0.908$ with no hint and $0.556$ under the plausible hint, hint adoption is $0.441$, accuracy under the wrong hint is $0.433$, and the frozen probe reaches AUROC $0.997$; at $589{,}824$ the values are $0.904$, $0.521$, $0.467$, $0.383$ and $1.000$, matching the native run. Resolution moves the level by at most $0.05$ and does not produce the conflict effect.
+
+\section{External validation details}
+\label{app:external}
+
+VizWiz is used for naturally unanswerable questions and VQA-v2 for colour questions with real answer distributions. The VizWiz run keeps $462$ items ($212$ answerable, $250$ unanswerable) and the same three prompt conditions; the hint is the most frequent colour of the queried category, as in the plausible condition. The VQA-v2 run uses $300$ colour questions over $277$ images, with the conflicting hint taken from the far-hue mapping. Both runs use the same 3B model and the probe frozen after fitting on the main no-hint pair.
+
+\begin{table}[h]
+\centering
+\small
+\caption{VizWiz (Qwen2.5-VL-3B). Refusal and accuracy by condition, and AUROC over answerable versus unanswerable questions. In-domain means refitting the probe inside VizWiz; frozen means transferring the probe fitted on the 261-image set.}
+\label{tab:vizwiz}
+\begin{tabular}{lcccccc}
+\toprule
+condition & ans.\ refuse & ans.\ acc & unans.\ refuse & probe (in-dom.) & probe (frozen) & $\punk$ \\
+\midrule
+no hint & 0.099 & 0.580 & 0.704 & 0.909 & 0.827 & 0.878 \\
+correct hint & 0.033 & 0.816 & --- & --- & --- & --- \\
+conflicting hint & 0.193 & 0.451 & 0.636 & 0.803 & 0.720 & 0.793 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+On VizWiz the asymmetry is present but weaker than in the constructed design: the hint lowers unanswerable refusal by $0.068$, whereas the constructed conflict lowers it by about $0.36$, and it raises answerable refusal by $0.094$. Maximum probability is close to chance on both pairs ($0.437$/$0.367$), while $\punk$ is strong ($0.878$/$0.793$). The frozen probe adds nothing over $\punk$ on this data ($-0.051$ $[-0.078,-0.023]$ without a hint, $-0.074$ $[-0.119,-0.031]$ with one). Naturally unanswerable questions are failed for heterogeneous reasons, and the hint does not target the refusal gate, so the regime in which the probe wins is not reached. At $50\%$ coverage, the risk of an incorrect answer is $0.457$ for the probe, $0.449$ for $\punk$ and $0.655$ for maximum probability; none of the three is usable, because half of these questions have no valid answer.
+
+\begin{table}[h]
+\centering
+\small
+\caption{VQA-v2 colour questions (300 items, 277 images, Qwen2.5-VL-3B). ``Score'' is the frozen probe score; ``$>0$'' is the fraction it classifies as evidence-present. AUROC is for answering correctly on answerable questions. Risk is $1-\text{accuracy}$ at the stated coverage.}
+\label{tab:vqa}
+\begin{tabular}{lcccccc}
+\toprule
+condition & accuracy & $\punk$ & max prob. & score & $>0$ & AUROC \\
+\midrule
+no hint & 0.850 & 0.024 & 0.865 & $+6.93$ & 0.940 & 0.710 \\
+correct hint & 0.983 & 0.021 & 0.971 & $+6.70$ & 0.983 & --- \\
+conflicting hint & 0.613 & 0.115 & 0.722 & $+2.10$ & 0.780 & 0.489 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+VQA-v2 reproduces the compression without the constructed absent arm: the score falls by $4.83$ points and the present-classification rate falls from $0.940$ to $0.780$, while accuracy falls from $0.850$ to $0.613$. The score is correlated across conditions ($r=0.54$), so the shift is graded by the item rather than uniform. The ordering survives in the sense that the probe still separates correct from incorrect answers without a hint ($0.710$), but under conflict it is at chance ($0.489$), and maximum probability is the better correctness predictor in both conditions ($0.831$/$0.649$). At $50\%$ coverage on no-hint answers, maximum probability has risk $0.007$ against $0.087$ for the probe. The probe is an evidence detector, not a correctness predictor, and on real answer distributions the two come apart.
 
 \section{Per-layer probe}
+\label{app:layer}
 
-A probe trained independently at each layer (grouped by sample) reaches AUROC $0.500$ at the embedding output, $0.867$ at layer 4, $0.982$ at layer 8, and $\ge0.990$ from layer 16 onward. Transfer from the no-hint pair to the conflicting pair has a dip at layer 8 ($0.803$) and recovers to $0.965$--$0.995$ in deeper layers. The evidence representation is therefore available well before the layers at which patching shows the suppression being written.
+A probe refitted independently at each layer (grouped by scene) reaches AUROC $0.500$ at the embedding output, $0.867$ at layer 4, $0.982$ at layer 8, and $\ge0.990$ from layer 16 onward; transfer from the no-hint pair to the conflicting pair has a dip at layer 8 ($0.803$) and recovers to $0.965$--$0.995$ deeper. Refitting, however, gives each layer its own estimator, so this curve measures decodability rather than a shared axis. We therefore also fit the estimator once on the final layer (per fold) and apply its weights unchanged to every layer, with per-layer standardisation only. That shared readout is at chance through position 18 of the stored stack (embedding plus 36 layers; AUROC $\le0.53$, rising to $0.58$ and $0.64$ at positions 19 and 21), then jumps to $0.86$ at position 22, $0.97$ at position 24 and $0.99$ from position 25 onward. The rise is not monotone ($0.67$ at position 23), so we locate it to the last quarter rather than a single layer. Evidence is thus linearly decodable early, but in a layer-specific basis; the final-layer evidence axis used by steering and patching is assembled late. The two analyses share a target but not an estimator, and we do not map probe AUROC at layer $L$ one-to-one onto recovery at layer $L$.
+
+\section{Full dose--response}
+\label{app:dose}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Steering the no-hint direction during the conflicting pass (Qwen2.5-VL-3B, $n=261$). ``True'' and ``hint'' are argmax rates on present items; ``hint'' on absent items is the rate of naming the hinted colour, averaged over hints a and b.}
+\begin{tabular}{lcccc}
+\toprule
+setting & present refusal & present true & absent refusal & absent hint \\
+\midrule
+no hint, unsteered & 0.011 & 0.762 & 0.904 & --- \\
+conflict, base & 0.088 & 0.383 & 0.542 & 0.450 \\
+$-0.50\,\wdir$ & 0.931 & 0.008 & 0.941 & 0.057 \\
+$-0.25\,\wdir$ & 0.759 & 0.073 & 0.874 & 0.125 \\
+$+0.25\,\wdir$ & 0.000 & 0.479 & 0.065 & 0.845 \\
+$+0.50\,\wdir$ & 0.000 & 0.479 & 0.000 & 0.665 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{SDT across models and task forms}
+\label{app:tasks}
+
+Criterion shifts under conflict are $+0.16$ $[-0.18,+0.39]$ (3B), $-0.54$ $[-0.73,-0.35]$ (7B) and $+1.00$ $[+0.66,+1.33]$ (LLaVA); $d'$ falls in all three. Under a correct hint, $d'$ changes are $+0.31$, $+0.50$ and $+0.32$.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Signal detection (Qwen2.5-VL-3B). $d'$ and $c$ are computed from paired present/absent refusal rates. Separation is the fixed probe's mean gap in pooled within-arm SD units. Slopes use $z$ from the no-hint state (fixed) or the condition's own state (own), with the same direction in both.}
+\label{tab:sdt}
+\begin{tabular}{lccccc}
+\toprule
+condition & $d'$ & $c$ & separation & slope, fixed & slope, own \\
+\midrule
+no hint & 3.51 & 0.46 & 5.06 & $-0.719$ & $-0.719$ \\
+conflicting hint & 1.45 & 0.62 & 2.60 & $-0.171$ & $-0.559$ \\
+correct hint & 3.83 & 0.62 & 4.17 & $-0.680$ & $-0.641$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\small
+\caption{Task form with the same images and absent categories (Qwen2.5-VL-3B). The gate opens in all three; the output readout collapses mainly for colour.}
+\label{tab:task}
+\begin{tabular}{llcccc}
+\toprule
+task & condition & refusal & adopts hint & probe & $\punk$ \\
+\midrule
+colour & present, conflict & 0.088 & 0.448 & 0.997 & 0.834 \\
+ & absent, no hint & 0.904 & --- & 0.995 & 0.993 \\
+ & absent, hint & 0.521 & 0.467 & --- & --- \\
+side & present, conflict & 0.000 & 0.268 & 0.991 & 0.966 \\
+ & absent, no hint & 0.621 & --- & 0.993 & 0.989 \\
+ & absent, hint & 0.111 & 0.743 & --- & --- \\
+count & present, conflict & 0.870 & 0.115 & 0.995 & 0.946 \\
+ & absent, no hint & 1.000 & --- & 0.996 & 0.986 \\
+ & absent, hint & 0.996 & 0.004 & --- & --- \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Deployment details}
+\label{app:deploy}
+
+Scores are out-of-fold for the probe on the 3B model and frozen for the 7B and LLaVA models; all deployment numbers use the plausible hint \texttt{a} and pair \texttt{sufficient|wrong} with \texttt{absent|a}, giving $522$ items. Fabrication is the fraction of answered items that are absent-object items; UAR is the same quantity divided by all absent items at full coverage. Conformal calibration uses half the scenes, a Clopper--Pearson upper bound at $90\%$ confidence over all prefixes, and evaluation on the other half. The 3B refit gate reaches $0.011$ at $50\%$ coverage; the frozen score used in deployment reaches $0.069$. The 12-dimensional logit readout reaches $0.142$.
 
 \section{Compute}
+\label{app:compute}
 
 All runs used one NVIDIA A10 with 24 GB. The main 3B run (six conditions per image, hidden states saved) takes about 30 minutes; the 7B and LLaVA runs take about an hour each; the full suite, including steering, patching and external validation, fits in a few GPU-hours.
 

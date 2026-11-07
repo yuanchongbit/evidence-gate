@@ -1,8 +1,8 @@
 # The Evidence Gate
 
-**Conflicting hints make vision-language models answer when the evidence is absent, but they do not erase the evidence inside the model.**
+**Conflicting hints make vision-language models answer when the evidence is absent, but they compress the internal evidence axis rather than erasing it.**
 
-This repository contains the code, the frozen benchmark and the result summaries for the paper *The Evidence Gate: How Vision-Language Models Decide to Answer Without Evidence* (preprint in preparation).
+This repository contains the code, the frozen benchmark and the result summaries for the paper *Hints Compress the Evidence Axis and Override a Late Abstention Gate in Vision-Language Models* (preprint in preparation).
 
 Project page: <https://yuanchongbit.github.io/evidence-gate/> (English) · [中文](https://yuanchongbit.github.io/evidence-gate/index.zh.html)
 
@@ -12,11 +12,12 @@ A VLM is asked *"What color is the umbrella?"* when there is no umbrella in the 
 
 Is that a failure of **seeing** or of **reporting what was seen**? We separate the two with a 2×3 within-subject design and find a dissociation:
 
-- **Output-space evidence signals collapse under conflict.** The AUROC of p(unknown) for detecting whether the queried object is present drops from **0.993 to 0.834**; max-probability drops from 0.615 to **0.463**, below chance.
-- **The internal evidence representation does not.** A linear probe on the final-token hidden state scores **0.995 / 0.998 / 0.997** under no / conflicting / correct hints, and transfers from no-hint to conflict at **0.969**.
-- **The suppression is a late write.** Pasting the no-hint state back at layer 32/36 recovers **80%** of the lost refusal (3B); at 26/28 it recovers **90%** (7B); a LLaVA-OneVision model, second family, recovers **36% / 80% / 96%** at 64% / 86% / 93% depth.
-- **The gate is causal and readable.** Adding or ablating one probe direction changes abstention bidirectionally and dose-monotonically on held-out halves.
-- **A training-free gate works where it matters.** At 50% coverage under conflicting hints, a probe-based gate reduces fabrication from **0.249** (p(unknown)) to **0.011** (3B), and similarly on 7B and LLaVA.
+- **Output-space evidence signals collapse under conflict.** The AUROC of p(unknown) for detecting whether the queried object is present drops from **0.993 to 0.834**; max-probability drops from 0.615 to **0.463** (95% CI [0.413, 0.514]), i.e. to chance.
+- **The internal evidence stays decodable, but its axis contracts.** A linear probe on the final-token hidden state reaches **0.995** without hints; frozen after fitting on that pair, it still ranks the conflict arms at **0.958** (3B) and **0.923** (LLaVA), and refitting inside the condition reaches **0.998**. The probe's present-minus-absent gap, however, shrinks from **15.9 to 7.7** for the plausible hint and **7.3** for the far-hue hint (ratio 0.46 [0.44, 0.49]); the within-class spread is unchanged. Ranking survives; scale does not.
+- **Most of the apparent loss of decision gain is compression.** On the fixed no-hint axis the conflict refusal curve is 4.2× flatter in 3B; on the condition's own axis it is only 22% flatter (24% in 7B, 12% and n.s. in LLaVA). The contraction is the cross-model invariant (0.34–0.49).
+- **The override is late.** Pasting the no-hint state back at layer 32/36 recovers **80%** of the lost refusal (3B); at 26/28 it recovers **90%** (7B); LLaVA-OneVision-7B recovers **36% / 80% / 96%** at 64% / 86% / 93% depth. LLaVA uses a different vision encoder and recipe, though it shares the Qwen LLM lineage.
+- **The direction is sufficient at the readout.** Adding or subtracting one probe direction, injected immediately before unembedding, changes abstention bidirectionally and dose-monotonically on held-out halves. This is readout-level causal evidence, not an upstream mechanism claim; ablation is confounded with removed energy.
+- **A frozen linear gate works where it matters, within a boundary.** At 50% coverage under conflicting hints, ranking by the frozen probe reduces fabrication from **0.249** to **0.069** (3B, 3.6×), from **0.268** to **0.126** (7B, 2.1×) and from **0.295** to **0.111** (LLaVA, 2.7×). The gain survives unanswerable prevalences from 5% to 50%, and a 10% conformal risk certificate holds in two of three models; a 5% certificate is infeasible at 130 calibration scenes. The advantage is regime-specific: on naturally unanswerable VizWiz questions p(unknown) matches the probe.
 
 The effect is not a property of one checkpoint: the same depth profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B.
 
@@ -25,9 +26,9 @@ The effect is not a property of one checkpoint: the same depth profile appears o
 |  | no hint | correct hint | conflicting hint |
 |---|---|---|---|
 | **object present** | `sufficient\|none` | `sufficient\|correct` | `sufficient\|wrong` |
-| **object verified absent** | `absent\|none` | `absent\|a` | `absent\|b` |
+| **object annotation-absent** | `absent\|none` | `absent\|a` | `absent\|b` |
 
-Every image appears in all six cells. The absent arm asks about an object category that COCO's exhaustive val2017 annotations place outside the image; the hinted colour is that category's most frequent colour in COCO val, so the hint is plausible rather than adversarial. **No pixel is edited.** A separate yes/no presence question confirms the manipulation (p(yes) = 0.095 for absent categories vs. 0.95 for the original images).
+Every image appears in all six cells. The absent arm asks about an object category that COCO's exhaustive val2017 annotations place outside the image; the hinted colour is that category's most frequent colour in COCO val, so the hint is plausible rather than adversarial. **No pixel is edited.** A separate yes/no presence question confirms the manipulation (p(yes) = 0.046 on the main absent arm and 0.095 on 260 category-matched negatives, vs. 0.95 for the original images).
 
 Data: 261 human-verified colour labels, 74 absent categories, 11 colours + `unknown`, COCO val2017 images. Labels were proposed from instance masks and verified on contact sheets; the verified label file is shipped with the repository so the benchmark is frozen.
 
@@ -54,8 +55,19 @@ pilot/                 model-agnostic experiment code
   steer_conflict.py    same direction applied under conflict
   analyze_steer_conflict.py  paired summary for the conflict sweep
   steer_half.py        split-half causal check
+  control_steer.py     random-direction and dose-matched layer controls
   patch3.py            layer-wise patching for Qwen-VL
   patch4.py            layer-wise patching for other families (LLaVA)
+  patch5.py            same-image opposite-question patching control
+  control_analyze.py   summaries for the causal-control runs
+  extra44.py           energy-matched ablations, direction competitors, per-prompt dosing
+  patch6.py            no-op and zero-paste patching controls
+  prompt_variants.py   no-unknown and sentence-hint prompt formats
+  presence_main.py     yes/no presence check on the main absent arm
+  resolution3b.py      resolution-matched rerun of the 3B battery
+  layer_transfer.py    single-estimator per-layer transfer
+  plausibility.py      scene-fit stratification of the absent arm
+  analyze44.py         summaries for the v2 control battery
   task2.py, task3.py   side / count task-form boundaries
   ext_vizwiz.py        external: natural unanswerable questions
   ext_vqa_color.py     external: VQA-v2 colour questions, frozen probe
@@ -89,8 +101,15 @@ bash scripts/run_main.sh
 # steering, split-half steering, layer patching
 bash scripts/run_causal.sh
 
+# random-direction, dose-matched layer and same-image patching controls
+bash scripts/run_control_causal.sh
+
 # 7B and LLaVA-OneVision replication
 bash scripts/run_cross_model.sh
+
+# v2 controls: matched-energy ablation, no-op patching, prompt formats,
+# strict presence, resolution, single-estimator layer transfer, SmolVLM
+bash scripts/run_controls_v2.sh
 
 # controls, task forms, external validation
 bash scripts/download_vizwiz.sh
@@ -124,14 +143,17 @@ Evidence detection (AUROC over 522 paired items):
 
 | signal | no hint | conflicting hint | correct hint |
 |---|---|---|---|
-| final-state probe | 0.995 | 0.998 | 0.997 |
+| frozen final-state probe | 0.995 | 0.958 | 0.995 |
+| refit final-state probe (upper bound) | 0.995 | 0.998 | 1.000 |
 | p(unknown) | 0.993 | 0.834 | 0.969 |
 | max probability | 0.615 | 0.463 | 0.916 |
 | 12-d logit probe | 0.982 | 0.923 | 0.974 |
 
-Fabrication at 50% coverage under conflict: probe **0.011**, p(unknown) **0.249**, max-probability **0.510**.
+Fabrication at 50% coverage under conflict, frozen probe / p(unknown) / max-probability: **0.069 / 0.249 / 0.510** (3B), **0.126 / 0.268 / 0.648** (7B), **0.111 / 0.295 / 0.655** (LLaVA). The refit probe reaches 0.011 in 3B but is an upper bound, not a deployable score.
 
 Layer-wise patching, recovery of refusal (3B): L24 (67% depth) 22%, L32 (89%) 80%. 7B: L18 (64%) ~0%, L24 (86%) 69%, L26 (93%) 90%. LLaVA-OneVision-7B: L18 (64%) 36%, L24 (86%) 80%, L26 (93%) 96%.
+
+Direction controls (3B / 7B / LLaVA, conflicting pass): ablating `w` lowers absent refusal by 0.215 / 0.211 / 0.102 and raises hint adoption by 0.201 / 0.209 / 0.113, while ablating any of three random directions moves every metric by at most 0.015. This ratio is **not** interpreted as direction-specific necessity: `w` removes 5.4× more state energy than the random directions (projection fraction 0.055 vs 0.019 / 0.004 / 0.008), and class-mean and first-PC directions remove comparable energy (0.052 / 0.066). Matching the removed energy removes most of the effect: `w` scaled to a random direction's energy changes absent refusal by −0.073 (3B), −0.018 (7B) and −0.011 (LLaVA); a random direction scaled up to `w`'s energy is null in 3B (+0.010) but larger than `w` in 7B (−0.044) and LLaVA (−0.029); class-mean and first-PC directions at the same energy move 3B refusal (+0.083), leave 7B unchanged (+0.004) and move LLaVA by −0.063 / −0.038. We therefore claim readout-level sufficiency and an efficient readout direction, not a circuit. Dose-matched injection is inert through L16 (3B) and L20 (7B) and only bites at L32 / L26; LLaVA's onset is earlier (L20) but still in the last 30% of depth. Same-image, opposite-question patching at L24/L26 gives paired absent-minus-present recovery gaps of +0.51/+0.83 (3B), +0.84/+0.86 (7B) and +0.74/+0.80 (LLaVA), while shuffled sources restore at least as much.
 
 Full numbers, including 7B/LLaVA, controls, task forms and external validation, are in [`results/summary.md`](results/summary.md) and in the paper.
 
@@ -140,13 +162,16 @@ Full numbers, including 7B/LLaVA, controls, task forms and external validation, 
 - The advantage of internal gating is **specific to hint-polluted settings**. On naturally unanswerable VizWiz images the model's own p(unknown) is as good as the frozen probe (0.878 vs 0.827); the probe still beats max-probability by a wide margin.
 - The probe's invariance is **rank invariance**, not calibration invariance: on VQA-v2 the probe's mean score moves from +6.93 to +2.10 under conflict even though its ordering is preserved.
 - The probe detects **whether evidence is available**, not whether a particular answer is correct. For answer correctness under no hint, max-probability is the better signal.
+- The evidence direction is **not a unique knob at the readout**. Large random directions can also open the gate when added, at matched norm, and removing `w` is confounded with removing more state energy (5.4× the random directions). We therefore do not claim direction-specific necessity. What the intervention shows is sufficiency at the readout: adding the direction changes abstention bidirectionally, so the gate is expressed late and the evidence axis remains connected to it.
+- The absent arm carries a **scene-fit component**: absent categories that co-occur more with the image's own objects are refused less (by 0.116 / 0.069 / 0.132 in 3B / 7B / LLaVA). Category frequency is only weakly related to scene fit (Spearman 0.23) and does not explain it: in a joint fit scene fit stays negative in all three models and frequency adds only in 7B. Evidence detection survives within both strata (p(unknown) AUROC ≥ 0.976, probe ≥ 0.989), so scene fit moves the level of the gate, not the ranking of evidence.
+- SmolVLM-Instruct (a non-Qwen backbone) is a **boundary case, not a fourth replication**: it never emits `unknown` in any of the six cells (refusal 0.000; adoption 0.985 / 0.989), so there is no gate to open or close. Its final state still separates present from absent images (probe 0.989 with no hint, 0.993 under conflict), with the caveat that on conflict pairs the probe may be reading hint–image mismatch rather than evidence.
 - Mechanistic results are strongest on the colour task. Side and count tasks are tested as boundary conditions, not as full replications.
 
 ## Citation
 
 ```bibtex
 @misc{yuanchongbit2026evidencegate,
-  title  = {The Evidence Gate: How Vision-Language Models Decide to Answer Without Evidence},
+  title  = {Hints Compress the Evidence Axis and Override a Late Abstention Gate in Vision-Language Models},
   author = {yuanchongbit},
   year   = {2026},
   note   = {Preprint in preparation},
