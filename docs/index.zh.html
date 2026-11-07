@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>提示压缩证据轴 — 证据之门</title>
-<meta name="description" content="用 2×3 设计把“视觉证据缺失”与“被提示的答案”分开。冲突提示通过压缩内部证据轴破坏拒答读出，而不是抹掉证据。">
+<title>提示稀释并旋转证据轴 — 证据之门</title>
+<meta name="description" content="用 2×3 设计把“视觉证据缺失”与“被提示的答案”分开。冲突提示通过稀释并旋转内部证据轴破坏拒答读出，而不是抹掉证据。">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="alternate" hreflang="en" href="https://yuanchongbit.github.io/evidence-gate/">
 <link rel="alternate" hreflang="zh-Hans" href="https://yuanchongbit.github.io/evidence-gate/index.zh.html">
@@ -20,7 +20,7 @@
     </nav>
     <p class="kicker">预印本 · 2026</p>
     <h1>证据之门</h1>
-    <p class="subtitle">提示压缩内部证据轴，并覆盖<br>后段的弃答门</p>
+    <p class="subtitle">提示稀释并旋转视觉语言模型的<br>证据轴</p>
     <p class="authors">yuanchongbit</p>
     <nav class="links">
       <a class="primary" href="https://github.com/yuanchongbit/evidence-gate">代码</a>
@@ -35,7 +35,7 @@
 <main class="wrap">
 
 <section class="tldr">
-  <p><strong>一句话。</strong>问视觉语言模型一个图中并不存在的物体，它通常回答<em>不确定</em>。只要加一句话——“提示：雨伞是黑色的。”——它就会回答<em>黑色</em>。我们表明，这不是“没看见”：证据在模型内部仍然可解码，但提示把它的轴压缩了一半；坏掉的是把证据转成拒答的那道<em>门</em>。这道门写得很晚，位于最后几层，可以被读出，也可以沿单一方向推回去。</p>
+  <p><strong>一句话。</strong>问视觉语言模型一个图中并不存在的物体，它通常回答<em>不确定</em>。只要加一句话——“提示：雨伞是黑色的。”——它就会回答<em>黑色</em>。我们表明，这不是“没看见”：证据在模型内部仍然可解码，但提示把存在-缺失均值差缩短，并让它偏离模型原本读取的方向约 40°；坏掉的是把证据转成拒答的那道<em>门</em>。这道门写得很晚，位于最后几层，可以被读出，也可以沿单一方向推回去。</p>
 </section>
 
 <section id="idea">
@@ -69,8 +69,8 @@
 </section>
 
 <section id="results">
-  <h2>读出坍塌，证据轴收缩</h2>
-  <p class="lead">在冲突提示下，任何由模型输出分布计算出的信号，都失去了区分“有证据”与“无证据”的能力。最终隐状态上的线性探针保住了大部分排序（冻结迁移 0.958），但它区分存在与缺失的间隔从 15.9 缩到 7.3。信息是被重新编码，而不是被抹掉。</p>
+  <h2>读出坍塌，证据轴被稀释并旋转</h2>
+  <p class="lead">在冲突提示下，任何由模型输出分布计算出的信号，都失去了区分“有证据”与“无证据”的能力。最终隐状态上的线性探针在留出场景上保住了大部分排序（3B 0.958、7B 0.946、LLaVA 0.935，远端色相提示）；但它区分存在与缺失的间隔从 15.9 缩到 7.3，完整的均值差向量既变短又转向。信息是被重新编码，而不是被抹掉。</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 320" role="img" aria-label="三种提示条件下证据检测的 AUROC">
@@ -105,21 +105,34 @@
         <circle class="maxp" cx="470" cy="308" r="5"></circle><text x="484" y="312">最大概率</text>
       </g>
     </svg>
-    <figcaption>把 522 个配对样本分类为“有证据 vs. 无证据”的 AUROC。分组 bootstrap 95% 置信区间见论文；图中探针在每种条件内部重新拟合；只在无提示对上拟合的冻结探针迁移到冲突对时为 0.958（3B）与 0.923（LLaVA）。</figcaption>
+    <figcaption>把 522 个配对样本分类为“有证据 vs. 无证据”的 AUROC。分组 bootstrap 95% 置信区间见论文；图中探针在每种条件内部重新拟合；只在无提示对上拟合的探针迁移到冲突对时，在留出场景上为 0.958（3B）、0.946（7B）与 0.935（LLaVA）。</figcaption>
   </figure>
 
   <div class="cards">
-    <div class="card"><span class="num">0.958</span><span class="lab">冲突下的冻结探针 AUROC</span></div>
+    <div class="card"><span class="num">0.958</span><span class="lab">冲突下的留出探针 AUROC（提示 b）</span></div>
     <div class="card"><span class="num">0.834</span><span class="lab">冲突下 p(unknown) 的 AUROC</span></div>
     <div class="card"><span class="num">0.463</span><span class="lab">最大概率 AUROC——随机水平（CI [0.413, 0.514]）</span></div>
     <div class="card"><span class="num">0.46</span><span class="lab">冲突下探针间隔比（15.9 → 7.3）</span></div>
-    <div class="card"><span class="num">0.998</span><span class="lab">重拟合探针：无提示 → 冲突（上界）</span></div>
+    <div class="card"><span class="num">0.53 / 40°</span><span class="lab">冲突下均值差向量的长度与转角（3B）</span></div>
   </div>
 </section>
 
 <section id="mechanism">
-  <h2>抑制发生在后段，证据被压缩</h2>
-  <p class="lead">冲突下，探针区分存在与缺失的间隔从 15.9 缩到 7.3，而类内离散度基本不变。冻结的无提示方向仍能把两组排到 0.958；在冲突对上重新拟合的探针达到 0.998，说明证据是被重新编码，而不是被摧毁。这解释了为什么 p(unknown) 会失效——它读的是绝对尺度——而基于排序的门仍然有效。</p>
+  <h2>抑制发生在后段，证据被稀释并旋转</h2>
+  <p class="lead">冲突下，探针区分存在与缺失的间隔从 15.9 缩到 7.3，而类内离散度基本不变。在完整状态空间里（见下表），存在-缺失均值差只剩 0.39–0.64 的长度，并偏离无提示方向 24°–71°；两种冲突颜色旋转到几乎相同的方向（cos 0.91）。用类内噪声白化后，可分性并未下降，冲突对内部重拟合的探针达到 0.989–0.999：证据是被重新编码，而不是被摧毁。这解释了为什么 p(unknown) 会失效——它读的是绝对尺度和一个固定方向——而基于排序的门仍然有效。</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>模型</th><th>‖Δμ‖ 长度比（a / b）</th><th>与无提示轴夹角（a / b）</th><th>轴向投影比（a / b）</th><th>跨场景一致性 none → 冲突</th></tr></thead>
+      <tbody>
+        <tr><td>Qwen2.5-VL-3B</td><td>0.53 / 0.57</td><td>39° / 41°</td><td>0.41 / 0.43</td><td>0.60 → 0.40</td></tr>
+        <tr><td>Qwen2.5-VL-7B</td><td>0.39 / 0.43</td><td>48° / 44°</td><td>0.26 / 0.31</td><td>0.70 → 0.41</td></tr>
+        <tr><td>LLaVA-OneVision-7B</td><td>0.61 / 0.64</td><td>71° / 69°</td><td>0.20 / 0.23</td><td>0.61 → 0.45</td></tr>
+        <tr><td>Gemma-3-4B-it</td><td>0.53 / 0.54</td><td>29° / 24°</td><td>0.47 / 0.50</td><td>0.59 → 0.54</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">最终隐状态上完整的“存在 − 缺失”均值差向量（261 个场景；场景 bootstrap 置信区间见论文）。<em>a</em> 为可信提示，<em>b</em> 为远端色相提示。同一估计量在无提示向量自比时给出长度比 1.00、夹角 3–5°，即噪声底。逐场景间隔失去了跨场景一致性，而归一化后的可分性并未下降：聚合向量变短，一部分是因为不同场景不再指向同一方向。Gemma-3-4B-it（Gemma-3 + SigLIP，不含任何 Qwen 组件）复现了稀释、旋转、与颜色无关的方向（cos 0.97）和留出场景迁移（0.964 / 0.970），但没有复现输出信号的塌缩：冲突下它的最大概率反而上升（0.627 → 0.701），而答案被带偏的程度与 3B 相当（准确率 0.567 → 0.241）。内部几何跨语言模型家族成立；排序-尺度分离是本组 Qwen2/2.5 读出的性质。</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 330" role="img" aria-label="逐层激活替换后拒答的恢复情况">
@@ -158,7 +171,7 @@
 
   <p>两个干预检验这一分离的因果地位。沿探针方向 <em>w</em>，加上 +0.5·‖h‖ 会把“物体缺失”时的拒答从 0.904 压到 0.000；减去 0.5·‖h‖ 会把“物体存在”时的拒答从 0.011 抬到 0.352。剂量–响应是单调的，并且当方向在一半场景上拟合、在另一半上评估时依然成立。</p>
 
-  <p>同一方向在提示存在时依然有效。在冲突提示的前向过程中，−0.25·‖h‖ 把“物体缺失”时的拒答从 0.542 抬到 0.874；+0.25·‖h‖ 把答对真实颜色的比例从 0.383 提到 0.479，而采纳提示的比例仍为 0.433。冲突压缩并削弱证据的权重，但没有切断它与决策的连接。由于向量在 unembedding 之前注入，这是读出层面的因果证据。</p>
+  <p>同一方向在提示存在时依然有效。在冲突提示的前向过程中，−0.25·‖h‖ 把“物体缺失”时的拒答从 0.542 抬到 0.874；+0.25·‖h‖ 把答对真实颜色的比例从 0.383 提到 0.479，而采纳提示的比例仍为 0.433。冲突稀释、旋转并削弱证据的权重，但没有切断它与决策的连接。由于向量在 unembedding 之前注入，这是读出层面的因果证据。</p>
 
   <p>两个控制限定了这一结论。去掉 <em>w</em> 使缺失项拒答下降 0.215 / 0.211 / 0.102（3B / 7B / LLaVA）、提示采纳上升 0.201 / 0.209 / 0.113，而去掉三个随机方向时所有指标的变化不超过 0.015。但这个比值不能解释为方向特异性：两种投影去掉的状态量不同。平均绝对投影比例为 <em>w</em> 的 0.055，随机方向为 0.019 / 0.004 / 0.008，相差 5.4 倍；与类别结构对齐的方向去掉的能量相当（类均值 0.052，第一主成分 0.066）。把去除能量对齐之后，大部分效应消失：把 <em>w</em> 缩放到随机方向的能量，缺失拒答只变化 −0.073（3B）和 −0.018（7B）；把随机方向放大到 <em>w</em> 的能量，3B 无效应（+0.010），7B 反而比 <em>w</em> 更大（−0.044）；类均值与第一主成分在对齐能量后使 3B 上升 +0.083、对 7B 无影响（+0.004）。注入同样不特异：同范数随机方向也能把门推开。因此可辩护的结论是读出层面的充分性、<em>w</em> 是一条高效的读出方向，而不是已识别的回路。</p>
 
@@ -190,8 +203,8 @@
       <thead><tr><th>模型</th><th>探针<br>无提示</th><th>冻结探针<br>冲突</th><th>p(unknown)<br>无提示</th><th>p(unknown)<br>冲突</th><th>轴间隔比</th><th>替换恢复</th></tr></thead>
       <tbody>
         <tr><td>Qwen2.5-VL-3B（36 层）</td><td>0.995</td><td>0.958</td><td>0.993</td><td>0.834</td><td>0.47</td><td>22% @ 67%，80% @ 89%</td></tr>
-        <tr><td>Qwen2.5-VL-7B（28 层）</td><td>0.995</td><td>0.947</td><td>0.984</td><td>0.797</td><td>0.42</td><td>~0% @ 64%，69% @ 86%，90% @ 93%</td></tr>
-        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.994</td><td>0.923</td><td>0.991</td><td>0.781</td><td>0.34</td><td>36% @ 64%，80% @ 86%，96% @ 93%</td></tr>
+        <tr><td>Qwen2.5-VL-7B（28 层）</td><td>0.995</td><td>0.946</td><td>0.984</td><td>0.797</td><td>0.42</td><td>~0% @ 64%，69% @ 86%，90% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B（28 层）</td><td>0.994</td><td>0.935</td><td>0.991</td><td>0.781</td><td>0.34</td><td>36% @ 64%，80% @ 86%，96% @ 93%</td></tr>
       </tbody>
     </table>
   </div>
@@ -232,8 +245,8 @@
   <h2>引用</h2>
   <p class="small">论文正文为英文，BibTeX 如下。</p>
 <pre><code>@misc{yuanchongbit2026evidencegate,
-  title  = {Hints Compress the Evidence Axis and Override a Late
-            Abstention Gate in Vision-Language Models},
+  title  = {Hints Dilute and Rotate the Evidence Axis
+            of Vision-Language Models},
   author = {yuanchongbit},
   year   = {2026},
   note   = {Preprint in preparation},

@@ -13,7 +13,8 @@ from pathlib import Path
 import numpy as np
 import torch
 from PIL import Image
-from transformers import AutoModelForImageTextToText, AutoProcessor
+from transformers import (AutoModelForCausalLM, AutoModelForImageTextToText,
+                          AutoProcessor)
 
 from .constants import CANDIDATES, DISTRACTOR
 from .infer import ROOT, SYSTEM, build_user
@@ -28,22 +29,34 @@ def first_id(tokenizer, word):
 
 
 class Gen:
-    def __init__(self, path, max_pixels=1024 * 1024, resize=512):
+    def __init__(self, path, max_pixels=1024 * 1024, resize=512,
+                 trust_remote_code=False, dtype="bfloat16"):
         kw = dict(min_pixels=256 * 256, max_pixels=max_pixels)
+        if trust_remote_code:
+            kw["trust_remote_code"] = True
         try:
             self.proc = AutoProcessor.from_pretrained(path, **kw)
         except TypeError:
-            self.proc = AutoProcessor.from_pretrained(path)
+            self.proc = AutoProcessor.from_pretrained(
+                path, trust_remote_code=trust_remote_code)
+        dt = {"bfloat16": torch.bfloat16, "float16": torch.float16}[dtype]
         loaders = [
-            dict(dtype=torch.bfloat16, device_map="cuda", attn_implementation="sdpa"),
-            dict(torch_dtype=torch.bfloat16, device_map="cuda", attn_implementation="sdpa"),
+            dict(dtype=dt, device_map="cuda", attn_implementation="sdpa"),
+            dict(torch_dtype=dt, device_map="cuda", attn_implementation="sdpa"),
         ]
-        for kwm in loaders:
-            try:
-                self.model = AutoModelForImageTextToText.from_pretrained(path, **kwm).eval()
+        self.model = None
+        for cls in (AutoModelForImageTextToText, AutoModelForCausalLM):
+            for kwm in loaders:
+                try:
+                    self.model = cls.from_pretrained(
+                        path, trust_remote_code=trust_remote_code, **kwm).eval()
+                    break
+                except (TypeError, ValueError):
+                    continue
+            if self.model is not None:
                 break
-            except TypeError:
-                continue
+        if self.model is None:
+            raise RuntimeError(f"no loader accepted {path}")
         self.resize = resize
         self.ids = {w: first_id(self.proc.tokenizer, w) for w in CANDIDATES}
         print("model class:", type(self.model).__name__, flush=True)
@@ -70,6 +83,8 @@ class Gen:
         with torch.inference_mode():
             out = self.model(**inputs, use_cache=False, output_hidden_states=capture is not None)
         logits = out.logits[0, -1].float()
+        if not torch.isfinite(logits).all():
+            raise FloatingPointError("non-finite logits; use --dtype bfloat16")
         s = np.array([float(logits[i]) for i in [self.ids[w] for w in CANDIDATES]])
         s -= s.max()
         p = np.exp(s)
@@ -85,7 +100,8 @@ def run(args):
         rows = rows[: args.limit]
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    g = Gen(args.model, resize=args.resize)
+    g = Gen(args.model, resize=args.resize,
+            trust_remote_code=args.trust_remote_code, dtype=args.dtype)
     hidden = {}
     t0 = time.time()
     with open(out, "w") as f:
@@ -132,6 +148,8 @@ def main():
     ap.add_argument("--out", default=str(ROOT / "runs" / "gen.jsonl"))
     ap.add_argument("--limit", type=int)
     ap.add_argument("--resize", type=int, default=512)
+    ap.add_argument("--trust-remote-code", action="store_true")
+    ap.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float16"])
     args = ap.parse_args()
     run(args)
 

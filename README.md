@@ -1,8 +1,8 @@
 # The Evidence Gate
 
-**Conflicting hints make vision-language models answer when the evidence is absent, but they compress the internal evidence axis rather than erasing it.**
+**Conflicting hints make vision-language models answer when the evidence is absent, but they dilute and rotate the internal evidence axis rather than erasing it.**
 
-This repository contains the code, the frozen benchmark and the result summaries for the paper *Hints Compress the Evidence Axis and Override a Late Abstention Gate in Vision-Language Models* (preprint in preparation).
+This repository contains the code, the frozen benchmark and the result summaries for the paper *Hints Dilute and Rotate the Evidence Axis of Vision-Language Models* (preprint in preparation).
 
 Project page: <https://yuanchongbit.github.io/evidence-gate/> (English) · [中文](https://yuanchongbit.github.io/evidence-gate/index.zh.html)
 
@@ -13,13 +13,14 @@ A VLM is asked *"What color is the umbrella?"* when there is no umbrella in the 
 Is that a failure of **seeing** or of **reporting what was seen**? We separate the two with a 2×3 within-subject design and find a dissociation:
 
 - **Output-space evidence signals collapse under conflict.** The AUROC of p(unknown) for detecting whether the queried object is present drops from **0.993 to 0.834**; max-probability drops from 0.615 to **0.463** (95% CI [0.413, 0.514]), i.e. to chance.
-- **The internal evidence stays decodable, but its axis contracts.** A linear probe on the final-token hidden state reaches **0.995** without hints; frozen after fitting on that pair, it still ranks the conflict arms at **0.958** (3B) and **0.923** (LLaVA), and refitting inside the condition reaches **0.998**. The probe's present-minus-absent gap, however, shrinks from **15.9 to 7.7** for the plausible hint and **7.3** for the far-hue hint (ratio 0.46 [0.44, 0.49]); the within-class spread is unchanged. Ranking survives; scale does not.
-- **Most of the apparent loss of decision gain is compression.** On the fixed no-hint axis the conflict refusal curve is 4.2× flatter in 3B; on the condition's own axis it is only 22% flatter (24% in 7B, 12% and n.s. in LLaVA). The contraction is the cross-model invariant (0.34–0.49).
+- **The internal evidence stays decodable, but its axis dilutes and rotates.** A linear probe on the final-token hidden state reaches **0.995** without hints; fitted on training scenes' no-hint states and scored on held-out scenes, it still ranks the conflict arms at **0.958** (3B), **0.946** (7B) and **0.935** (LLaVA, far-hue hint), and refitting inside the condition reaches **0.995–0.999**. The probe's present-minus-absent gap, however, shrinks from **15.9 to 7.7** for the plausible hint and **7.3** for the far-hue hint (ratio 0.46 [0.44, 0.49]); the within-class spread is unchanged.
+- **The full mean-difference vector both shrinks and turns.** Measured in the state space rather than on one projection, a conflicting hint shortens the present-minus-absent vector to **0.39–0.64** of its no-hint length and rotates it **39°–71°** off the no-hint axis (both hinted colours rotate to almost the same direction, cos 0.91). The projection a fixed readout sees falls further, to **0.20–0.43**. Noise-normalised separation does not fall and per-scene gaps keep most of their length but lose cross-scene coherence (**0.70 → 0.41** in 7B): the evidence is re-coded, not deleted. Ranking survives; scale and alignment do not.
+- **Most of the apparent loss of decision gain is the axis, not the criterion.** On the fixed no-hint axis the conflict refusal curve is 4.2× flatter in 3B; on the condition's own axis it is only 22% flatter (24% in 7B, 12% and n.s. in LLaVA). The dilution is the cross-model invariant (probe-gap ratio 0.34–0.49); in Gemma-3-4B the coarse binary decomposition is a criterion shift rather than a sensitivity loss, so the signal-detection profile, unlike the geometry, is not shared.
 - **The override is late.** Pasting the no-hint state back at layer 32/36 recovers **80%** of the lost refusal (3B); at 26/28 it recovers **90%** (7B); LLaVA-OneVision-7B recovers **36% / 80% / 96%** at 64% / 86% / 93% depth. LLaVA uses a different vision encoder and recipe, though it shares the Qwen LLM lineage.
 - **The direction is sufficient at the readout.** Adding or subtracting one probe direction, injected immediately before unembedding, changes abstention bidirectionally and dose-monotonically on held-out halves. This is readout-level causal evidence, not an upstream mechanism claim; ablation is confounded with removed energy.
 - **A frozen linear gate works where it matters, within a boundary.** At 50% coverage under conflicting hints, ranking by the frozen probe reduces fabrication from **0.249** to **0.069** (3B, 3.6×), from **0.268** to **0.126** (7B, 2.1×) and from **0.295** to **0.111** (LLaVA, 2.7×). The gain survives unanswerable prevalences from 5% to 50%, and a 10% conformal risk certificate holds in two of three models; a 5% certificate is infeasible at 130 calibration scenes. The advantage is regime-specific: on naturally unanswerable VizWiz questions p(unknown) matches the probe.
 
-The effect is not a property of one checkpoint: the same depth profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B.
+The effect is not a property of one checkpoint: the same depth profile appears on Qwen2.5-VL-3B, Qwen2.5-VL-7B and LLaVA-OneVision-7B, and the geometry also appears on Gemma-3-4B-it (Gemma-3 + SigLIP, the only backbone whose language model is not from the Qwen family). Gemma reproduces the dilution (**0.53**), the rotation (**24°–29°**), the colour-independent direction (**cos 0.97**) and the held-out transfer (**0.964 / 0.970**), but not the output collapse: its max-probability *rises* under conflict (0.627 → 0.701) while its answers are overridden as strongly as in 3B (accuracy 0.567 → 0.241). The representational result therefore generalises across language-model families; the rank–scale dissociation is specific to the Qwen2/2.5 readouts in this battery. SmolVLM-Instruct has no abstention behaviour at all (refusal 0 in every cell) and serves as a boundary case.
 
 ## Design
 
@@ -44,6 +45,7 @@ pilot/                 model-agnostic experiment code
   infer.py             Qwen2.5-VL scorer, 12-way readout, main run
   infer_gen.py         AutoModelForImageTextToText runner (LLaVA-OneVision-7B)
   probe.py             final-state linear probe, grouped CV, bootstrap CIs
+  geometry.py          full mean-difference geometry: dilution, rotation, coherence, held-out transfer
   sdt.py               signal detection and psychometric curves on the probe axis
   decompose.py         answer decomposition and hint adoption vs evidence
   baselines.py         output-space baselines from the same softmax
@@ -107,6 +109,9 @@ bash scripts/run_control_causal.sh
 # 7B and LLaVA-OneVision replication
 bash scripts/run_cross_model.sh
 
+# fourth backbone outside the Qwen family (Gemma-3-4B-it, about 6 min)
+bash scripts/run_nonqwen.sh
+
 # v2 controls: matched-energy ablation, no-op patching, prompt formats,
 # strict presence, resolution, single-estimator layer transfer, SmolVLM
 bash scripts/run_controls_v2.sh
@@ -143,11 +148,13 @@ Evidence detection (AUROC over 522 paired items):
 
 | signal | no hint | conflicting hint | correct hint |
 |---|---|---|---|
-| frozen final-state probe | 0.995 | 0.958 | 0.995 |
-| refit final-state probe (upper bound) | 0.995 | 0.998 | 1.000 |
+| frozen final-state probe (scene-held-out) | 0.995 | 0.958 | 0.990 |
+| refit final-state probe (upper bound) | 0.995 | 0.995 | 1.000 |
 | p(unknown) | 0.993 | 0.834 | 0.969 |
 | max probability | 0.615 | 0.463 | 0.916 |
 | 12-d logit probe | 0.982 | 0.923 | 0.974 |
+
+The frozen probe is fitted on no-hint scenes and scored on held-out scenes (C=0.1); scoring it on its own fitting scenes gives 0.971, so scene overlap inflates the estimate by 0.013 here (at most 0.035 across models and hints), and a C grid moves the held-out value by at most 0.020. Full geometry (vector length, rotation, Mahalanobis length, per-scene coherence) is in `results/geometry.json` and Section 4.3 of the paper.
 
 Fabrication at 50% coverage under conflict, frozen probe / p(unknown) / max-probability: **0.069 / 0.249 / 0.510** (3B), **0.126 / 0.268 / 0.648** (7B), **0.111 / 0.295 / 0.655** (LLaVA). The refit probe reaches 0.011 in 3B but is an upper bound, not a deployable score.
 
@@ -171,7 +178,7 @@ Full numbers, including 7B/LLaVA, controls, task forms and external validation, 
 
 ```bibtex
 @misc{yuanchongbit2026evidencegate,
-  title  = {Hints Compress the Evidence Axis and Override a Late Abstention Gate in Vision-Language Models},
+  title  = {Hints Dilute and Rotate the Evidence Axis of Vision-Language Models},
   author = {yuanchongbit},
   year   = {2026},
   note   = {Preprint in preparation},

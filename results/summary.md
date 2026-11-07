@@ -42,7 +42,7 @@ Presence check on 260 category-matched negatives: mean p(yes) = 0.095, versus
 
 | signal | no hint | conflicting | correct |
 |---|---|---|---|
-| frozen final-state probe (headline) | 0.995 [0.989, 0.999] | 0.958 [0.940, 0.973] | 0.995 [0.987, 0.999] |
+| frozen final-state probe (headline) | 0.995 [0.989, 0.999] | 0.958 [0.939, 0.974] | 0.990 [0.981, 0.997] |
 | refit final-state probe (upper bound) | 0.995 [0.989, 0.999] | 0.995 [0.990, 0.999] | 1.000 [1.000, 1.000] |
 | p(unknown) | 0.993 | 0.834 | 0.969 |
 | max probability | 0.615 | 0.463 | 0.916 |
@@ -54,11 +54,29 @@ Presence check on 260 category-matched negatives: mean p(yes) = 0.095, versus
 Probe minus p(unknown): no hint +0.002 [-0.003, +0.007]; conflict +0.164
 [+0.132, +0.196]; correct +0.028 [+0.017, +0.042].
 
-Transfer, fitted on the no-hint pair and evaluated on the hinted pair. The
-frozen row above is this transfer; refitting inside the condition is an upper
-bound. Frozen transfer to conflict is 0.958 for hint b and 0.957 for hint a;
-to correct 0.995. LLaVA 0.923, Qwen-7B 0.947 (hint b). Reverse transfer
-(conflict -> none) is 0.999. Headline numbers in the paper are frozen.
+Transfer, fitted on the no-hint pair and evaluated on the hinted pair, with
+scenes held out (5 scene folds: fit on training scenes' no-hint states, score
+held-out scenes' hinted states) and C fixed at 0.1. The frozen row above is this
+held-out transfer; refitting inside the condition is an upper bound.
+
+| model | pair | leaky (fit-scene scores) | held out | refit |
+|---|---|---|---|---|
+| 3B | conflict a | 0.969 | 0.957 [0.939, 0.974] | 0.997 |
+| 3B | conflict b | 0.971 | 0.958 [0.939, 0.974] | 0.995 |
+| 3B | correct | 0.996 | 0.990 [0.981, 0.997] | 0.997 |
+| 7B | conflict a | 0.953 | 0.939 [0.919, 0.956] | 0.997 |
+| 7B | conflict b | 0.955 | 0.946 [0.926, 0.963] | 0.993 |
+| 7B | correct | 0.999 | 0.997 [0.995, 0.999] | 0.998 |
+| LLaVA | conflict a | 0.958 | 0.923 [0.899, 0.945] | 0.999 |
+| LLaVA | conflict b | 0.960 | 0.935 [0.914, 0.954] | 0.998 |
+| LLaVA | correct | 0.997 | 0.986 [0.978, 0.993] | 0.998 |
+
+Scene overlap inflates the number, though not much: leaky minus held-out is
+0.002-0.035 (largest for LLaVA, hint a). A C grid (0.0003, 0.001, 0.003, 0.01,
+0.1) under the held-out protocol moves conflict AUROC by at most 0.020 (LLaVA,
+hint a). Reverse
+transfer (conflict -> none) is 0.999. Headline numbers in the paper are held out
+at C=0.1.
 
 ## 2b. Signal detection / psychometric curves, 3B
 
@@ -101,11 +119,46 @@ fixed no-hint direction's present-minus-absent gap contracts from 15.86 to
 (2.83/3.09 -> 2.56/2.88). Applying the own-axis slope to the contracted axis
 predicts a 2.7-fold flattening; the remainder is item-level variation in the
 contraction (r=0.855 between the pre- and post-hint projections). The fixed
-direction still ranks conflict pairs at AUROC 0.958; a direction refit on the
-conflict pair reaches 0.998. Reading: the hint compresses the evidence axis;
-ranking survives, scale does not. The residual 22% gain loss is real but
-modest. The criterion shift is 3B-specific and inconsistent across models.
+direction still ranks conflict pairs at 0.957 held out (0.958 for the far-hue
+hint); a direction refit on the conflict pair reaches 0.997. Reading: the hint
+dilutes and rotates the evidence axis; ranking survives, scale does not. The
+residual 22% gain loss is real but modest. The criterion shift is 3B-specific
+and inconsistent across models.
 Figure: paper/figures/fig_sdt.pdf.
+
+## 2c. Evidence-axis geometry: dilution and rotation
+
+`pilot/geometry.py` -> `results/geometry.json`. For each condition it computes
+the full mean-difference vector `dmu = mean(h_present) - mean(h_absent)`: its
+norm relative to the no-hint norm, its angle to the no-hint unit axis `w`, its
+projection on `w`, its Mahalanobis length under no-hint within-class whitening
+(ridge 1% of mean eigenvalue), and the per-scene paired-gap coherence
+`||mean_s v_s|| / rms_s ||v_s||`. Scene bootstrap, 500 draws. The same
+estimator applied to the no-hint vector against itself gives ratio 1.00
+[0.97, 1.05] and angle 3-5 deg: the noise floor.
+
+| model | cond | \|dmu\| ratio | angle to w | along-w ratio | Mahalanobis (none -> cond) | coherence (none -> cond) |
+|---|---|---|---|---|---|---|
+| 3B | conflict a | 0.528 [0.502, 0.554] | 39.2 [35.9, 42.5] | 0.409 | 0.450 -> 0.518 | 0.597 -> 0.397 |
+| 3B | conflict b | 0.572 [0.544, 0.597] | 40.7 [37.7, 43.9] | 0.433 | 0.450 -> 0.491 | 0.597 -> 0.444 |
+| 3B | correct | 0.780 [0.749, 0.817] | 39.1 [37.4, 41.2] | 0.605 | 0.450 -> 0.682 | 0.597 -> 0.541 |
+| 7B | conflict a | 0.387 [0.362, 0.413] | 47.7 [44.3, 51.4] | 0.259 | 0.428 -> 0.548 | 0.704 -> 0.409 |
+| 7B | conflict b | 0.430 [0.402, 0.456] | 44.3 [41.8, 47.2] | 0.307 | 0.428 -> 0.530 | 0.704 -> 0.465 |
+| 7B | correct | 0.746 [0.717, 0.779] | 22.4 [21.4, 23.7] | 0.689 | 0.428 -> 0.716 | 0.704 -> 0.641 |
+| LLaVA | conflict a | 0.606 [0.572, 0.640] | 70.8 [68.1, 73.2] | 0.199 | 0.424 -> 0.634 | 0.605 -> 0.448 |
+| LLaVA | conflict b | 0.644 [0.607, 0.679] | 68.7 [66.1, 70.9] | 0.234 | 0.424 -> 0.619 | 0.605 -> 0.485 |
+| LLaVA | correct | 0.687 [0.654, 0.723] | 45.5 [43.3, 47.9] | 0.482 | 0.424 -> 0.598 | 0.605 -> 0.482 |
+
+Directions of the two hinted colours agree: cos(conflict a, conflict b) =
+0.908 (3B), 0.908 (7B), 0.915 (LLaVA); cos(none, conflict) is 0.783 / 0.676 /
+0.331. Per-scene gap norms fall less than the mean vector (3B 78.5 -> 61.7, 7B
+155.4 -> 102.9, LLaVA 108.4 -> 87.9), so part of the aggregate loss is
+decorrelation across scenes rather than uniform shrinkage. Noise-normalised
+separation does not fall, and an in-condition refit reaches 0.995-0.999: the
+evidence is re-coded, not removed. Reading: a hint dilutes the full vector and
+rotates it systematically off the direction a no-hint readout uses; per-scene
+gaps also stop agreeing. The projection on `w` falls further than either factor
+alone because it is their product.
 
 Cross-model binary SDT (same 261 scenes, 522 absent items under conflict):
 
@@ -173,8 +226,8 @@ hint adoption less likely and the true colour more likely.
 | gray image (text only) | 0.849 | 0.981 | 0.700 | 0.325 | — | — |
 
 The direction learned on gray images transfers across hints at 0.540 / 0.603,
-versus 0.958 / 0.995 for the frozen real-image direction (0.969 / 0.996 when
-refitted on the condition).
+versus 0.958 / 0.990 for the real-image direction on held-out scenes (0.971 /
+0.996 when scored on its own fitting scenes).
 
 ## 4. Steering (3B)
 
@@ -532,12 +585,18 @@ maxprob 0.831 / 0.649. Risk at 50% coverage: probe 0.087, maxprob 0.007.
 
 | model | probe, no hint | frozen probe, conflict | refit probe, conflict | p(unknown), no hint | p(unknown), conflict | maxprob, conflict | 12-d logit probe, conflict | gap ratio b [95% CI] |
 |---|---|---|---|---|---|---|---|---|
-| Qwen2.5-VL-3B | 0.995 | 0.958 | 0.998 | 0.993 | 0.834 | 0.463 | 0.923 | 0.463 [0.438, 0.488] |
-| Qwen2.5-VL-7B | 0.995 | 0.947 | 0.998 | 0.984 | 0.797 | 0.306 | 0.896 | 0.424 [0.393, 0.457] |
-| LLaVA-OneVision-7B | 0.996 | 0.923 | 0.999 | 0.991 | 0.781 | 0.289 | 0.909 | 0.344 [0.324, 0.365] |
+| Qwen2.5-VL-3B | 0.995 | 0.958 | 0.995 | 0.993 | 0.834 | 0.463 | 0.923 | 0.463 [0.438, 0.488] |
+| Qwen2.5-VL-7B | 0.995 | 0.946 | 0.993 | 0.984 | 0.797 | 0.306 | 0.896 | 0.424 [0.393, 0.457] |
+| LLaVA-OneVision-7B | 0.994 | 0.935 | 0.998 | 0.991 | 0.781 | 0.289 | 0.909 | 0.344 [0.324, 0.365] |
+| Gemma-3-4B-it | 0.986 | 0.964 | 0.989 | 0.961 | 0.891 | 0.701 | — | 0.543 [0.502, 0.580] |
 
-The frozen column is the deployable headline; the refit column is an upper
-bound from retraining inside the conflict condition.
+The frozen column is the deployable headline (scene-held-out, hint b, C=0.1);
+the refit column is an upper bound from retraining inside the conflict
+condition. Hint a gives 0.957 / 0.939 / 0.923 frozen. Gemma-3-4B-it is the only
+backbone outside the Qwen family (Gemma-3 language model + SigLIP); its frozen
+values are 0.964 (hint a) and 0.970 (hint b) with refits 0.989 / 0.990, and its
+maxprob *rises* under conflict, so only the output-collapse columns fail to
+replicate.
 
 ## 10. Revision controls (3B / 7B, LLaVA where run)
 
@@ -684,3 +743,80 @@ frozen transfer from the no-hint pair 0.924 (conflict) and 0.967 (correct). A
 decodable evidence axis can exist without abstention. Caveat: on the conflict
 pair the probe could partly read hint-image mismatch, so this is a boundary
 observation about the axis, not about the gate.
+
+### 10.9 A fourth backbone with a gate outside the Qwen family (Gemma-3-4B)
+
+Gemma-3-4B-it (Gemma-3 language model + SigLIP encoder, run at a 512-pixel
+resize in bf16, 261 items x 6 conditions, about 6 minutes on the A10) is the
+only backbone here whose language model is not from the Qwen family. It does
+abstain, so unlike SmolVLM it can test the gate.
+
+| condition | refusal | mean conf. | adopts hint | accuracy |
+|---|---|---|---|---|
+| present, correct hint | 0.004 | 0.992 | — | 0.943 |
+| present, conflicting hint | 0.008 | 0.974 | 0.674 | 0.241 |
+| present, no hint | 0.050 | 0.966 | — | 0.567 |
+| absent, hint a | 0.402 | 0.928 | 0.579 | — |
+| absent, hint b | 0.475 | 0.955 | 0.502 | — |
+| absent, no hint | 0.843 | 0.978 | — | — |
+
+The behaviour has the same shape as 3B: the hint moves both arms toward the
+assertion (absent refusal 0.843 -> 0.402/0.475, adoption 0.579/0.502; present
+accuracy 0.567 -> 0.241 at adoption 0.674). Its no-hint colour accuracy is
+lower (0.567 against 0.762 in 3B), so the present arm is noisier.
+
+Internal signals (probe CV by scene, C=0.1; frozen transfer = fit on training
+scenes' no-hint states, score held-out scenes):
+
+| pair | probe | p(unknown) | maxprob | frozen held-out [95% CI] | refit |
+|---|---|---|---|---|---|
+| none | 0.986 | 0.961 | 0.627 | — | — |
+| hint a | 0.989 | 0.891 | 0.701 | 0.964 [0.950, 0.976] | 0.989 |
+| hint b | — | — | — | 0.970 [0.957, 0.981] | 0.990 |
+| correct | 0.991 | 0.928 | 0.868 | 0.981 [0.971, 0.989] | 0.991 |
+
+Geometry (same estimator and noise-floor control as section 2c):
+
+| condition | ratio | angle | along w | Mahalanobis | coherence |
+|---|---|---|---|---|---|
+| none (noise floor) | 1.001 [0.942, 1.060] | 4.5° [3.6, 5.6] | 1.00 | 0.39 | 0.594 |
+| conflict a | 0.529 [0.490, 0.567] | 28.6° [26.5, 30.8] | 0.466 | 0.424 | 0.544 |
+| conflict b | 0.543 [0.502, 0.580] | 24.3° [22.6, 26.3] | 0.496 | 0.419 | 0.563 |
+| correct | 0.538 [0.501, 0.576] | 30.1° [28.1, 32.2] | 0.467 | 0.432 | 0.567 |
+
+cos(none, conflict) 0.881, cos(none, conflict_b) 0.914, cos(conflict a,
+conflict b) 0.971 — the two hinted colours rotate to almost the same direction,
+more tightly than in any Qwen-family model (0.908-0.915).
+
+Reading. Dilution (0.53), rotation (24-29°, five to six times the 4.5° noise
+floor), transfer (0.964/0.970) and the colour-independent direction all
+replicate outside the Qwen family. Two things do not: per-scene coherence barely
+falls (0.594 -> 0.544/0.563, against 0.60 -> 0.40 in 3B), and the native output
+signals do not collapse — p(unknown) AUROC falls only 0.961 -> 0.891 and
+maxprob *rises* 0.627 -> 0.701 while the answers are overridden as strongly as
+anywhere in the battery. The representational claim (dilution + rotation, with
+the evidence still decodable and transferable) generalises across language-model
+families; the rank-scale/output dissociation that motivates the frozen gate is
+specific to the Qwen2/2.5 readouts in this battery. In Gemma the gate's margin
+over p(unknown) is smaller (0.964 vs 0.891) but still present. A refit gate in
+the conflict condition reaches fabrication 0.038 at 50% coverage against 0.172
+for p(unknown), so the gate is still useful there.
+
+Binary SDT on the fixed no-hint axis (log-linear-corrected, 2000 scene
+bootstrap draws):
+
+| condition | d' | c | Δd' [95% CI] | Δc [95% CI] |
+|---|---|---|---|---|
+| none | 2.63 | +0.31 | — | — |
+| conflict | 2.19 | +1.25 | -0.44 [-0.78, +0.16] | +1.25 [+0.75, +1.25] |
+| correct | 3.53 | +0.76 | +0.90 [+0.52, +1.40] | +0.45 [+0.25, +0.70] |
+
+Unlike 3B (d' 3.51 -> 1.45), Gemma shows a criterion shift without a detectable
+sensitivity loss on this coarse statistic, which is consistent with its milder
+rotation (24-29 deg) leaving the fixed axis comparatively intact. The
+decision-level decomposition is therefore model-specific too; only the geometry
+survives in all four.
+
+Raw run: `runs/v5_261_gemma.jsonl` + `.npz` and `results/geometry_gemma.json` are
+on the GPU instance (regenerate with `scripts/run_nonqwen.sh`, about 6 minutes);
+the tables above quote that output.

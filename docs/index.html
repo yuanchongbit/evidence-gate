@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hints compress the evidence axis — The Evidence Gate</title>
-<meta name="description" content="A 2×3 design separating missing visual evidence from asserted answers in vision-language models. Conflicting hints break the refusal readout by compressing the internal evidence axis, not by erasing the evidence.">
+<title>Hints dilute and rotate the evidence axis — The Evidence Gate</title>
+<meta name="description" content="A 2×3 design separating missing visual evidence from asserted answers in vision-language models. Conflicting hints break the refusal readout by diluting and rotating the internal evidence axis, not by erasing the evidence.">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="alternate" hreflang="en" href="https://yuanchongbit.github.io/evidence-gate/">
 <link rel="alternate" hreflang="zh-Hans" href="https://yuanchongbit.github.io/evidence-gate/index.zh.html">
@@ -20,7 +20,7 @@
     </nav>
     <p class="kicker">Preprint · 2026</p>
     <h1>The Evidence Gate</h1>
-    <p class="subtitle">Hints compress the evidence axis and override<br>a late abstention gate</p>
+    <p class="subtitle">Hints dilute and rotate the evidence axis<br>of vision-language models</p>
     <p class="authors">yuanchongbit</p>
     <nav class="links">
       <a class="primary" href="https://github.com/yuanchongbit/evidence-gate">Code</a>
@@ -35,7 +35,7 @@
 <main class="wrap">
 
 <section class="tldr">
-  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still decodable inside the model, but the hint compresses its axis by half; what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last few layers, and can be read out and pushed back along a single direction.</p>
+  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still decodable inside the model, but the hint shortens its mean difference and turns it 40° off the direction the model was reading; what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last few layers, and can be read out and pushed back along a single direction.</p>
 </section>
 
 <section id="idea">
@@ -69,8 +69,8 @@
 </section>
 
 <section id="results">
-  <h2>The readout collapses. The evidence axis contracts.</h2>
-  <p class="lead">Under a conflicting hint, every signal computed from the model’s output distribution loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state keeps most of its ranking (frozen transfer 0.958), but its present–absent gap halves: 15.9 → 7.3. The information is re-encoded, not erased.</p>
+  <h2>The readout collapses. The evidence axis dilutes and rotates.</h2>
+  <p class="lead">Under a conflicting hint, every signal computed from the model’s output distribution loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state keeps most of its ranking on held-out scenes (0.958 in 3B, 0.946 in 7B, 0.935 in LLaVA), but its present–absent gap halves (15.9 → 7.3) and the full mean difference both shrinks and turns. The information is re-encoded, not erased.</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 320" role="img" aria-label="AUROC of evidence detection under three hint conditions">
@@ -105,21 +105,34 @@
         <circle class="maxp" cx="470" cy="308" r="5"></circle><text x="484" y="312">max probability</text>
       </g>
     </svg>
-    <figcaption>AUROC for classifying 522 paired items as evidence-present vs. evidence-absent. Grouped bootstrap 95% CIs are in the paper; the probe shown is refit inside each condition, and the frozen no-hint probe transfers to the conflict pair at 0.958 (3B) and 0.923 (LLaVA).</figcaption>
+    <figcaption>AUROC for classifying 522 paired items as evidence-present vs. evidence-absent. Grouped bootstrap 95% CIs are in the paper; the probe shown is refit inside each condition, and the no-hint probe transfers to the conflict pair at 0.958 (3B), 0.946 (7B) and 0.935 (LLaVA) on held-out scenes (far-hue hint).</figcaption>
   </figure>
 
   <div class="cards">
-    <div class="card"><span class="num">0.958</span><span class="lab">frozen probe AUROC under conflict</span></div>
+    <div class="card"><span class="num">0.958</span><span class="lab">held-out probe AUROC under conflict (hint b)</span></div>
     <div class="card"><span class="num">0.834</span><span class="lab">p(unknown) AUROC under conflict</span></div>
     <div class="card"><span class="num">0.463</span><span class="lab">max-probability AUROC — at chance (CI [0.413, 0.514])</span></div>
     <div class="card"><span class="num">0.46</span><span class="lab">probe gap ratio under conflict (15.9 → 7.3)</span></div>
-    <div class="card"><span class="num">0.998</span><span class="lab">refit probe, no hint → conflict (upper bound)</span></div>
+    <div class="card"><span class="num">0.53 / 40°</span><span class="lab">length and rotation of the mean-difference vector under conflict (3B)</span></div>
   </div>
 </section>
 
 <section id="mechanism">
-  <h2>The suppression is late; the evidence is compressed</h2>
-  <p class="lead">Under conflict the probe’s present–absent gap shrinks from 15.9 to 7.3, while the within-class spread is unchanged. The frozen no-hint direction still ranks the arms at 0.958; a probe refit on the conflict pair reaches 0.998, so the evidence is re-encoded rather than destroyed. This is why p(unknown) fails — it reads an absolute scale — while rank-based gating survives.</p>
+  <h2>The suppression is late; the evidence is diluted and rotated</h2>
+  <p class="lead">Under conflict the probe’s present–absent gap shrinks from 15.9 to 7.3, while the within-class spread is unchanged. Measured in the full state space (table below), the present-minus-absent mean difference keeps 0.39–0.64 of its length and turns 24°–71° away from the no-hint axis; the two hinted colours rotate to nearly the same direction (cos 0.91). Whitened by within-class noise the separation does not fall, and a probe refit on the conflict pair reaches 0.989–0.999: the evidence is re-coded rather than destroyed. This is why p(unknown) fails — it reads an absolute scale and a fixed direction — while rank-based gating survives.</p>
+
+  <div class="tablewrap">
+    <table>
+      <thead><tr><th>model</th><th>‖Δμ‖ ratio (a / b)</th><th>angle to no-hint axis (a / b)</th><th>projection on axis (a / b)</th><th>coherence, none → conflict</th></tr></thead>
+      <tbody>
+        <tr><td>Qwen2.5-VL-3B</td><td>0.53 / 0.57</td><td>39° / 41°</td><td>0.41 / 0.43</td><td>0.60 → 0.40</td></tr>
+        <tr><td>Qwen2.5-VL-7B</td><td>0.39 / 0.43</td><td>48° / 44°</td><td>0.26 / 0.31</td><td>0.70 → 0.41</td></tr>
+        <tr><td>LLaVA-OneVision-7B</td><td>0.61 / 0.64</td><td>71° / 69°</td><td>0.20 / 0.23</td><td>0.61 → 0.45</td></tr>
+        <tr><td>Gemma-3-4B-it</td><td>0.53 / 0.54</td><td>29° / 24°</td><td>0.47 / 0.50</td><td>0.59 → 0.54</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="small">Full present–absent mean-difference vector, measured from the final hidden state (261 scenes; scene bootstrap in the paper). <em>a</em> is the plausible hint, <em>b</em> the far-hue one. The same estimator applied to the no-hint vector against itself returns ratio 1.00 and an angle of 3–5°, the noise floor. Per-scene gaps lose cross-scene coherence while noise-normalised separation does not fall: the aggregate shortens partly because different scenes stop pointing the same way. Gemma-3-4B-it (Gemma-3 + SigLIP, no Qwen component) reproduces the dilution, the rotation, the colour-independent direction (cos 0.97) and the held-out transfer (0.964 / 0.970), but not the output collapse: its max-probability rises under conflict (0.627 → 0.701) while its answers are overridden as strongly as in 3B (accuracy 0.567 → 0.241). The geometry generalises across language-model families; the rank–scale dissociation is specific to the Qwen2/2.5 readouts.</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 330" role="img" aria-label="Recovery of refusal after layer-wise activation patching">
@@ -158,7 +171,7 @@
 
   <p>Two control interventions close the causal loop. Along the probe direction <em>w</em>, adding +0.5·‖h‖ pushes absent-object refusal from 0.904 to 0.000; subtracting 0.5·‖h‖ raises present-object refusal from 0.011 to 0.352. The dose–response is monotone and survives when the direction is fitted on one half of the scenes and evaluated on the other.</p>
 
-  <p>The same direction still works when the hint is present. Applied during the conflicting pass, −0.25·‖h‖ raises absent-object refusal from 0.542 to 0.874, and +0.25·‖h‖ raises true-colour answers from 0.383 to 0.479 while hint adoption stays at 0.433. Conflict compresses and under-weights the evidence; it does not disconnect it from the decision. Because the vector is injected immediately before unembedding, this is readout-level causal evidence.</p>
+  <p>The same direction still works when the hint is present. Applied during the conflicting pass, −0.25·‖h‖ raises absent-object refusal from 0.542 to 0.874, and +0.25·‖h‖ raises true-colour answers from 0.383 to 0.479 while hint adoption stays at 0.433. Conflict dilutes, rotates and under-weights the evidence; it does not disconnect it from the decision. Because the vector is injected immediately before unembedding, this is readout-level causal evidence.</p>
 
   <p>Two controls bound the claim. Ablating <em>w</em> lowers absent refusal by 0.215 / 0.211 / 0.102 (3B / 7B / LLaVA) and raises hint adoption by 0.201 / 0.209 / 0.113, while ablating any of three random directions moves every metric by at most 0.015. That ratio is not direction-specific evidence, because the projections remove different amounts of the state: the mean absolute projection fraction is 0.055 for <em>w</em> versus 0.019 / 0.004 / 0.008 for the random directions, a 5.4× energy difference. Matching the removed energy removes most of the effect: <em>w</em> scaled to a random direction's energy changes absent refusal by −0.073 (3B) and −0.018 (7B), a random direction scaled up to <em>w</em>'s energy is null in 3B (+0.010) but larger than <em>w</em> in 7B (−0.044), and class-mean / first-PC directions at the same energy move 3B refusal (+0.083) and leave 7B unchanged (+0.004). Addition is also not specific: large random directions of the same norm can open the gate. The defensible claim is readout-level sufficiency and an efficient readout direction, not an identified circuit.</p>
 
@@ -187,15 +200,15 @@
   <h2>Three models, one depth profile</h2>
   <div class="tablewrap">
     <table>
-      <thead><tr><th>model</th><th>probe, no hint</th><th>frozen probe, conflict</th><th>p(unknown), no hint</th><th>p(unknown), conflict</th><th>axis gap ratio</th><th>patch recovery</th></tr></thead>
+      <thead><tr><th>model</th><th>probe, no hint</th><th>held-out probe, conflict</th><th>p(unknown), no hint</th><th>p(unknown), conflict</th><th>axis gap ratio</th><th>patch recovery</th></tr></thead>
       <tbody>
         <tr><td>Qwen2.5-VL-3B (36 layers)</td><td>0.995</td><td>0.958</td><td>0.993</td><td>0.834</td><td>0.47</td><td>22% @ 67%, 80% @ 89%</td></tr>
-        <tr><td>Qwen2.5-VL-7B (28 layers)</td><td>0.995</td><td>0.947</td><td>0.984</td><td>0.797</td><td>0.42</td><td>~0% @ 64%, 69% @ 86%, 90% @ 93%</td></tr>
-        <tr><td>LLaVA-OneVision-7B (28 layers)</td><td>0.994</td><td>0.923</td><td>0.991</td><td>0.781</td><td>0.34</td><td>36% @ 64%, 80% @ 86%, 96% @ 93%</td></tr>
+        <tr><td>Qwen2.5-VL-7B (28 layers)</td><td>0.995</td><td>0.946</td><td>0.984</td><td>0.797</td><td>0.42</td><td>~0% @ 64%, 69% @ 86%, 90% @ 93%</td></tr>
+        <tr><td>LLaVA-OneVision-7B (28 layers)</td><td>0.994</td><td>0.935</td><td>0.991</td><td>0.781</td><td>0.34</td><td>36% @ 64%, 80% @ 86%, 96% @ 93%</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">LLaVA is far more hint-sensitive: under conflict its present-object refusal is 0.004 and absent-object refusal 0.138, against 0.556 and 0.918 in Qwen2.5-VL-7B. Yet recovery is localised at the same relative depth, and the axis contracts in all three. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
+  <p class="small">LLaVA is far more hint-sensitive: under conflict its present-object refusal is 0.004 and absent-object refusal 0.138, against 0.556 and 0.918 in Qwen2.5-VL-7B. Yet recovery is localised at the same relative depth, and the axis dilutes and rotates in all three. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
 </section>
 
 <section id="limits">
@@ -231,8 +244,8 @@
 <section id="cite">
   <h2>Citation</h2>
 <pre><code>@misc{yuanchongbit2026evidencegate,
-  title  = {Hints Compress the Evidence Axis and Override a Late
-            Abstention Gate in Vision-Language Models},
+  title  = {Hints Dilute and Rotate the Evidence Axis
+            of Vision-Language Models},
   author = {yuanchongbit},
   year   = {2026},
   note   = {Preprint in preparation},

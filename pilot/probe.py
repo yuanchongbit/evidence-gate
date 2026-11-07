@@ -93,6 +93,8 @@ def main():
     ap.add_argument("--run", default="runs/v5_261.jsonl")
     ap.add_argument("--pairs", default="none,hint")
     ap.add_argument("--Cs", default="0.0003,0.001,0.003,0.01,0.1")
+    ap.add_argument("--C", type=float, default=0.1,
+                    help="fixed regularisation for the reported probe (not tuned on the evaluation set)")
     ap.add_argument("--fit-on", default="none", help="pair used to train the transfer probe")
     ap.add_argument("--group-by", default="sample", choices=["sample", "prompt"],
                     help="CV grouping: scene (sample) or prompted category (prompt)")
@@ -111,21 +113,21 @@ def main():
             pt = auroc(oof, y)
             rows.append((pt, C, oof))
         rows.sort(reverse=True)
-        pt, C, oof = rows[0]
+        pt, C, oof = next(r for r in rows if abs(r[1] - args.C) < 1e-12)
         lo, hi = grouped_ci(oof, y, g)
         c = auroc(conf, y)
         dlo, dhi = grouped_diff(oof, conf, y, g)
         k = auroc(pk, y)
         klo, khi = grouped_diff(oof, pk, y, g)
-        best[name] = (C, oof, X, y, g)
+        best[name] = (C, X, y, g)
         print(f"\npair={name} ({pos} vs {neg})  n={len(y)}  groups={len(np.unique(g))}")
-        print(f"  probe  AUROC {pt:.3f} [{lo:.3f}, {hi:.3f}]  (C={C:g})")
+        print(f"  probe  AUROC {pt:.3f} [{lo:.3f}, {hi:.3f}]  (fixed C={C:g})")
         print(f"  maxprob AUROC {c:.3f}   probe-maxprob {pt-c:+.3f} [{dlo:+.3f}, {dhi:+.3f}]")
         print(f"  p_known AUROC {k:.3f}   probe-p_known {pt-k:+.3f} [{klo:+.3f}, {khi:+.3f}]")
         print("  by C:", ", ".join(f"{r[1]:g}:{r[0]:.3f}" for r in sorted(rows, key=lambda r: r[1])))
 
     if args.fit_on in best and args.pairs.count(",") >= 1:
-        C, _, X, y, g = best[args.fit_on]
+        C, X, y, g = best[args.fit_on]
         clf = make_pipeline(StandardScaler(), LogisticRegression(C=C, max_iter=3000))
         clf.fit(X, y)
         for name in args.pairs.split(","):
@@ -133,7 +135,16 @@ def main():
                 continue
             Xh, yh, gh, confh, pkh = dataset(recs, H, *PAIRS[name], args.group_by)
             s = clf.decision_function(Xh)
-            print(f"\ntransfer {args.fit_on}->{name}: probe {auroc(s, yh):.3f}  "
+            # scene-held-out: fit on training scenes' no-hint states only,
+            # score held-out scenes' hinted states
+            oof = np.zeros(len(yh))
+            for tr, te in GroupKFold(n_splits=5).split(X, y, g):
+                clf2 = make_pipeline(StandardScaler(),
+                                     LogisticRegression(C=C, max_iter=3000))
+                clf2.fit(X[tr], y[tr])
+                oof[te] = clf2.decision_function(Xh[te])
+            print(f"\ntransfer {args.fit_on}->{name}: probe {auroc(s, yh):.3f} leaky, "
+                  f"{auroc(oof, yh):.3f} scene-held-out (C={C:g})  "
                   f"maxprob {auroc(confh, yh):.3f}  p_known {auroc(pkh, yh):.3f}")
 
 
