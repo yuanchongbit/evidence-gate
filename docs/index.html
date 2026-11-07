@@ -35,7 +35,7 @@
 <main class="wrap">
 
 <section class="tldr">
-  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still decodable inside the model, but the hint shortens its mean difference and turns it 40° off the direction the model was reading; what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last few layers, and can be read out and pushed back along a single direction.</p>
+  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still decodable inside the model, but the hint shortens its mean difference and turns it 24°–71° off the direction the model was reading (40° in the 3B model below); what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last few layers, and can be read out and pushed back along a single direction. The geometry repeats in four backbones from two language-model families; only the collapse of the model’s own confidence is specific to the Qwen readouts.</p>
 </section>
 
 <section id="idea">
@@ -69,8 +69,8 @@
 </section>
 
 <section id="results">
-  <h2>The readout collapses. The evidence axis dilutes and rotates.</h2>
-  <p class="lead">Under a conflicting hint, every signal computed from the model’s output distribution loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state keeps most of its ranking on held-out scenes (0.958 in 3B, 0.946 in 7B, 0.935 in LLaVA), but its present–absent gap halves (15.9 → 7.3) and the full mean difference both shrinks and turns. The information is re-encoded, not erased.</p>
+  <h2>The output readout collapses in the Qwen family. The evidence axis dilutes and rotates in all four.</h2>
+  <p class="lead">Under a conflicting hint, every signal computed from the output distribution of the three Qwen-backed models (the two Qwen2.5-VL sizes and LLaVA-OneVision, whose language model is Qwen2-7B) loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state keeps most of its ranking on held-out scenes (0.958 in 3B, 0.946 in 7B, 0.935 in LLaVA), but its present–absent gap halves (15.9 → 7.3) and the full mean difference both shrinks and turns. The information is re-encoded, not erased. The fourth backbone, Gemma-3-4B-it (Gemma-3 with a SigLIP encoder, no Qwen component), shows the same geometry but not the output collapse: its p(unknown) AUROC falls only from 0.961 to 0.891, its maximum probability rises from 0.627 to 0.701, and its held-out probe transfers at 0.964 / 0.970.</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 320" role="img" aria-label="AUROC of evidence detection under three hint conditions">
@@ -105,7 +105,7 @@
         <circle class="maxp" cx="470" cy="308" r="5"></circle><text x="484" y="312">max probability</text>
       </g>
     </svg>
-    <figcaption>AUROC for classifying 522 paired items as evidence-present vs. evidence-absent. Grouped bootstrap 95% CIs are in the paper; the probe shown is refit inside each condition, and the no-hint probe transfers to the conflict pair at 0.958 (3B), 0.946 (7B) and 0.935 (LLaVA) on held-out scenes (far-hue hint).</figcaption>
+    <figcaption>AUROC for classifying 522 paired items as evidence-present vs. evidence-absent. Grouped bootstrap 95% CIs are in the paper; the probe shown is refit inside each condition, and the no-hint probe transfers to the conflict pair at 0.958 (3B), 0.946 (7B) and 0.935 (LLaVA) on held-out scenes (far-hue hint), and at 0.964 / 0.970 in Gemma-3-4B (plausible / far-hue).</figcaption>
   </figure>
 
   <div class="cards">
@@ -114,12 +114,13 @@
     <div class="card"><span class="num">0.463</span><span class="lab">max-probability AUROC — at chance (CI [0.413, 0.514])</span></div>
     <div class="card"><span class="num">0.46</span><span class="lab">probe gap ratio under conflict (15.9 → 7.3)</span></div>
     <div class="card"><span class="num">0.53 / 40°</span><span class="lab">length and rotation of the mean-difference vector under conflict (3B)</span></div>
+    <div class="card"><span class="num">0.964 / 0.970</span><span class="lab">held-out probe AUROC under conflict in Gemma-3-4B (hint a / b)</span></div>
   </div>
 </section>
 
 <section id="mechanism">
   <h2>The suppression is late; the evidence is diluted and rotated</h2>
-  <p class="lead">Under conflict the probe’s present–absent gap shrinks from 15.9 to 7.3, while the within-class spread is unchanged. Measured in the full state space (table below), the present-minus-absent mean difference keeps 0.39–0.64 of its length and turns 24°–71° away from the no-hint axis; the two hinted colours rotate to nearly the same direction (cos 0.91). Whitened by within-class noise the separation does not fall, and a probe refit on the conflict pair reaches 0.989–0.999: the evidence is re-coded rather than destroyed. This is why p(unknown) fails — it reads an absolute scale and a fixed direction — while rank-based gating survives.</p>
+  <p class="lead">Under conflict the probe’s present–absent gap shrinks from 15.9 to 7.3, while the within-class spread is unchanged. Measured in the full state space (table below), the present-minus-absent mean difference keeps 0.39–0.64 of its length and turns 24°–71° away from the no-hint axis; the two hinted colours rotate to nearly the same direction (cos 0.91 in the Qwen models, 0.97 in Gemma). Whitened by within-class noise the separation does not fall, and a probe refit on the conflict pair reaches 0.989–0.999: the evidence is re-coded rather than destroyed. This is why p(unknown) fails — it reads an absolute scale and a fixed direction — while rank-based gating survives.</p>
 
   <div class="tablewrap">
     <table>
@@ -197,7 +198,7 @@
 </section>
 
 <section id="models">
-  <h2>Three models, one depth profile</h2>
+  <h2>Three layer-swept models, one depth profile</h2>
   <div class="tablewrap">
     <table>
       <thead><tr><th>model</th><th>probe, no hint</th><th>held-out probe, conflict</th><th>p(unknown), no hint</th><th>p(unknown), conflict</th><th>axis gap ratio</th><th>patch recovery</th></tr></thead>
@@ -208,7 +209,7 @@
       </tbody>
     </table>
   </div>
-  <p class="small">LLaVA is far more hint-sensitive: under conflict its present-object refusal is 0.004 and absent-object refusal 0.138, against 0.556 and 0.918 in Qwen2.5-VL-7B. Yet recovery is localised at the same relative depth, and the axis dilutes and rotates in all three. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
+  <p class="small">LLaVA is far more hint-sensitive: under conflict its present-object refusal is 0.004 and absent-object refusal 0.138, against 0.556 and 0.918 in Qwen2.5-VL-7B. Yet recovery is localised at the same relative depth, and the axis dilutes and rotates in all three. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open. Gemma-3-4B was scored on geometry, probe transfer and signal detection but not swept layer by layer, so the depth profile rests on these three.</p>
 </section>
 
 <section id="limits">
@@ -237,6 +238,10 @@
     <div>
       <h3>Readout-level causal evidence</h3>
       <p>Steering is injected immediately before unembedding, and the patching control’s shuffled source is label-matched. We claim sufficiency at the readout and localisation of the recovery, not the full upstream mechanism.</p>
+    </div>
+    <div>
+      <h3>The output collapse is model-specific</h3>
+      <p>Gemma-3-4B dilutes and rotates its evidence axis as strongly as the Qwen models, yet its own confidence barely degrades (p(unknown) AUROC 0.961 → 0.891, maximum probability 0.627 → 0.701) while its answers are overridden just the same. The collapse that motivates a frozen gate is a property of the Qwen2/2.5 readouts; in Gemma the probe’s margin over p(unknown) is smaller (0.964 vs. 0.891) but still present. SmolVLM-Instruct, a further backbone, never abstains at all, so it cannot test the gate.</p>
     </div>
   </div>
 </section>
