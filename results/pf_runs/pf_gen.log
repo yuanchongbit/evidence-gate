@@ -1,0 +1,56 @@
+nohup: 忽略输入
+Loading weights:   0%|          | 0/883 [00:00<?, ?it/s]Loading weights:   0%|          | 1/883 [00:00<01:33,  9.42it/s]Loading weights:   2%|▏         | 18/883 [00:00<00:09, 91.61it/s]Loading weights:   5%|▍         | 43/883 [00:00<00:05, 155.36it/s]Loading weights:  11%|█         | 95/883 [00:00<00:02, 289.73it/s]Loading weights:  17%|█▋        | 148/883 [00:00<00:02, 366.58it/s]Loading weights:  24%|██▍       | 211/883 [00:00<00:01, 446.38it/s]Loading weights:  30%|██▉       | 264/883 [00:00<00:01, 470.65it/s]Loading weights:  36%|███▋      | 322/883 [00:00<00:01, 502.39it/s]Loading weights:  43%|████▎     | 380/883 [00:00<00:00, 522.62it/s]Loading weights:  49%|████▉     | 433/883 [00:01<00:00, 524.66it/s]Loading weights:  84%|████████▍ | 745/883 [00:01<00:00, 1306.23it/s]Loading weights: 100%|██████████| 883/883 [00:01<00:00, 745.08it/s] 
+model class: Gemma3ForConditionalGeneration
+5/261 7.3s/sample eta 31.0min
+10/261 7.2s/sample eta 30.2min
+15/261 7.2s/sample eta 29.6min
+20/261 7.2s/sample eta 29.0min
+25/261 7.2s/sample eta 28.4min
+30/261 7.2s/sample eta 27.8min
+35/261 7.2s/sample eta 27.2min
+40/261 7.2s/sample eta 26.6min
+45/261 7.2s/sample eta 26.0min
+50/261 7.2s/sample eta 25.4min
+55/261 7.2s/sample eta 24.8min
+60/261 7.2s/sample eta 24.2min
+65/261 7.2s/sample eta 23.6min
+70/261 7.2s/sample eta 23.0min
+75/261 7.2s/sample eta 22.4min
+80/261 7.2s/sample eta 21.8min
+85/261 7.2s/sample eta 21.2min
+90/261 7.2s/sample eta 20.6min
+95/261 7.2s/sample eta 20.0min
+100/261 7.2s/sample eta 19.4min
+105/261 7.2s/sample eta 18.8min
+110/261 7.2s/sample eta 18.2min
+115/261 7.2s/sample eta 17.6min
+120/261 7.2s/sample eta 17.0min
+125/261 7.2s/sample eta 16.4min
+130/261 7.2s/sample eta 15.8min
+135/261 7.2s/sample eta 15.2min
+140/261 7.2s/sample eta 14.6min
+145/261 7.2s/sample eta 14.0min
+150/261 7.2s/sample eta 13.4min
+155/261 7.2s/sample eta 12.8min
+160/261 7.2s/sample eta 12.2min
+165/261 7.2s/sample eta 11.6min
+170/261 7.2s/sample eta 11.0min
+175/261 7.2s/sample eta 10.4min
+180/261 7.2s/sample eta 9.8min
+185/261 7.2s/sample eta 9.2min
+190/261 7.2s/sample eta 8.6min
+195/261 7.2s/sample eta 8.0min
+200/261 7.2s/sample eta 7.4min
+205/261 7.2s/sample eta 6.8min
+210/261 7.2s/sample eta 6.1min
+215/261 7.2s/sample eta 5.5min
+220/261 7.2s/sample eta 4.9min
+225/261 7.2s/sample eta 4.3min
+230/261 7.2s/sample eta 3.7min
+235/261 7.2s/sample eta 3.1min
+240/261 7.2s/sample eta 2.5min
+245/261 7.2s/sample eta 1.9min
+250/261 7.2s/sample eta 1.3min
+255/261 7.2s/sample eta 0.7min
+260/261 7.2s/sample eta 0.1min
+saved runs/prompt_forms_gemma.jsonl hidden 9396

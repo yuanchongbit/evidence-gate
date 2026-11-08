@@ -1,0 +1,28 @@
+{
+ "behaviour": {
+  "main": {
+   "refuse_absent_none": 0.9042145593869731,
+   "refuse_absent_a": 0.5210727969348659,
+   "refuse_absent_b": 0.5632183908045977,
+   "refuse_sufficient_none": 0.011494252873563218,
+   "gold_sufficient_none": 0.7624521072796935,
+   "refuse_sufficient_wrong": 0.08812260536398467,
+   "gold_sufficient_wrong": 0.3831417624521073,
+   "adopt_absent_a": 0.4674329501915709,
+   "adopt_absent_b": 0.4329501915708812,
+   "adopt_sufficient_wrong": 0.4482758620689655,
+   "adopt_absent": 0.4501915708812261
+  }
+ },
+ "geometry": {
+  "main": {
+   "length_ratio": 0.522615373134613,
+   "angle_deg": 38.49608883643133,
+   "cos_hint_pairs": 0.9079236388206482,
+   "frozen_probe_conflict": 0.9690257042615347,
+   "cos_to_ref_dir": 1.0000000000000013,
+   "ref_probe_transfer": 0.9690257042615347
+  }
+ },
+ "n": 261
+}

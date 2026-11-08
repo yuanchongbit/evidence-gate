@@ -1,0 +1,24 @@
+
+## prompt_forms_3b: behaviour
+
+| form | refuse_absent_none | refuse_absent_a | refuse_absent_b | adopt_absent_a | adopt_absent_b | gold_sufficient_none | gold_sufficient_wrong | refuse_sufficient_none | refuse_sufficient_wrong | adopt_sufficient_wrong |
+|---|---|---|---|---|---|---|---|---|---|---|
+| belief | 0.904 | 0.808 | 0.889 | 0.161 | 0.088 | 0.762 | 0.659 | 0.011 | 0.080 | 0.092 |
+| claim | 0.904 | 0.812 | 0.877 | 0.176 | 0.115 | 0.762 | 0.602 | 0.011 | 0.180 | 0.100 |
+| dialogue | 0.939 | 0.383 | 0.510 | 0.605 | 0.483 | 0.770 | 0.644 | 0.011 | 0.042 | 0.184 |
+| nl | 0.904 | 0.854 | 0.950 | 0.142 | 0.042 | 0.762 | 0.567 | 0.011 | 0.249 | 0.084 |
+| std | 0.904 | 0.521 | 0.563 | 0.467 | 0.433 | 0.762 | 0.383 | 0.011 | 0.088 | 0.448 |
+| system | 0.904 | 0.057 | 0.107 | 0.927 | 0.885 | 0.762 | 0.598 | 0.011 | 0.008 | 0.284 |
+
+## prompt_forms_3b: geometry
+
+| form | length_ratio | angle_deg | cos_hint_pairs | frozen_probe_conflict | cos_to_ref_dir | ref_probe_transfer |
+|---|---|---|---|---|---|---|
+| belief | 0.681 | 32.730 | 0.968 | 0.997 | 1.000 | 0.997 |
+| claim | 0.595 | 46.853 | 0.949 | 0.985 | 1.000 | 0.985 |
+| dialogue | 0.667 | 28.018 | 0.941 | 0.999 | 0.976 | 0.999 |
+| nl | 0.589 | 44.157 | 0.940 | 0.992 | 1.000 | 0.992 |
+| std | 0.523 | 38.496 | 0.908 | 0.969 | 1.000 | 0.969 |
+| system | 0.672 | 32.455 | 0.919 | 0.999 | 1.000 | 0.999 |
+
+saved runs/prompt_forms_3b_analysis.json

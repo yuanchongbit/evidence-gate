@@ -1,0 +1,70 @@
+{
+ "behaviour": {
+  "nl": {
+   "refuse_absent_none": 0.8122605363984674,
+   "refuse_absent_a": 0.8505747126436781,
+   "refuse_absent_b": 0.8697318007662835,
+   "refuse_sufficient_none": 0.04597701149425287,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.06513409961685823,
+   "gold_sufficient_wrong": 0.5593869731800766,
+   "adopt_absent_a": 0.038314176245210725,
+   "adopt_absent_b": 0.02681992337164751,
+   "adopt_sufficient_wrong": 0.05363984674329502,
+   "adopt_absent": 0.032567049808429116
+  },
+  "nounk": {
+   "refuse_absent_none": 0.0,
+   "refuse_absent_a": 0.0,
+   "refuse_absent_b": 0.0,
+   "refuse_sufficient_none": 0.0,
+   "gold_sufficient_none": 0.5747126436781609,
+   "refuse_sufficient_wrong": 0.0,
+   "gold_sufficient_wrong": 0.25287356321839083,
+   "adopt_absent_a": 0.789272030651341,
+   "adopt_absent_b": 0.6398467432950191,
+   "adopt_sufficient_wrong": 0.6206896551724138,
+   "adopt_absent": 0.7145593869731801
+  },
+  "std": {
+   "refuse_absent_none": 0.842911877394636,
+   "refuse_absent_a": 0.40229885057471265,
+   "refuse_absent_b": 0.47509578544061304,
+   "refuse_sufficient_none": 0.04980842911877394,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.007662835249042145,
+   "gold_sufficient_wrong": 0.2413793103448276,
+   "adopt_absent_a": 0.578544061302682,
+   "adopt_absent_b": 0.5019157088122606,
+   "adopt_sufficient_wrong": 0.6743295019157088,
+   "adopt_absent": 0.5402298850574713
+  }
+ },
+ "geometry": {
+  "nl": {
+   "length_ratio": 0.9278382658958435,
+   "angle_deg": 14.330251599071744,
+   "cos_hint_pairs": 0.9984251260757446,
+   "frozen_probe_conflict": 0.9955373526518988,
+   "cos_to_ref_dir": 0.9560412727046042,
+   "ref_probe_transfer": 0.9951997181485885
+  },
+  "nounk": {
+   "length_ratio": 0.7883036136627197,
+   "angle_deg": 48.842924986128395,
+   "cos_hint_pairs": 0.8751518130302429,
+   "frozen_probe_conflict": 0.9758224336107808,
+   "cos_to_ref_dir": -0.1295379445737004,
+   "ref_probe_transfer": 0.9268360711087624
+  },
+  "std": {
+   "length_ratio": 0.5288217067718506,
+   "angle_deg": 28.18148896072769,
+   "cos_hint_pairs": 0.9713004231452942,
+   "frozen_probe_conflict": 0.9821053713245549,
+   "cos_to_ref_dir": 1.0000000000000007,
+   "ref_probe_transfer": 0.9821053713245549
+  }
+ },
+ "n": 261
+}

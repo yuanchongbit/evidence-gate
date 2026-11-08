@@ -1122,6 +1122,150 @@ holds on a different stimulus distribution with a slightly lower gain.
 Raw run and analyses: `results/voc_results.json`, `results/voc_extra.json`;
 `scripts/run_voc.sh` regenerates them.
 
+## 10b. Prompt form: six-form battery (Qwen 3B/7B, Gemma-3-4B)
+
+Question: is the conflict effect an artifact of the bracketed `Hint:` prefix?
+Six forms on the same 261 scenes: `std` (bracketed), `nl` (colleague report),
+`claim` (bare sentence), `belief` (first-person), `system` (assertion in the
+system message) and `dialogue` (two turns; its no-hint cell uses a neutral
+first turn). Full report: `results/pf_runs/six_form_report.md`.
+
+Behaviour (adopt b / refuse b / wrong-hint accuracy):
+
+| form | 3B | 7B | Gemma |
+|---|---|---|---|
+| std | 0.433 / 0.563 / 0.383 | 0.042 / 0.958 / 0.249 | 0.502 / 0.475 / 0.241 |
+| nl | 0.042 / 0.950 / 0.567 | 0.000 / 0.996 / 0.487 | 0.050 / 0.881 / 0.540 |
+| claim | 0.115 / 0.877 / 0.602 | 0.050 / 0.950 / 0.249 | 0.119 / 0.847 / 0.437 |
+| belief | 0.088 / 0.889 / 0.659 | 0.008 / 0.985 / 0.479 | 0.038 / 0.851 / 0.533 |
+| system | 0.885 / 0.107 / 0.598 | 0.019 / 0.973 / 0.521 | 0.034 / 0.954 / 0.418 |
+| dialogue | 0.483 / 0.510 / 0.644 | 0.000 / 0.989 / 0.506 | 0.004 / 0.962 / 0.536 |
+
+Qwen 3B adoption spans 0.042--0.885; `std` (0.433) is mid-range, `system` is
++0.452 [+0.391,+0.513] above it and `dialogue` is indistinguishable
+(-0.050 [-0.123,+0.023]). Qwen 7B stays at or below 0.050 in every form.
+Gemma reverses the ordering: `std` is the only form with substantial adoption
+(0.502 vs 0.004--0.119), `system` and `dialogue` are the two weakest, and in
+`dialogue` the assertion raises refusal above its own no-hint level
+(0.743 -> 0.935/0.962). Placement therefore changes the readout policy in a
+family-specific way.
+
+Geometry (length ratio / angle / std-probe transfer), per model range:
+
+| model | length ratio | angle (deg) | std-probe transfer |
+|---|---|---|---|
+| 3B | 0.523--0.681 | 28.0--46.9 | 0.969--0.999 |
+| 7B | 0.384--0.746 | 17.9--47.4 | 0.953--0.999 |
+| Gemma | 0.529--0.891 | 16.3--31.7 | 0.969--0.997 |
+
+The axis shortens and rotates in every form of every model, including the
+five forms without a bracket. Split-half reliability is 0.96--0.99 (Qwen) and
+0.985--0.989 (Gemma); the two hinted colours give nearly parallel axes
+(cos 0.91--0.999). A probe fitted only on `std` conflict states transfers to
+every other form, so the state organisation is shared even where behaviour
+is not.
+
+Agreeing hint: in Qwen the loss under conflict exceeds the gain under
+agreement in 9/12 model-by-form cells, and the agreeing hint leaves the axis
+longer in 4/6 (3B) and 6/6 (7B) forms. In Gemma the separation disappears
+(std 0.54 vs 0.53; all six forms within 0.04), and the agreeing hint rotates
+as much or more. Conflict-graded dilution is Qwen-specific; assertion-driven
+rotation is shared.
+
+Cross-cell colour decoding: Qwen transfers a->b at 0.85--0.97 raw in 11/12
+cells, including forms the model ignores. Gemma transfers only in `std`
+(0.85) and `claim` (0.66), falling to 0.46/0.40/0.18/0.10 in
+`system`/`nl`/`belief`/`dialogue`, although within-cell decoding is
+0.71--0.99 everywhere. The a->b test is the one that rules out category-level
+colour priors (the hinted colour is a fixed function of the absent category),
+so in Gemma a shared colour code is demonstrable only in the two forms the
+model acts on, while the axis moves in all six.
+
+Form-level link: the length ratio predicts wrong-hint accuracy at r = +0.89
+(3B), +0.89 (7B) and +0.98 (Gemma), while its relation to adoption has no
+consistent sign (+0.25, -0.79, -0.83). The less a form dilutes the axis, the
+more accurately the model answers under conflict, in all three models.
+
+Caveat: the Gemma dialogue no-hint axis is 46 deg from the `std` no-hint axis
+(cos 0.689), against cos 0.976/0.960 in Qwen, so the Gemma dialogue geometry
+is read within-form only.
+
+Raw runs: `results/pf_runs/prompt_forms_{3b,7b,gemma}.jsonl/.npz`,
+`pf_correct_{3b,7b}.jsonl/.npz`, `prompt_forms_gemma_fixed.*` (dialogue
+no-hint fix merged), `attn_forms_3b.jsonl`; analyses in the same directory.
+
+## 10c. Query-specificity control (3B, 7B, Gemma)
+
+Question: is the axis displacement specific to an assertion about the queried
+category, or does any extra sentence move it? Three control forms add one
+sentence to the `nl` template in both evidence arms, with no hint in either
+arm: `neutral` ("A colleague mentioned that the room is quiet."), `other`
+("A colleague mentioned that the remote is {absent_hint}."), and `query`
+("A colleague mentioned that the {category} is {absent_hint}.", i.e. the
+queried category with the scene's absent-category colour, held constant
+across arms). "remote" occurs neither as a queried nor as an absent category.
+The evidence axis is sufficient-minus-absent within the control; the neutral
+and other arms carry the identical sentence in both arms, and the query arm
+the same colour with the arm's queried category, so the only difference from
+`v0` is that added assertion.
+The queried-conflict row reuses the `nl` conflict axis from the main battery
+and reproduces it exactly (0.589 / 44.2 in 3B, 0.568 / 35.1 in 7B, 0.885 /
+16.3 in Gemma).
+
+| model | added material | length ratio [95% CI] | angle to v0 (deg) [95% CI] |
+|---|---|---|---|
+| 3B | neutral sentence | 0.822 [0.803,0.840] | 42.7 [41.4,44.2] |
+| 3B | other-object assertion | 0.804 [0.787,0.822] | 31.1 [30.1,32.1] |
+| 3B | **queried assertion, constant colour** | **0.604 [0.587,0.622]** | **38.5 [36.6,40.4]** |
+| 3B | queried assertion (`nl` conflict) | 0.589 | 44.2 |
+| 7B | neutral sentence | 0.730 [0.711,0.749] | 25.0 [23.9,26.1] |
+| 7B | other-object assertion | 0.691 [0.673,0.709] | 28.1 [27.2,29.1] |
+| 7B | **queried assertion, constant colour** | **0.596 [0.577,0.615]** | **30.9 [29.4,32.3]** |
+| 7B | queried assertion (`nl` conflict) | 0.568 | 35.1 |
+| Gemma | neutral sentence | 1.000 [0.975,1.027] | 10.1 [9.5,10.7] |
+| Gemma | other-object assertion | 0.897 [0.869,0.928] | 14.1 [13.6,14.7] |
+| Gemma | **queried assertion, constant colour** | **0.877 [0.842,0.916]** | **15.2 [14.7,15.7]** |
+| Gemma | queried assertion (`nl` conflict) | 0.885 | 16.3 |
+
+Cosine with the conflict axis — neutral / other / query: 3B 0.795 / 0.865 /
+0.976; 7B 0.874 / 0.921 / 0.988; Gemma 0.964 / 0.978 / 0.997. Paired
+query-minus-other contrast: angle +7.37 deg [+5.78,+8.96] and length -0.20
+[-0.22,-0.18] in 3B; +2.76 [+1.52,+3.95] and -0.10 [-0.11,-0.08] in 7B;
++1.04 [+0.52,+1.56] and -0.02 [-0.05,+0.01] in Gemma. Query-minus-neutral:
+-4.25 deg and -0.22 in 3B, +5.89 and -0.13 in 7B, +5.10 and -0.12 in Gemma.
+
+Behaviour (refusal absent / gold acc sufficient / stated-colour report
+sufficient): neutral 3B 0.977/0.736/—, 7B 0.996/0.494/—, Gemma 0.897/0.552/—;
+other 3B 0.973/0.705/0.123, 7B 0.989/0.452/0.077, Gemma 0.904/0.563/0.134;
+query 3B 0.866/0.571/0.218, 7B 0.985/0.490/0.149, Gemma 0.866/0.521/0.199.
+No-hint reference: absent refusal 0.904/0.958/0.843, sufficient accuracy
+0.762/0.667/0.567.
+
+Conclusion: compression is graded by query relevance, not by the mere presence
+of extra text or of a colour word — neutral > other > query in every backbone
+(3B 0.822/0.804/0.604/0.589; 7B 0.730/0.691/0.596/0.568; Gemma
+1.000/0.897/0.877/0.885), with the conflict axis at or beyond the query axis
+except in Gemma, where the two are within 0.01. The direction is query-linked
+as well: the constant-colour query axis is nearly collinear with the conflict
+axis (cos 0.976/0.988/0.997), far more than the neutral or other-object axes,
+even though its asserted colour never changes between arms. The remaining gap
+to the conflict axis is the colour change itself (0.604->0.589, 0.596->0.568,
+0.877->0.885). Behaviour follows the compression in 3B (0.762 -> 0.736 ->
+0.705 -> 0.571 -> 0.567 accuracy; adoption 0.123 -> 0.218) and mildly in 7B
+(adoption 0.077 -> 0.149) and Gemma (0.563 -> 0.521, adoption 0.134 -> 0.199).
+Caveats: this compares displacements of one reference direction, not a
+variance decomposition; `other`'s colour can coincide with the queried gold,
+so 0.123 is an upper bound on leakage; the query sentence is always wrong for
+a present scene, so its behavioural cost includes a factual error as well as
+query mention. Gemma's query-minus-other length difference is not
+distinguishable from zero, so the object-specificity claim is strongest for
+the Qwen backbones. Raw:
+`runs/pf_query_control_{3b,7b,gemma}.jsonl/.npz` and
+`runs/pf_query_constant_{3b,7b,gemma}.jsonl/.npz`; analyses
+`results/pf_runs/pf_query_control_{3b,7b,gemma}.txt` and
+`results/pf_runs/pf_query_constant_{3b,7b,gemma}.txt` (the text tables are
+mirrored locally; the raw runs remain on the persistent cloud disk).
+
 ## 11. Novelty: what the data support, and what they reject
 
 We tested two candidate quantitative laws that would link evidence geometry to

@@ -1,0 +1,35 @@
+## n=261
+
+| axis | length ratio [95% CI] | angle to v0 (deg) [95% CI] |
+|---|---|---|
+| neutral extra sentence | 0.822 [0.803,0.840] | 42.7 [41.4,44.2] |
+| other-object assertion | 0.804 [0.787,0.822] | 31.1 [30.1,32.1] |
+| query assertion, constant colour | 0.604 [0.587,0.622] | 38.5 [36.6,40.4] |
+| queried conflict (nl) | 0.589 | 44.2 |
+
+| pair | cosine [95% CI] |
+|---|---|
+| neutral vs other | +0.887 [+0.879,+0.893] |
+| neutral vs query | +0.825 [+0.816,+0.834] |
+| other vs query | +0.908 [+0.899,+0.917] |
+| neutral vs conflict | +0.795 [+0.784,+0.806] |
+| other vs conflict | +0.865 [+0.852,+0.878] |
+| query vs conflict | +0.976 [+0.968,+0.982] |
+
+| paired contrast | estimate [95% CI] |
+|---|---|
+| query - neutral, angle (deg) | -4.25 [-6.25,-2.14] |
+| query - neutral, length ratio | -0.22 [-0.24,-0.20] |
+| query - other, angle (deg) | +7.37 [+5.78,+8.96] |
+| query - other, length ratio | -0.20 [-0.22,-0.18] |
+
+| cell | refusal | gold acc | answers stated colour |
+|---|---|---|---|
+| neutral absent | 0.977 | 0.008 | — |
+| neutral sufficient | 0.084 | 0.736 | — |
+| other absent | 0.973 | 0.008 | 0.011 |
+| other sufficient | 0.092 | 0.705 | 0.123 |
+| query absent | 0.866 | 0.027 | 0.130 |
+| query sufficient | 0.192 | 0.571 | 0.218 |
+| no-hint absent | 0.904 | — | — |
+| no-hint sufficient | — | 0.762 | — |

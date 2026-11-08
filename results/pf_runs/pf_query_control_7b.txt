@@ -1,0 +1,27 @@
+## runs/pf_query_control_7b.jsonl  n=261
+
+| axis | length ratio [95% CI] | angle to v0 (deg) [95% CI] |
+|---|---|---|
+| neutral extra sentence | 0.730 [0.711,0.749] | 25.0 [23.9,26.1] |
+| other-object assertion | 0.691 [0.673,0.709] | 28.1 [27.2,29.1] |
+| queried-category assertion (nl) | 0.568 | 35.1 |
+
+| pair | cosine [95% CI] |
+|---|---|
+| neutral vs other | +0.945 [+0.942,+0.949] |
+| neutral vs queried | +0.874 [+0.866,+0.882] |
+| other vs queried | +0.921 [+0.915,+0.927] |
+
+| paired contrast (other - neutral) | estimate [95% CI] |
+|---|---|
+| angle to v0 (deg) | +3.13 [+2.09,+4.13] |
+| length ratio | -0.04 [-0.05,-0.02] |
+
+| cell | refusal | gold acc | answers stated colour |
+|---|---|---|---|
+| neutral absent | 0.996 | 0.004 | — |
+| neutral sufficient | 0.402 | 0.494 | — |
+| other absent | 0.989 | 0.008 | 0.004 |
+| other sufficient | 0.460 | 0.452 | 0.077 |
+| no-hint absent | 0.958 | — | — |
+| no-hint sufficient | — | 0.667 | — |

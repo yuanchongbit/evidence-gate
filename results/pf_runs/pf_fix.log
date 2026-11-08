@@ -1,0 +1,55 @@
+Loading weights:   0%|          | 0/883 [00:00<?, ?it/s]Loading weights:   1%|          | 5/883 [00:00<00:18, 48.45it/s]Loading weights:   7%|▋         | 66/883 [00:00<00:02, 364.47it/s]Loading weights:  14%|█▎        | 120/883 [00:00<00:01, 438.31it/s]Loading weights:  20%|█▉        | 173/883 [00:00<00:01, 470.56it/s]Loading weights:  26%|██▌       | 230/883 [00:00<00:01, 505.80it/s]Loading weights:  33%|███▎      | 289/883 [00:00<00:01, 528.79it/s]Loading weights:  39%|███▉      | 343/883 [00:00<00:01, 528.36it/s]Loading weights:  46%|████▌     | 406/883 [00:00<00:00, 553.48it/s]Loading weights:  64%|██████▍   | 569/883 [00:00<00:00, 882.32it/s]Loading weights: 100%|██████████| 883/883 [00:01<00:00, 874.47it/s]
+model class: Gemma3ForConditionalGeneration
+5/261 0.6s/sample eta 2.4min
+10/261 0.5s/sample eta 2.0min
+15/261 0.4s/sample eta 1.8min
+20/261 0.4s/sample eta 1.7min
+25/261 0.4s/sample eta 1.7min
+30/261 0.4s/sample eta 1.6min
+35/261 0.4s/sample eta 1.6min
+40/261 0.4s/sample eta 1.5min
+45/261 0.4s/sample eta 1.5min
+50/261 0.4s/sample eta 1.5min
+55/261 0.4s/sample eta 1.4min
+60/261 0.4s/sample eta 1.4min
+65/261 0.4s/sample eta 1.3min
+70/261 0.4s/sample eta 1.3min
+75/261 0.4s/sample eta 1.3min
+80/261 0.4s/sample eta 1.2min
+85/261 0.4s/sample eta 1.2min
+90/261 0.4s/sample eta 1.2min
+95/261 0.4s/sample eta 1.1min
+100/261 0.4s/sample eta 1.1min
+105/261 0.4s/sample eta 1.1min
+110/261 0.4s/sample eta 1.0min
+115/261 0.4s/sample eta 1.0min
+120/261 0.4s/sample eta 1.0min
+125/261 0.4s/sample eta 0.9min
+130/261 0.4s/sample eta 0.9min
+135/261 0.4s/sample eta 0.9min
+140/261 0.4s/sample eta 0.8min
+145/261 0.4s/sample eta 0.8min
+150/261 0.4s/sample eta 0.7min
+155/261 0.4s/sample eta 0.7min
+160/261 0.4s/sample eta 0.7min
+165/261 0.4s/sample eta 0.6min
+170/261 0.4s/sample eta 0.6min
+175/261 0.4s/sample eta 0.6min
+180/261 0.4s/sample eta 0.5min
+185/261 0.4s/sample eta 0.5min
+190/261 0.4s/sample eta 0.5min
+195/261 0.4s/sample eta 0.4min
+200/261 0.4s/sample eta 0.4min
+205/261 0.4s/sample eta 0.4min
+210/261 0.4s/sample eta 0.3min
+215/261 0.4s/sample eta 0.3min
+220/261 0.4s/sample eta 0.3min
+225/261 0.4s/sample eta 0.2min
+230/261 0.4s/sample eta 0.2min
+235/261 0.4s/sample eta 0.2min
+240/261 0.4s/sample eta 0.1min
+245/261 0.4s/sample eta 0.1min
+250/261 0.4s/sample eta 0.1min
+255/261 0.4s/sample eta 0.0min
+260/261 0.4s/sample eta 0.0min
+saved runs/pf_gemma_dialogue_fix.jsonl hidden 522

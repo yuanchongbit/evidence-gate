@@ -1,0 +1,24 @@
+
+## prompt_forms_gemma_fixed: behaviour
+
+| form | refuse_absent_none | refuse_absent_a | refuse_absent_b | adopt_absent_a | adopt_absent_b | gold_sufficient_none | gold_sufficient_wrong | refuse_sufficient_none | refuse_sufficient_wrong | adopt_sufficient_wrong |
+|---|---|---|---|---|---|---|---|---|---|---|
+| belief | 0.843 | 0.843 | 0.851 | 0.057 | 0.038 | 0.567 | 0.533 | 0.050 | 0.077 | 0.073 |
+| claim | 0.843 | 0.762 | 0.847 | 0.207 | 0.119 | 0.567 | 0.437 | 0.050 | 0.100 | 0.234 |
+| dialogue | 0.743 | 0.935 | 0.962 | 0.015 | 0.004 | 0.590 | 0.536 | 0.031 | 0.134 | 0.027 |
+| nl | 0.843 | 0.862 | 0.881 | 0.080 | 0.050 | 0.567 | 0.540 | 0.050 | 0.084 | 0.084 |
+| std | 0.843 | 0.402 | 0.475 | 0.579 | 0.502 | 0.567 | 0.241 | 0.050 | 0.008 | 0.674 |
+| system | 0.843 | 0.912 | 0.954 | 0.077 | 0.034 | 0.567 | 0.418 | 0.050 | 0.245 | 0.172 |
+
+## prompt_forms_gemma_fixed: geometry
+
+| form | length_ratio | angle_deg | cos_hint_pairs | frozen_probe_conflict | cos_to_ref_dir | ref_probe_transfer |
+|---|---|---|---|---|---|---|
+| belief | 0.860 | 16.385 | 0.998 | 0.995 | 1.000 | 0.995 |
+| claim | 0.731 | 25.798 | 0.993 | 0.992 | 1.000 | 0.992 |
+| dialogue | 0.891 | 20.932 | 0.999 | 0.987 | 0.689 | 0.990 |
+| nl | 0.885 | 16.291 | 0.998 | 0.997 | 1.000 | 0.997 |
+| std | 0.529 | 28.181 | 0.971 | 0.982 | 1.000 | 0.982 |
+| system | 0.676 | 31.700 | 0.996 | 0.969 | 1.000 | 0.969 |
+
+saved results/pf_runs/prompt_forms_gemma_fixed_analysis.json

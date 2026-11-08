@@ -215,7 +215,7 @@ Gemma & \texttt{a} & 0.53 & $29^\circ$ & 0.47 & 0.39 $\to$ 0.42 & 0.59 $\to$ 0.5
 \end{tabular}
 \end{table}
 
-Under a conflicting hint the full vector shortens to $0.53$ $[0.50,0.55]$ (hint \texttt{a}) and $0.57$ $[0.54,0.60]$ (hint \texttt{b}) of its no-hint length in 3B, to $0.39$/$0.43$ in 7B and $0.61$/$0.64$ in LLaVA, and turns $39^\circ$/$41^\circ$, $48^\circ$/$44^\circ$ and $71^\circ$/$69^\circ$ away from $\wdir$---eight to sixteen times the noise floor. The projection onto $\wdir$ falls to $0.41$/$0.43$, $0.26$/$0.31$ and $0.20$/$0.23$, further than either factor alone, because $\|\Delta\mu\|\cos\theta$ is their product. Two different hinted colours produce almost the same direction: $\cos(\Delta\mu_{\texttt{a}},\Delta\mu_{\texttt{b}})=0.908$, $0.908$ and $0.915$ in 3B, 7B and LLaVA. The two pairs share the present arm and differ only in the hinted colour and the absent arm, so this agreement means the shift is not specific to the colour being asserted: it is a common response to receiving a hint. A correct hint also shortens and rotates the vector ($0.69$--$0.78$ of its length, $22^\circ$--$46^\circ$) but keeps a larger along-axis projection ($0.61$ against $0.41$ in 3B; $0.69$ against $0.26$--$0.31$ in 7B; $0.48$ against $0.20$--$0.23$ in LLaVA), which is consistent with its undamaged ranking. In 3B the correct hint rotates as much as the conflicting one, so the angle alone does not predict damage; what separates the two hints is how much of the length survives.
+Under a conflicting hint the full vector shortens to $0.53$ $[0.50,0.55]$ (hint \texttt{a}) and $0.57$ $[0.54,0.60]$ (hint \texttt{b}) of its no-hint length in 3B, to $0.39$/$0.43$ in 7B and $0.61$/$0.64$ in LLaVA, and turns $39^\circ$/$41^\circ$, $48^\circ$/$44^\circ$ and $71^\circ$/$69^\circ$ away from $\wdir$---eight to sixteen times the noise floor. The projection onto $\wdir$ falls to $0.41$/$0.43$, $0.26$/$0.31$ and $0.20$/$0.23$, further than either factor alone, because $\|\Delta\mu\|\cos\theta$ is their product. Two different hinted colours produce almost the same direction: $\cos(\Delta\mu_{\texttt{a}},\Delta\mu_{\texttt{b}})=0.908$, $0.908$ and $0.915$ in 3B, 7B and LLaVA. The two pairs share the present arm and differ only in the hinted colour and the absent arm, so this agreement means the shift is not specific to the colour being asserted: it is a common response to receiving a hint. Appendix~\ref{app:sixform} shows that in 3B even a neutral added sentence with no object and no colour rotates the axis by a comparable amount, so the rotation is a response to rewriting the prompt rather than to the asserted content; the conflict-specific part is the shortening. A correct hint also shortens and rotates the vector ($0.69$--$0.78$ of its length, $22^\circ$--$46^\circ$) but keeps a larger along-axis projection ($0.61$ against $0.41$ in 3B; $0.69$ against $0.26$--$0.31$ in 7B; $0.48$ against $0.20$--$0.23$ in LLaVA), which is consistent with its undamaged ranking. In 3B the correct hint rotates as much as the conflicting one, so the angle alone does not predict damage; what separates the two hints is how much of the length survives.
 
 A nested bootstrap that re-estimates $\wdir$, the whitening $W$ and the no-hint gap inside every scene resample gives the same intervals: conflict ratio, angle and along-$\wdir$ ratio are $0.523$ $[0.508,0.544]$, $38.5^\circ$ $[35.7,42.1]$ and $0.409$ $[0.381,0.438]$ in 3B; $0.384$ $[0.362,0.409]$, $47.4^\circ$ $[44.1,51.1]$ and $0.259$ $[0.230,0.291]$ in 7B; $0.602$ $[0.572,0.637]$, $70.7^\circ$ $[67.9,73.1]$ and $0.199$ $[0.175,0.227]$ in LLaVA; and $0.529$ $[0.499,0.561]$, $28.2^\circ$ $[26.6,30.7]$ and $0.466$ $[0.435,0.496]$ in Gemma. Every angle interval excludes zero and every ratio interval excludes one, so neither dilution nor rotation is an artefact of estimating the axis once on all scenes.
 
@@ -386,7 +386,7 @@ The hint does not erase the evidence; it dilutes and rotates it, and changes a l
 In the constructed regime the hint attacks the refusal gate and $\punk$ is corrupted; there the cross-fitted probe buys $2.2$--$2.5\times$ in 3B and LLaVA, $9.0\times$ in Gemma and $2.0\times$ in Phi-3.5 at a quarter of items answered, and a null margin in 7B, though the category-matched control shows that part of this margin is specific to the change of question between the two arms (Appendix~\ref{app:controls}). On naturally unanswerable images the failure is heterogeneous and $\punk$ is already good, so the probe adds little. The score is an evidence detector, not a calibrated per-item predictor of credulity: it predicts absent-item refusal in three models but adoption only in Gemma (Appendix~\ref{app:validity}). A practical system should use the internal gate when it suspects prompt pollution, operate it by coverage rather than a fixed threshold, and fall back to calibrated confidence when evidence is present.
 
 \paragraph{Limitations.}
-The benchmark is small ($261$ images) but densely observed. Absent categories are sampled without requiring scene plausibility, and ``absent'' is annotation-level; a co-occurrence score for the absent category against the image's own objects predicts no-hint refusal (Appendix~\ref{app:controls}), so the gate partly tracks scene fit, though evidence detection survives within both strata ($\punk$ AUROC $\ge0.976$) and the effect survives a control for category frequency. On the main absent arm a yes/no presence probe gives mean $p(\text{yes})=0.046$ and judges $2.7\%$ of items present above $0.5$; restricting to the $254$ items it judges absent leaves refusal under conflict at $0.531$ (against $0.521$ on all items), hint adoption at $0.457$, and probe AUROC at $0.999$. LLaVA's own presence readout is weak (mean $p(\text{yes})=0.403$), so for LLaVA absence rests on the annotation, though its strict subset gives the same picture (refusal $0.104$, adoption $0.891$, probe $1.000$). A category-matched control that holds the question and the asserted colour fixed across the label reproduces the output collapse, the in-condition decodability and the geometry, but reduces the frozen probe's margin over $\punk$ from $+0.123$/$+0.142$/$+0.142$ to $+0.050$/$+0.002$/$-0.015$ in 3B/7B/LLaVA and removes its fabrication advantage in 7B and LLaVA; the same control leaves Gemma's margin at $-0.009$ and keeps Phi's positive only because its own signal is below chance, so the deployment numbers are an upper bound for a setting in which the question changes between arms. The main prompts offer an explicit \unknown\ option and a bracketed hint. Removing the \unknown\ option removes abstention by construction (refusal $0$) and raises hint adoption from $0.467$ to $0.935$ in 3B and $0.123$ to $0.977$ in 7B; phrasing the hint as a sentence rather than a bracket restores refusal to $0.958$/$0.989$ and all but eliminates hint adoption ($0.038$/$0.004$), while accuracy under the wrong hint rises from $0.383$ to $0.594$ in 3B and $0.249$ to $0.498$ in 7B. LLaVA moves the same way from a lower baseline: sentence phrasing raises conflict refusal from $0.088$ to $0.559$, cuts adoption from $0.904$ to $0.333$ and raises wrong-hint accuracy from $0.360$ to $0.548$. Gemma and Phi-3.5 follow the same pattern: removing the \unknown\ option raises adoption from $0.579$/$0.663$ to $0.789$/$0.985$, sentence phrasing raises conflict refusal from $0.402$/$0.322$ to $0.851$/$0.877$ and cuts adoption to $0.038$/$0.088$, and wrong-hint accuracy rises from $0.241$/$0.080$ to $0.559$/$0.276$. The conflict effect is therefore specific to a prefixed assertion with an available abstention token; we do not claim it for conversational hints or for readouts without \unknown. The mechanistic claims are strongest for colour. The probe requires white-box states. Energy-matched removal shows no direction-specific necessity, so we claim readout-level sufficiency, not a circuit. To break the confound between architecture and training recipe we added two backbones outside the Qwen family. Gemma-3-4B-it (Gemma-3 with a SigLIP encoder) abstains without hints ($0.843$ of absent items) and is overridden by conflict ($0.402$/$0.475$ refusal, adoption $0.579$/$0.502$). Its evidence vector dilutes to $0.53$ and rotates $24^\circ$--$29^\circ$, its two hinted colours coincide at $\cos=0.971$, and its frozen probe transfers at $0.964$/$0.970$, so the geometry replicates outside the Qwen family; its output confidence, however, barely degrades ($\punk$ AUROC $0.961\to0.891$, maximum probability $0.627\to0.701$). Phi-3.5-vision (Phi-3 with a CLIP encoder) abstains ($0.897$), is overridden ($0.322$/$0.425$ refusal, adoption $0.663$/$0.567$), dilutes its evidence vector to $0.052$/$0.149$ and rotates it $86^\circ$/$74^\circ$, and its output signal collapses as in the Qwen family ($\punk$ $0.939\to0.385$/$0.458$); its frozen probe falls to $0.685$/$0.675$ while a refit reaches $0.998$ (Appendix~\ref{app:phi}). The rank--scale dissociation is therefore about the representation; the collapse of the native output signal appears in the Qwen2/2.5 and Phi-3 readouts but not in Gemma, so it is readout-specific rather than a property of one language-model family. SmolVLM-Instruct (Idefics3 with a SmolLM2 language model) remains a boundary case with no abstention behaviour at all (refusal $0$ in every cell), so it cannot test the gate. The geometry analysis is descriptive: it establishes dilution, rotation and loss of cross-scene coherence, and bounds what a fixed direction recovers, but a rotated yet fully decodable axis is compatible with several implementations and we do not identify which. We also tested two candidate laws from geometry to behaviour and rejected both: a condition-invariant slope (likelihood-ratio $37.8$, $df=5$, $p=4.2\times10^{-7}$ in 3B) and isotropic contraction, under which the within-class spread would shrink with the mean gap (across four models and three hinted conditions the gap ratio is $0.20$--$0.69$ but the spread ratio is $0.62$--$0.83$, log--log slope $0.006$, $R^2\approx0$). What survives is weaker but quantitative: for the fixed readout the rank-sensitivity loss is proportional to the mean-gap ratio, $d'_c/d'_0=1.42\,g_c+0.003$ ($R^2=0.918$, leave-one-cell-out MAE $0.056$), with a per-model gain of $1.25$--$1.60$ in the four fitted models that is stable across hints (Phi-3.5, out of sample, has a gain of $1.13$ and RMSE $0.096$). This is a within-readout regularity, not a law from geometry to the model's own confidence, which Gemma dissociates. Input resolution is not the driver, since moving the 3B model from its native $589{,}824$ to $262{,}144$ pixels changes absent refusal only from $0.521$ to $0.556$ and leaves the frozen probe at AUROC $0.997$. The conformal risk bound is not usable at $130$ calibration scenes for most models: with the answered subset in both numerator and denominator, no family-wise $5\%$ level exists in any model and a family-wise $10\%$ level exists only for Gemma in $4/20$ splits, while the pointwise $10\%$ bound holds in $7/20$, $11/20$, $7/20$, $20/20$ and $0/20$ splits, so we withdraw the general certificate claim. The invariance is rank invariance, not calibration invariance. Labels were verified by a single annotator on contact sheets; we did not run a second-annotator agreement study.
+The benchmark is small ($261$ images) but densely observed. Absent categories are sampled without requiring scene plausibility, and ``absent'' is annotation-level; a co-occurrence score for the absent category against the image's own objects predicts no-hint refusal (Appendix~\ref{app:controls}), so the gate partly tracks scene fit, though evidence detection survives within both strata ($\punk$ AUROC $\ge0.976$) and the effect survives a control for category frequency. On the main absent arm a yes/no presence probe gives mean $p(\text{yes})=0.046$ and judges $2.7\%$ of items present above $0.5$; restricting to the $254$ items it judges absent leaves refusal under conflict at $0.531$ (against $0.521$ on all items), hint adoption at $0.457$, and probe AUROC at $0.999$. LLaVA's own presence readout is weak (mean $p(\text{yes})=0.403$), so for LLaVA absence rests on the annotation, though its strict subset gives the same picture (refusal $0.104$, adoption $0.891$, probe $1.000$). A category-matched control that holds the question and the asserted colour fixed across the label reproduces the output collapse, the in-condition decodability and the geometry, but reduces the frozen probe's margin over $\punk$ from $+0.123$/$+0.142$/$+0.142$ to $+0.050$/$+0.002$/$-0.015$ in 3B/7B/LLaVA and removes its fabrication advantage in 7B and LLaVA; the same control leaves Gemma's margin at $-0.009$ and keeps Phi's positive only because its own signal is below chance, so the deployment numbers are an upper bound for a setting in which the question changes between arms. The main prompts offer an explicit \unknown\ option and a bracketed hint. Removing the \unknown\ option removes abstention by construction (refusal $0$) and raises hint adoption from $0.467$ to $0.935$ in 3B and $0.123$ to $0.977$ in 7B; phrasing the hint as a sentence rather than a bracket restores refusal to $0.958$/$0.989$ and all but eliminates hint adoption ($0.038$/$0.004$), while accuracy under the wrong hint rises from $0.383$ to $0.594$ in 3B and $0.249$ to $0.498$ in 7B. LLaVA moves the same way from a lower baseline: sentence phrasing raises conflict refusal from $0.088$ to $0.559$, cuts adoption from $0.904$ to $0.333$ and raises wrong-hint accuracy from $0.360$ to $0.548$. Gemma and Phi-3.5 follow the same pattern: removing the \unknown\ option raises adoption from $0.579$/$0.663$ to $0.789$/$0.985$, sentence phrasing raises conflict refusal from $0.402$/$0.322$ to $0.851$/$0.877$ and cuts adoption to $0.038$/$0.088$, and wrong-hint accuracy rises from $0.241$/$0.080$ to $0.559$/$0.276$. The behavioural conflict effect is therefore specific to an available abstention token and, in Qwen, to where the assertion sits: single-turn user-message sentences largely suppress it, while a system-message assertion or a two-turn dialogue restores it; in Gemma the ordering reverses and only the bracketed form produces substantial adoption. The internal dilution and rotation appear in every form and every model we tested, so we do not attribute the geometry to the bracket (Appendix~\ref{app:sixform}). A query-specificity control shows that rotation is not triggered by conflict alone: in 3B a neutral sentence with no object and no colour turns the evidence axis $42.7^\circ$ $[41.4,44.2]$, as far as the conflicting assertion about the queried category ($44.2^\circ$). The displacement is nevertheless query-linked: in all three backbones a sentence about the queried category that holds one colour fixed across arms is nearly collinear with the conflict axis ($\cos 0.976$/$0.988$/$0.997$ in 3B/7B/Gemma) and shortens the axis to $0.604$/$0.596$/$0.877$, against $0.804$/$0.691$/$0.897$ for an assertion about another object and $0.822$/$0.730$/$1.000$ for a neutral sentence; the conflict arms, which also change the asserted colour, shorten it further to $0.589$/$0.568$/$0.885$. We therefore read the conflict effect as the extreme of a graded, query-relevance-dependent compression, with the colour change contributing a smaller additional increment. We do not claim the behavioural effect for readouts without \unknown. The mechanistic claims are strongest for colour. The probe requires white-box states. Energy-matched removal shows no direction-specific necessity, so we claim readout-level sufficiency, not a circuit. To break the confound between architecture and training recipe we added two backbones outside the Qwen family. Gemma-3-4B-it (Gemma-3 with a SigLIP encoder) abstains without hints ($0.843$ of absent items) and is overridden by conflict ($0.402$/$0.475$ refusal, adoption $0.579$/$0.502$). Its evidence vector dilutes to $0.53$ and rotates $24^\circ$--$29^\circ$, its two hinted colours coincide at $\cos=0.971$, and its frozen probe transfers at $0.964$/$0.970$, so the geometry replicates outside the Qwen family; its output confidence, however, barely degrades ($\punk$ AUROC $0.961\to0.891$, maximum probability $0.627\to0.701$). Phi-3.5-vision (Phi-3 with a CLIP encoder) abstains ($0.897$), is overridden ($0.322$/$0.425$ refusal, adoption $0.663$/$0.567$), dilutes its evidence vector to $0.052$/$0.149$ and rotates it $86^\circ$/$74^\circ$, and its output signal collapses as in the Qwen family ($\punk$ $0.939\to0.385$/$0.458$); its frozen probe falls to $0.685$/$0.675$ while a refit reaches $0.998$ (Appendix~\ref{app:phi}). The rank--scale dissociation is therefore about the representation; the collapse of the native output signal appears in the Qwen2/2.5 and Phi-3 readouts but not in Gemma, so it is readout-specific rather than a property of one language-model family. SmolVLM-Instruct (Idefics3 with a SmolLM2 language model) remains a boundary case with no abstention behaviour at all (refusal $0$ in every cell), so it cannot test the gate. The geometry analysis is descriptive: it establishes dilution, rotation and loss of cross-scene coherence, and bounds what a fixed direction recovers, but a rotated yet fully decodable axis is compatible with several implementations and we do not identify which. We also tested two candidate laws from geometry to behaviour and rejected both: a condition-invariant slope (likelihood-ratio $37.8$, $df=5$, $p=4.2\times10^{-7}$ in 3B) and isotropic contraction, under which the within-class spread would shrink with the mean gap (across four models and three hinted conditions the gap ratio is $0.20$--$0.69$ but the spread ratio is $0.62$--$0.83$, log--log slope $0.006$, $R^2\approx0$). What survives is weaker but quantitative: for the fixed readout the rank-sensitivity loss is proportional to the mean-gap ratio, $d'_c/d'_0=1.42\,g_c+0.003$ ($R^2=0.918$, leave-one-cell-out MAE $0.056$), with a per-model gain of $1.25$--$1.60$ in the four fitted models that is stable across hints (Phi-3.5, out of sample, has a gain of $1.13$ and RMSE $0.096$). This is a within-readout regularity, not a law from geometry to the model's own confidence, which Gemma dissociates. Input resolution is not the driver, since moving the 3B model from its native $589{,}824$ to $262{,}144$ pixels changes absent refusal only from $0.521$ to $0.556$ and leaves the frozen probe at AUROC $0.997$. The conformal risk bound is not usable at $130$ calibration scenes for most models: with the answered subset in both numerator and denominator, no family-wise $5\%$ level exists in any model and a family-wise $10\%$ level exists only for Gemma in $4/20$ splits, while the pointwise $10\%$ bound holds in $7/20$, $11/20$, $7/20$, $20/20$ and $0/20$ splits, so we withdraw the general certificate claim. The invariance is rank invariance, not calibration invariance. Labels were verified by a single annotator on contact sheets; we did not run a second-annotator agreement study.
 
 \section{Conclusion}
 
@@ -519,12 +519,12 @@ $s$ hi, freq hi & 0.811 & 0.878 & 0.689 \\
 \end{table}
 
 \paragraph{Prompt format.}
-The main battery offers an explicit \unknown\ option and a bracketed hint, which could overstate abstention or hint uptake. We rerun the absent arm three ways in all five models (Table~\ref{tab:promptfmt}). Removing the \unknown\ option makes abstention impossible by construction (refusal is $0$ in every condition) and raises adoption of the plausible hint from $0.467$ to $0.935$ in 3B, from $0.123$ to $0.977$ in 7B, from $0.904$ to $0.992$ in LLaVA, from $0.579$ to $0.789$ in Gemma and from $0.663$ to $0.985$ in Phi-3.5. Phrasing the hint as a sentence rather than a bracket leaves refusal under conflict at $0.958$/$0.989$ in 3B/7B, raises it from $0.088$ to $0.559$ in LLaVA, from $0.402$ to $0.851$ in Gemma and from $0.322$ to $0.877$ in Phi-3.5, while reducing hint adoption to $0.038$/$0.004$/$0.333$/$0.038$/$0.088$; accuracy under the wrong hint rises from $0.383$ to $0.594$ in 3B, from $0.249$ to $0.498$ in 7B, from $0.360$ to $0.548$ in LLaVA, from $0.241$ to $0.559$ in Gemma and from $0.080$ to $0.276$ in Phi-3.5. The conflict effect is thus tied to a prefixed assertion and to the availability of an abstention token; a conversational hint does not reproduce it.
+The main battery offers an explicit \unknown\ option and a bracketed hint, which could overstate abstention or hint uptake. We rerun the absent arm three ways in all five models (Table~\ref{tab:promptfmt}). Removing the \unknown\ option makes abstention impossible by construction (refusal is $0$ in every condition) and raises adoption of the plausible hint from $0.467$ to $0.935$ in 3B, from $0.123$ to $0.977$ in 7B, from $0.904$ to $0.992$ in LLaVA, from $0.579$ to $0.789$ in Gemma and from $0.663$ to $0.985$ in Phi-3.5. Phrasing the hint as a sentence rather than a bracket leaves refusal under conflict at $0.958$/$0.989$ in 3B/7B, raises it from $0.088$ to $0.559$ in LLaVA, from $0.402$ to $0.851$ in Gemma and from $0.322$ to $0.877$ in Phi-3.5, while reducing hint adoption to $0.038$/$0.004$/$0.333$/$0.038$/$0.088$; accuracy under the wrong hint rises from $0.383$ to $0.594$ in 3B, from $0.249$ to $0.498$ in 7B, from $0.360$ to $0.548$ in LLaVA, from $0.241$ to $0.559$ in Gemma and from $0.080$ to $0.276$ in Phi-3.5. In Qwen the behavioural conflict effect is thus tied to the availability of an abstention token and to where the assertion sits: a single-turn sentence in the user message largely suppresses it, while an assertion in the system message or in a two-turn dialogue restores it. Gemma-3-4B reverses the ordering: the bracketed form is the only one with substantial adoption ($0.502$ vs.\ $0.004$--$0.119$), and \texttt{system} and \texttt{dialogue} suppress it. What is not an artifact of the bracketed prefix is the geometry: dilution and rotation of the evidence axis appear in all six forms in all three models, and a probe fitted on the bracketed form transfers at AUROC $0.95$--$0.999$ (Appendix~\ref{app:sixform}).
 
 \begin{table}[h]
 \centering
 \small
-\caption{Prompt-format robustness ($n=261$ absent items per model). ``std'' is the main battery; ``no \unknown'' removes the \unknown\ option from the system prompt; ``sentence'' phrases the hint as a sentence. Hint adoption for absent $b$ is measured against the far-hue colour actually stated.}
+\caption{Prompt-format robustness ($n=261$ absent items per model). ``std'' is the main battery; ``no \unknown'' removes the \unknown\ option from the system prompt; ``sentence'' phrases the hint as a sentence. Hint adoption for absent $b$ is measured against the far-hue colour actually stated. The sentence rows use the earlier wording, which asks ``in this photo''; Appendix~\ref{app:sixform} reruns single-turn sentence forms with the standard question.}
 \label{tab:promptfmt}
 \begin{tabular}{llccccc}
 \toprule
@@ -555,6 +555,315 @@ Phi-3.5 & std & 0.897 & 0.322 & 0.425 & 0.663 & 0.567 \\
 
 \paragraph{Input resolution.}
 LLaVA runs at a different input resolution from the Qwen models, so we rerun the 3B battery at $262{,}144$ and $589{,}824$ pixels. At $262{,}144$, absent refusal is $0.908$ with no hint and $0.556$ under the plausible hint, hint adoption is $0.441$, accuracy under the wrong hint is $0.433$, and the frozen probe reaches AUROC $0.997$; at $589{,}824$ the values are $0.904$, $0.521$, $0.467$, $0.383$ and $1.000$, matching the native run. Resolution moves the level by at most $0.05$ and does not produce the conflict effect.
+
+\section{Prompt form: is the effect an artifact of the bracket?}
+\label{app:sixform}
+
+The main battery states the assertion as a bracketed \texttt{Hint:} prefix, so
+the conflict effect could in principle be a property of the prefix rather than
+of the assertion. We reran the absent and sufficient arms in six forms on the
+same $261$ scenes in both Qwen sizes and in Gemma-3-4B-it: the bracketed form
+(\texttt{std}), a
+colleague report (\texttt{nl}), a bare claim (\texttt{claim}), a first-person
+belief (\texttt{belief}), the claim appended to the system message
+(\texttt{system}), and a two-turn dialogue in which the user states the belief,
+the assistant answers ``Okay.'', and the image and question follow
+(\texttt{dialogue}; its no-hint cell uses a neutral first turn). Every form
+keeps the standard question and the \unknown\ option. The \texttt{std} form
+reproduces the main battery cell for cell (3B refusal
+$0.904/0.521/0.563$, adoption $0.467/0.433$, wrong-hint accuracy $0.383$; 7B
+$0.958/0.877/0.958$, $0.123/0.042$, $0.249$; Gemma $0.843/0.402/0.475$,
+$0.579/0.502$, $0.241$), so the battery differs from the main run only in the
+form of the assertion. The six-form battery also adds the agreeing-hint cell.
+
+\paragraph{Behaviour depends on the form.}
+Table~\ref{tab:sixform-behaviour} reports adoption and wrong-hint accuracy. In
+3B adoption of the plausible absent hint spans a factor of $20$, from $0.042$
+in \texttt{nl} to $0.885$ in \texttt{system}; the bracketed form ($0.433$) is
+statistically indistinguishable from the two-turn dialogue ($0.483$; paired
+difference $-0.050$ $[-0.123,+0.023]$) and far below \texttt{system}
+($+0.452$ $[+0.391,+0.513]$). For this model the bracketed form is neither
+necessary for adoption (system, dialogue) nor the strongest form. Adoption is
+highest when the assertion precedes the image (system, dialogue), intermediate
+when it is flagged as a hint, and lowest when it is a bare single-turn
+sentence after the image. In 7B adoption is at most $0.050$ in every form, so
+this model's readout does not take the assertion as the answer whatever its
+position.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Behaviour across prompt forms ($n=261$ scenes; Qwen2.5-VL-3B/7B and
+Gemma-3-4B-it). ``Adopt a/b'' is agreement with the colour stated in the
+absent cell; ``acc wrong'' is accuracy in the sufficient arm under a
+conflicting hint. The \texttt{std} rows are the main battery.}
+\label{tab:sixform-behaviour}
+\begin{tabular}{llccccc}
+\toprule
+model & form & adopt a & adopt b & refuse a & refuse b & acc wrong \\
+\midrule
+3B & std & 0.467 & 0.433 & 0.521 & 0.563 & 0.383 \\
+   & nl & 0.142 & 0.042 & 0.854 & 0.950 & 0.567 \\
+   & claim & 0.176 & 0.115 & 0.812 & 0.877 & 0.602 \\
+   & belief & 0.161 & 0.088 & 0.808 & 0.889 & 0.659 \\
+   & system & 0.927 & 0.885 & 0.057 & 0.107 & 0.598 \\
+   & dialogue & 0.605 & 0.483 & 0.383 & 0.510 & 0.644 \\
+\midrule
+7B & std & 0.123 & 0.042 & 0.877 & 0.958 & 0.249 \\
+   & nl & 0.004 & 0.000 & 0.989 & 0.996 & 0.487 \\
+   & claim & 0.100 & 0.050 & 0.900 & 0.950 & 0.249 \\
+   & belief & 0.023 & 0.008 & 0.969 & 0.985 & 0.479 \\
+   & system & 0.084 & 0.019 & 0.908 & 0.973 & 0.521 \\
+   & dialogue & 0.011 & 0.000 & 0.981 & 0.989 & 0.506 \\
+\midrule
+Gemma & std & 0.579 & 0.502 & 0.402 & 0.475 & 0.241 \\
+   & nl & 0.080 & 0.050 & 0.862 & 0.881 & 0.540 \\
+   & claim & 0.207 & 0.119 & 0.762 & 0.847 & 0.437 \\
+   & belief & 0.057 & 0.038 & 0.843 & 0.851 & 0.533 \\
+   & system & 0.077 & 0.034 & 0.912 & 0.954 & 0.418 \\
+   & dialogue & 0.015 & 0.004 & 0.935 & 0.962 & 0.536 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Geometry survives every form.}
+Table~\ref{tab:sixform-geometry} reports the evidence-axis geometry. The axis
+shortens to $0.52$--$0.68$ of its no-hint length and turns
+$28^\circ$--$47^\circ$ in 3B, and to $0.38$--$0.75$ and $18^\circ$--$47^\circ$
+in 7B, in every form. The signature is present in every form; its magnitude
+varies. A probe fitted only on \texttt{std} conflict states
+transfers to every other form's conflict states at AUROC $0.953$--$0.999$. The
+bracketed form is neither necessary for the geometry (five forms without a
+bracket reproduce it, including a two-turn dialogue) nor uniquely diluting
+(it is the most diluted form in 7B and in Gemma). One caveat: in the five non-dialogue forms the two
+no-hint cells are the same prompt, since the assertion is absent, so their
+states are identical by construction and the clean axis is one vector shared
+across those forms. The conflict axes use form-specific prompts, so the length
+ratios, rotations and transfers are not trivial. The dialogue no-hint cell is
+an independent test because its neutral first turn changes the prompt, and it
+recovers the clean axis at $\cos 0.976$ (3B) and $0.960$ (7B) against the
+other forms.
+
+\begin{table}[h]
+\centering
+\small
+\caption{Evidence-axis geometry across prompt forms (Qwen2.5-VL-3B/7B and
+Gemma-3-4B-it). Length ratio and angle compare the conflict axis to the
+no-hint evidence axis; transfer is the AUROC of a probe fitted on
+\texttt{std} conflict states applied to each form.}
+\label{tab:sixform-geometry}
+\begin{tabular}{llccc}
+\toprule
+model & form & length ratio & angle (deg) & std-probe transfer \\
+\midrule
+3B & std & 0.523 [0.508,0.544] & 38.5 [35.7,41.9] & 0.969 \\
+   & nl & 0.589 [0.574,0.612] & 44.2 [42.2,46.2] & 0.992 \\
+   & claim & 0.595 [0.576,0.618] & 46.9 [44.2,49.7] & 0.985 \\
+   & belief & 0.681 [0.666,0.700] & 32.7 [31.1,34.8] & 0.997 \\
+   & system & 0.672 [0.658,0.691] & 32.5 [31.0,34.2] & 0.999 \\
+   & dialogue & 0.667 [0.653,0.686] & 28.0 [26.9,29.4] & 0.999 \\
+\midrule
+7B & std & 0.384 [0.364,0.410] & 47.4 [44.2,51.0] & 0.953 \\
+   & nl & 0.568 [0.554,0.587] & 35.1 [33.9,36.4] & 0.995 \\
+   & claim & 0.393 [0.377,0.414] & 46.9 [44.2,50.0] & 0.958 \\
+   & belief & 0.525 [0.509,0.544] & 39.6 [38.1,41.4] & 0.991 \\
+   & system & 0.672 [0.652,0.693] & 28.0 [26.7,29.5] & 0.998 \\
+   & dialogue & 0.746 [0.729,0.763] & 17.9 [17.3,18.7] & 0.999 \\
+\midrule
+Gemma & std & 0.529 [0.500,0.557] & 28.2 [26.4,30.5] & 0.982 \\
+   & nl & 0.885 [0.852,0.918] & 16.3 [15.8,17.1] & 0.997 \\
+   & claim & 0.731 [0.695,0.766] & 25.8 [25.0,27.0] & 0.992 \\
+   & belief & 0.860 [0.831,0.889] & 16.4 [16.0,17.2] & 0.995 \\
+   & system & 0.676 [0.637,0.716] & 31.7 [30.6,33.1] & 0.969 \\
+   & dialogue & 0.891 [0.848,0.936] & 20.9 [20.0,22.5] & 0.990 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\paragraph{Cross-family replication: the behaviour reverses, the geometry does not.}
+Gemma-3-4B-it runs the same six forms. Its behavioural ordering is the mirror
+image of Qwen 3B: adoption of the plausible absent hint is $0.502$ in
+\texttt{std} and $0.004$--$0.119$ in the other five forms, and the two forms
+that are strongest in Qwen, \texttt{system} and \texttt{dialogue}, are the two
+weakest in Gemma ($0.034$ and $0.004$); in \texttt{dialogue} the assertion
+raises absent refusal above its own no-hint level ($0.743\to0.935/0.962$).
+The geometry does not reverse. In every non-\texttt{std} form the axis
+shortens to $0.68$--$0.89$ and turns $16^\circ$--$32^\circ$, the two hinted
+colours remain nearly parallel ($0.971$--$0.999$), and a \texttt{std}-trained
+probe transfers at AUROC $0.969$--$0.997$; \texttt{std} remains the most
+diluted form ($0.529$, $28.2^\circ$), matching the earlier prompt-variant
+run. A family$\times$placement interaction thus exists in behaviour but not
+in the evidence axis: placement changes whether the readout acts on the
+assertion, not what the assertion does to the state. One caveat: Gemma's
+dialogue no-hint axis is $46^\circ$ from the \texttt{std} no-hint axis
+($\cos 0.689$), unlike Qwen ($\cos 0.976$/$0.960$), so its dialogue geometry
+is read within-form only.
+
+\paragraph{Reliability, and what the rotation is not.}
+Split-half over scenes gives a stable conflict axis ($\cos 0.96$--$0.99$) and
+nearly parallel axes for the two hinted colours ($0.91$--$0.99$). The rotation
+away from the no-hint axis, measured on one half of the scenes, is only weakly
+aligned with the isolated colour-swap direction measured on the other half
+($\cos 0.16$--$0.26$ where it is measurable, and indistinguishable from zero in
+3B \texttt{nl}, \texttt{claim} and \texttt{belief}), so the assertion does not
+add a fixed colour vector to the evidence axis; it reconfigures the axis. That
+reconfiguration is not triggered by conflict alone: an added sentence with no
+object and no colour turns the axis almost as far, while the compression that
+the conflict manipulation amplifies does grow with how much the sentence is
+about the queried category (query-specificity control below).
+
+\paragraph{An agreeing hint.}
+The new battery also runs the sufficient arm with a hint that agrees with the
+image. In Qwen, in 9 of the 12 model-by-form cells the loss under a conflicting hint
+exceeds the gain from an agreeing one (3B gains $+0.069$--$+0.211$ against
+losses $-0.103$--$-0.379$; 7B gains $-0.050$--$+0.280$ against losses
+$-0.115$--$-0.418$); in 3B \texttt{belief}, \texttt{system} and \texttt{dialogue}
+the two are within $0.03$ of each other, and in 7B \texttt{nl} and
+\texttt{dialogue} an agreeing hint does not help at all. The geometry separates
+the cells: with an agreeing hint the evidence axis remains longer than with a
+conflicting one in 4/6 forms in 3B and 6/6 in 7B, most sharply in 7B
+\texttt{std} ($0.74$ vs.\ $0.38$) and \texttt{claim} ($0.70$ vs.\ $0.39$).
+Rotation is present under both and is larger under conflict in 7B. In Qwen,
+then, dilution is graded by whether the assertion contradicts the image,
+while rotation is what any assertion does. Gemma breaks the grading: there
+the agreeing hint dilutes as much as the conflicting one (length $0.54$ vs.\
+$0.53$ in \texttt{std}; all six forms within $0.04$) and rotates as much or
+more (\texttt{system} $40^\circ$ vs.\ $32^\circ$, \texttt{claim}
+$34^\circ$ vs.\ $26^\circ$). The cross-family invariant is that an assertion
+moves the axis; whether contradiction adds movement beyond agreement is
+model-specific.
+
+\paragraph{The stated colour is linearly decodable in every form.}
+An eleven-way decoder trained within the absent-$b$ cell reaches
+$0.97$--$0.996$ in 3B and $0.94$--$0.996$ in 7B. Trained on the absent-$a$
+cell and tested on the absent-$b$ cell of the same form, where the same scene
+carries a different label, it reaches $0.85$--$0.97$ raw ($0.76$--$0.96$
+balanced) in 3B, and $0.85$--$0.99$ raw in 7B except the two-turn dialogue
+($0.57$ raw, $0.45$ balanced against a $0.38$ majority baseline; the colour is
+still decodable within the dialogue's own $b$ cell at $0.94$). A
+\texttt{std}-trained decoder transfers to every form's $b$ cell at
+$0.86$--$0.96$ in 3B and $0.61$--$0.99$ in 7B, so in Qwen the assertion is
+decodable even in forms the model does not adopt. In Gemma within-cell
+decoding is equally high ($0.71$--$0.99$), but a within-cell decoder can lean
+on category-level colour priors, because the hinted colour is a fixed
+function of the absent category; the cross-cell test is the one that excludes
+them. It succeeds only in the two forms the model acts on (\texttt{std}
+$0.85$, \texttt{claim} $0.66$) and falls to $0.46$, $0.40$, $0.18$ and
+$0.10$ in \texttt{system}, \texttt{nl}, \texttt{belief} and
+\texttt{dialogue}. In Gemma, therefore, a shared colour code is demonstrable
+only where the model acts on the assertion, although the axis moves in every
+form.
+
+\paragraph{Attention.}
+In 3B (final query, eager attention, 36 layers, 55 scenes) the assertion
+receives $3$--$7\%$ of final-query attention in every form, the image
+$7$--$10\%$ and the question $17$--$20\%$. The form with the highest adoption
+(\texttt{system}, $0.96$) has the lowest assertion share ($0.052$), while
+\texttt{nl} (adoption $0.17$) has a higher one ($0.068$), so the between-form
+variation in adoption is not a matter of how much the readout attends to the
+assertion. Image attention rises from the absent to the sufficient arm in
+every form ($0.071\to0.089$ in \texttt{std}, $0.072\to0.104$ in
+\texttt{system}). Within a form, scenes that adopt have modestly more
+assertion attention ($r=+0.36$ in \texttt{std}, $+0.43$ in \texttt{dialogue},
+$+0.17$ in \texttt{system}, absent cell), consistent with the assertion
+competing for the readout, but this does not explain the large between-form
+differences. This run resizes images to $512$ px for speed, so its own argmax
+rates are lower than the battery's; the correlations use the battery's
+adoption.
+
+\paragraph{The form-level link is to conflict accuracy.}
+Across the six forms the evidence-axis length ratio predicts wrong-hint
+accuracy at $r=+0.89$ in both Qwen sizes (Spearman $+0.83$ and $+0.93$) and
+at $r=+0.98$ in Gemma (Spearman $+0.94$), while its relation to adoption has
+no consistent sign (3B $r=+0.25$, 7B $r=-0.79$ with adoption never above
+$0.05$, Gemma $r=-0.83$). The less a form dilutes the axis, the more
+accurately the model answers under conflict, in every model tested; whether
+the model answers at all is a separate, family-dependent property of the
+readout.
+
+\paragraph{What moves the axis: a query-specificity control.}
+Every form asserts something about the queried category, so the forms alone
+cannot separate query content from the extra sentence or from a colour word
+about something else. We add three control forms in the \texttt{nl} template,
+each in both evidence arms with no hint: a neutral sentence (``A colleague
+mentioned that the room is quiet.''), an assertion about a different object
+(``A colleague mentioned that the remote is \emph{colour}.'', where
+\texttt{remote} is never a queried or absent category), and an assertion about
+the queried category that holds one colour fixed across arms (``A colleague
+mentioned that the \emph{category} is \emph{colour}.'', where the colour is
+the scene's absent-category colour, so the asserted colour is identical across
+arms and is wrong for a present scene). The evidence axis is
+sufficient-minus-absent within each form, so the only change from $v_0$ is the
+added sentence (Table~\ref{tab:query-control}). Compression is graded by how
+much the sentence is about the query. In 3B the neutral sentence leaves the axis at $0.822$
+$[0.803,0.840]$ of the no-hint length, the other-object assertion at $0.804$
+$[0.787,0.822]$, the constant-colour query assertion at $0.604$
+$[0.587,0.622]$, and the \texttt{nl} conflict axis at $0.589$; the same order
+holds in 7B ($0.730$, $0.691$, $0.596$, $0.568$); Gemma is compressed
+throughout ($1.000$, $0.897$, $0.877$, $0.885$), with its query and conflict
+rows within $0.01$ of each other. The direction is query-linked as well: the
+constant-colour query axis is nearly collinear with the conflict axis ($\cos
+0.976$ in 3B, $0.988$ in 7B, $0.997$ in Gemma), whereas the neutral and
+other-object axes are further away (cosine with the conflict axis
+$0.795$/$0.865$, $0.874$/$0.921$ and $0.964$/$0.978$). The paired contrast
+isolates the object the sentence is about: naming the queried category
+instead of another object turns the axis a further $7.4^\circ$ $[5.8,9.0]$
+in 3B and $2.8^\circ$ $[1.5,4.0]$ in 7B, but only $1.0^\circ$ $[0.5,1.6]$
+in Gemma, and shortens it by $0.20$, $0.10$ and $0.02$ (Gemma's difference
+touches zero, $[-0.05,0.01]$). Behaviour follows the compression in 3B: with
+evidence, accuracy is $0.762$ with no hint, $0.736$ with the neutral
+sentence, $0.705$ with the other-object assertion, $0.571$ with the
+constant-colour query sentence and $0.567$ under \texttt{nl} conflict; the
+query sentence raises reporting of its (absent-category) colour from $12.3\%$
+to $21.8\%$, lowers absent-arm refusal from $0.973$--$0.977$ to $0.866$
+($0.904$ with no hint) and raises refusal under evidence from
+$0.084$--$0.092$ to $0.192$. In 7B the query sentence raises adoption from
+$7.7\%$ to $14.9\%$; in Gemma accuracy is flat across the first three cells
+($0.567$, $0.552$, $0.563$), and only the query sentence lowers it to $0.521$
+and raises adoption to $19.9\%$. We therefore read the conflict effect as the
+extreme of a graded, query-relevance-dependent compression: adding text moves
+the axis, but the component that the conflict manipulation amplifies---a
+shortening plus a turn toward the conflict direction---grows with how much the
+sentence is about the queried category, and appears even when the asserted
+colour does not change between arms. The residual difference between the
+constant-colour query axis and the conflict axis is the colour change itself,
+which adds a small further shortening in 3B and 7B ($0.604\to0.589$ and
+$0.596\to0.568$) and nothing in Gemma ($0.877\to0.885$).
+
+\begin{table}[h]
+\centering
+\small
+\caption{Query-specificity control ($n=261$). The neutral sentence names no
+object and no colour; the other-object sentence asserts a colour of an object
+that is never the query; the constant-colour query sentence is about the
+queried category and holds one colour (the scene's absent-category colour)
+fixed across arms; the queried-conflict row is the \texttt{nl} conflict axis
+of the main battery, whose arms also change the asserted colour. Length ratio
+and angle compare each axis to the no-hint evidence axis $v_0$; brackets are
+$95\%$ bootstrap intervals; the conflict rows have no interval because they
+reuse the main battery's fixed axis.}
+\label{tab:query-control}
+\begin{tabular}{llcc}
+\toprule
+model & added sentence & length ratio & angle (deg) \\
+\midrule
+3B & neutral & 0.822 [0.803,0.840] & 42.7 [41.4,44.2] \\
+   & other object & 0.804 [0.787,0.822] & 31.1 [30.1,32.1] \\
+   & queried, constant colour & 0.604 [0.587,0.622] & 38.5 [36.6,40.4] \\
+   & queried (\texttt{nl} conflict) & 0.589 & 44.2 \\
+\midrule
+7B & neutral & 0.730 [0.711,0.749] & 25.0 [23.9,26.1] \\
+   & other object & 0.691 [0.673,0.709] & 28.1 [27.2,29.1] \\
+   & queried, constant colour & 0.596 [0.577,0.615] & 30.9 [29.4,32.3] \\
+   & queried (\texttt{nl} conflict) & 0.568 & 35.1 \\
+\midrule
+Gemma & neutral & 1.000 [0.975,1.027] & 10.1 [9.5,10.7] \\
+      & other object & 0.897 [0.869,0.928] & 14.1 [13.6,14.7] \\
+      & queried, constant colour & 0.877 [0.842,0.916] & 15.2 [14.7,15.7] \\
+      & queried (\texttt{nl} conflict) & 0.885 & 16.3 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \section{External validation details}
 \label{app:external}

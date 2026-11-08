@@ -1,0 +1,12 @@
+
+## prompt_forms_7b.npz  n=261
+hint colours: {'black': 18, 'blue': 42, 'brown': 45, 'gray': 48, 'green': 8, 'orange': 43, 'red': 6, 'white': 41, 'yellow': 10}
+
+| form | hint acc abs-a (CV) | hint acc suf-wrong (CV) | transfer std->form (abs-a) |
+|---|---|---|---|
+| belief | 0.973 | 0.920 | 0.989 |
+| claim | 0.985 | 0.962 | 0.996 |
+| dialogue | 0.920 | 0.870 | 0.916 |
+| nl | 0.950 | 0.946 | 0.973 |
+| std | 0.985 | 0.927 | 1.000 |
+| system | 0.977 | 0.916 | 0.992 |

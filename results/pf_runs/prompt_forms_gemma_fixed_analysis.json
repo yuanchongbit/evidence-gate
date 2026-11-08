@@ -1,0 +1,133 @@
+{
+ "behaviour": {
+  "belief": {
+   "refuse_absent_none": 0.842911877394636,
+   "refuse_absent_a": 0.842911877394636,
+   "refuse_absent_b": 0.8505747126436781,
+   "refuse_sufficient_none": 0.04980842911877394,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.07662835249042145,
+   "gold_sufficient_wrong": 0.5325670498084292,
+   "adopt_absent_a": 0.05747126436781609,
+   "adopt_absent_b": 0.038314176245210725,
+   "adopt_sufficient_wrong": 0.07279693486590039,
+   "adopt_absent": 0.04789272030651341
+  },
+  "claim": {
+   "refuse_absent_none": 0.842911877394636,
+   "refuse_absent_a": 0.7624521072796935,
+   "refuse_absent_b": 0.8467432950191571,
+   "refuse_sufficient_none": 0.04980842911877394,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.09961685823754789,
+   "gold_sufficient_wrong": 0.4367816091954023,
+   "adopt_absent_a": 0.20689655172413793,
+   "adopt_absent_b": 0.11877394636015326,
+   "adopt_sufficient_wrong": 0.23371647509578544,
+   "adopt_absent": 0.16283524904214558
+  },
+  "dialogue": {
+   "refuse_absent_none": 0.7432950191570882,
+   "refuse_absent_a": 0.9348659003831418,
+   "refuse_absent_b": 0.9616858237547893,
+   "refuse_sufficient_none": 0.03065134099616858,
+   "gold_sufficient_none": 0.5900383141762452,
+   "refuse_sufficient_wrong": 0.13409961685823754,
+   "gold_sufficient_wrong": 0.5363984674329502,
+   "adopt_absent_a": 0.01532567049808429,
+   "adopt_absent_b": 0.0038314176245210726,
+   "adopt_sufficient_wrong": 0.02681992337164751,
+   "adopt_absent": 0.009578544061302681
+  },
+  "nl": {
+   "refuse_absent_none": 0.842911877394636,
+   "refuse_absent_a": 0.8620689655172413,
+   "refuse_absent_b": 0.8812260536398467,
+   "refuse_sufficient_none": 0.04980842911877394,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.0842911877394636,
+   "gold_sufficient_wrong": 0.5402298850574713,
+   "adopt_absent_a": 0.08045977011494253,
+   "adopt_absent_b": 0.04980842911877394,
+   "adopt_sufficient_wrong": 0.0842911877394636,
+   "adopt_absent": 0.06513409961685823
+  },
+  "std": {
+   "refuse_absent_none": 0.842911877394636,
+   "refuse_absent_a": 0.40229885057471265,
+   "refuse_absent_b": 0.47509578544061304,
+   "refuse_sufficient_none": 0.04980842911877394,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.007662835249042145,
+   "gold_sufficient_wrong": 0.2413793103448276,
+   "adopt_absent_a": 0.578544061302682,
+   "adopt_absent_b": 0.5019157088122606,
+   "adopt_sufficient_wrong": 0.6743295019157088,
+   "adopt_absent": 0.5402298850574713
+  },
+  "system": {
+   "refuse_absent_none": 0.842911877394636,
+   "refuse_absent_a": 0.9118773946360154,
+   "refuse_absent_b": 0.9540229885057471,
+   "refuse_sufficient_none": 0.04980842911877394,
+   "gold_sufficient_none": 0.5670498084291188,
+   "refuse_sufficient_wrong": 0.24521072796934865,
+   "gold_sufficient_wrong": 0.41762452107279696,
+   "adopt_absent_a": 0.07662835249042145,
+   "adopt_absent_b": 0.034482758620689655,
+   "adopt_sufficient_wrong": 0.1724137931034483,
+   "adopt_absent": 0.05555555555555555
+  }
+ },
+ "geometry": {
+  "belief": {
+   "length_ratio": 0.8601641654968262,
+   "angle_deg": 16.384531834311197,
+   "cos_hint_pairs": 0.9983986020088196,
+   "frozen_probe_conflict": 0.9948180443622378,
+   "cos_to_ref_dir": 1.0000000000000007,
+   "ref_probe_transfer": 0.9948180443622378
+  },
+  "claim": {
+   "length_ratio": 0.7308736443519592,
+   "angle_deg": 25.79755564277636,
+   "cos_hint_pairs": 0.9933863282203674,
+   "frozen_probe_conflict": 0.9921756873798094,
+   "cos_to_ref_dir": 1.0000000000000007,
+   "ref_probe_transfer": 0.9921756873798094
+  },
+  "dialogue": {
+   "length_ratio": 0.8906100988388062,
+   "angle_deg": 20.93194375016498,
+   "cos_hint_pairs": 0.9991313815116882,
+   "frozen_probe_conflict": 0.9871111698301551,
+   "cos_to_ref_dir": 0.6889746002423947,
+   "ref_probe_transfer": 0.9897241672905565
+  },
+  "nl": {
+   "length_ratio": 0.8847886919975281,
+   "angle_deg": 16.291184565084894,
+   "cos_hint_pairs": 0.997917652130127,
+   "frozen_probe_conflict": 0.996711733532978,
+   "cos_to_ref_dir": 1.0000000000000007,
+   "ref_probe_transfer": 0.996711733532978
+  },
+  "std": {
+   "length_ratio": 0.5288217067718506,
+   "angle_deg": 28.18148896072769,
+   "cos_hint_pairs": 0.9713004231452942,
+   "frozen_probe_conflict": 0.9821053713245549,
+   "cos_to_ref_dir": 1.0000000000000007,
+   "ref_probe_transfer": 0.9821053713245549
+  },
+  "system": {
+   "length_ratio": 0.6763049364089966,
+   "angle_deg": 31.70042086647922,
+   "cos_hint_pairs": 0.9964925050735474,
+   "frozen_probe_conflict": 0.9690257042615347,
+   "cos_to_ref_dir": 1.0000000000000007,
+   "ref_probe_transfer": 0.9690257042615347
+  }
+ },
+ "n": 261
+}
