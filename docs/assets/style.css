@@ -245,6 +245,10 @@ circle.m3b { stroke: var(--navy); fill: var(--navy); }
 circle.m7b { stroke: var(--teal); fill: var(--teal); }
 .line.llava { stroke: var(--orange); }
 circle.llava { stroke: var(--orange); fill: var(--orange); }
+.line.gemma { stroke: #7c3aed; }
+circle.gemma { stroke: #7c3aed; fill: #7c3aed; }
+.line.phi { stroke: #a16207; }
+circle.phi { stroke: #a16207; fill: #a16207; }
 .legend text { font-size: 12.5px; fill: #3b4755; font-family: -apple-system, sans-serif; }
 
 /* cards */

@@ -19,6 +19,7 @@ import numpy as np
 from PIL import Image
 from sklearn.decomposition import PCA
 
+from .constants import CANDIDATES
 from .infer import DATA, ROOT, Scorer, build_user
 from .steer import fit_direction
 from .steer_conflict import find_lm_head, prompts_for
@@ -104,6 +105,13 @@ def build_runner(args):
 
         def score(img, text):
             return scorer.score([img], text)[0]
+    elif args.family == "phi":
+        from .phi_infer import Gen
+        scorer = Gen(args.model, resize=args.resize)
+        cand = list(CANDIDATES)
+
+        def score(img, text):
+            return scorer.score(img, text)
     else:
         from .infer_gen import Gen
         scorer = Gen(args.model, resize=args.resize)
@@ -118,7 +126,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default=str(DATA / "manifest_v5.jsonl"))
     ap.add_argument("--model", default="Qwen/Qwen2.5-VL-3B-Instruct")
-    ap.add_argument("--family", default="qwen", choices=["qwen", "gen"])
+    ap.add_argument("--family", default="qwen",
+                    choices=["qwen", "gen", "phi"])
     ap.add_argument("--resize", type=int, default=512)
     ap.add_argument("--run", default=str(ROOT / "runs" / "v5_261.jsonl"))
     ap.add_argument("--out", default=str(ROOT / "runs" / "extra44.jsonl"))

@@ -18,10 +18,19 @@ them to regenerate the underlying `.jsonl` / `.npz` files and full logs.
 | Layer patching | `pilot/patch3.py`, `pilot/patch4.py` | `runs/repro/patch*.txt` |
 | Task forms | `pilot/task2.py`, `pilot/task3.py` | `runs/repro/task2.txt`, `task3.txt` |
 | External validation | `pilot/ext_analyze.py`, `pilot/ext_vqa_analyze.py` | `runs/ext_*_summary.json` |
+| Deployment re-audit (cross-fit, matched coverage) | `pilot/deploy_check.py` | `results/deploy_check.json` |
+| Nested geometry bootstrap | `pilot/geometry_nested.py` | `results/geometry_nested.json` |
+| Construct / predictive validity | `pilot/validity.py` | `results/validity.json` |
+| Law tests (isotropic contraction, d'-gap fit) | `pilot/law_test.py` | `results/law_isotropic.json` |
+| Behavioural check of the dilution law | `pilot/law_behaviour.py` | `results/law_behaviour.json` |
+| Category-matched control (LLaVA) | `pilot/matched_gen.py` | `results/matched_llava.jsonl`, `.npz` |
+| Matched analysis / gate (3B / 7B / LLaVA) | `pilot/matched_analysis.py`, `pilot/matched_gate.py` | `results/matched.json`, `results/matched_gate.json` |
+| Second stimulus set (PASCAL VOC 2012, 3B) | `pilot.voc_analyze`, `pilot.voc_extra` | `results/voc_results.json`, `results/voc_extra.json` |
+| Second non-Qwen abstaining backbone (Phi-3.5-vision) | `pilot.voc_analyze`, `pilot.voc_extra` | `results/phi_results.json`, `results/phi_extra.json` |
 
 The paper's controls (gray images, category-matched pairs, category-grouped CV)
-come from `pilot/blank.py` and `pilot/matched.py`; their key numbers are repeated
-below.
+come from `pilot/blank.py`, `pilot/matched.py` and `pilot/matched_gen.py`; their
+key numbers are repeated below.
 
 ## 1. Behaviour (Qwen2.5-VL-3B, n=261)
 
@@ -42,7 +51,7 @@ Presence check on 260 category-matched negatives: mean p(yes) = 0.095, versus
 
 | signal | no hint | conflicting | correct |
 |---|---|---|---|
-| frozen final-state probe (headline) | 0.995 [0.989, 0.999] | 0.958 [0.939, 0.974] | 0.990 [0.981, 0.997] |
+| frozen final-state probe (headline) | 0.995 [0.989, 0.999] | 0.957 [0.939, 0.974] | 0.990 [0.981, 0.997] |
 | refit final-state probe (upper bound) | 0.995 [0.989, 0.999] | 0.995 [0.990, 0.999] | 1.000 [1.000, 1.000] |
 | p(unknown) | 0.993 | 0.834 | 0.969 |
 | max probability | 0.615 | 0.463 | 0.916 |
@@ -51,8 +60,8 @@ Presence check on 260 category-matched negatives: mean p(yes) = 0.095, versus
 | top-2 gap | 0.934 | 0.564 | 0.927 |
 | 12-d logit probe | 0.982 | 0.923 | 0.974 |
 
-Probe minus p(unknown): no hint +0.002 [-0.003, +0.007]; conflict +0.164
-[+0.132, +0.196]; correct +0.028 [+0.017, +0.042].
+Probe minus p(unknown): no hint +0.002 [-0.003, +0.007]; conflict +0.123
+[+0.098, +0.148]; correct +0.028 [+0.017, +0.042].
 
 Transfer, fitted on the no-hint pair and evaluated on the hinted pair, with
 scenes held out (5 scene folds: fit on training scenes' no-hint states, score
@@ -160,6 +169,18 @@ rotates it systematically off the direction a no-hint readout uses; per-scene
 gaps also stop agreeing. The projection on `w` falls further than either factor
 alone because it is their product.
 
+Nested bootstrap (`pilot/geometry_nested.py`, 500 scene resamples; `W`, `w`,
+`d0` re-estimated inside every resample) reproduces the same picture with
+intervals that exclude the no-effect value: conflict ratio / angle / along-w
+are 0.523 [0.508, 0.544] / 38.5 deg [35.7, 42.1] / 0.409 [0.381, 0.438] in
+3B; 0.384 [0.362, 0.409] / 47.4 [44.1, 51.1] / 0.259 [0.230, 0.291] in 7B;
+0.602 [0.572, 0.637] / 70.7 [67.9, 73.1] / 0.199 [0.175, 0.227] in LLaVA;
+0.529 [0.499, 0.561] / 28.2 [26.6, 30.7] / 0.466 [0.435, 0.496] in Gemma.
+cos(a, b) is 0.908 [0.877, 0.929], 0.908 [0.868, 0.931], 0.915 [0.884, 0.933]
+and 0.971 [0.958, 0.977]. Every interval for angle excludes zero and every
+ratio interval excludes one, so dilution and rotation are not artefacts of
+estimating the axis once on all scenes.
+
 Cross-model binary SDT (same 261 scenes, 522 absent items under conflict):
 
 | model | d' no hint | d' conflict | delta d' [95% CI] | c no hint | c conflict | delta c [95% CI] |
@@ -215,14 +236,97 @@ over scenes, 2,000 resamples):
 So the hint tilts the decision, but a higher pre-hint evidence score makes
 hint adoption less likely and the true colour more likely.
 
+## 2d. Construct and predictive validity
+
+`pilot/validity.py` -> `results/validity.json`. Construct check: the no-hint
+probe separates present from absent items even when the present arm is
+restricted to items the model answered *wrong*, so the separation is not
+carried by correctness on the present arm. Within-present correct-vs-wrong is
+much weaker, so the probe tracks presence, not answerability.
+
+| model | present vs absent, all | present answered-correct | present answered-wrong | within present, correct vs wrong |
+|---|---|---|---|---|
+| 3B | 0.995 [0.989, 0.999] | 0.996 [0.989, 1.000] | 0.991 [0.980, 1.000] | 0.619 [0.538, 0.697] |
+| 7B | 0.996 [0.993, 0.999] | 0.998 [0.995, 1.000] | 0.991 [0.981, 0.999] | 0.572 [0.492, 0.652] |
+| LLaVA | 0.994 [0.989, 0.998] | 0.995 [0.988, 0.999] | 0.994 [0.985, 1.000] | 0.602 [0.532, 0.671] |
+| Gemma | 0.985 [0.974, 0.994] | 0.985 [0.969, 0.996] | 0.985 [0.969, 0.995] | 0.586 [0.515, 0.656] |
+
+Predictive check: out-of-fold conflict score (fitted on no-hint, scored on
+held-out scenes) against three conflict behaviours. AUROC [95% scene
+bootstrap]; `p` is the Spearman permutation test.
+
+| model | absent refuse | present gold | present adopt |
+|---|---|---|---|
+| 3B | 0.644 [0.581, 0.708] | 0.549 [0.478, 0.623] | 0.448 [0.379, 0.520] |
+| 7B | 0.695 [0.587, 0.794] | 0.567 [0.481, 0.653] | 0.503 [0.405, 0.601] |
+| LLaVA | 0.454 [0.346, 0.566] | 0.529 [0.450, 0.606] | 0.477 [0.404, 0.552] |
+| Gemma | 0.750 [0.689, 0.807] | 0.676 [0.596, 0.753] | 0.334 [0.260, 0.414] |
+
+The probe reliably predicts absent-item refusal in 3B, 7B and Gemma, and in
+Gemma it also predicts whether a correct present answer survives (`rho=0.26`)
+and whether the hint is adopted (`rho=-0.25`). It does not predict adoption in
+3B/7B, and in LLaVA none of the three behaviours is predicted because refusal
+is near zero (0.088) and adoption near ceiling (0.636), leaving little
+variance. The gate therefore works on average (Section 6) without being a
+calibrated per-item predictor of credulity. This is a real scope limit: the
+score measures evidence availability, not the strength of the hint override.
+
 
 ## 3. Controls
+
+### 3.1 Category-matched pairs
+
+The main design's present and absent arms query different categories and assert
+different colours, so the question and the hint can predict the label. The
+control pairs each present image with a different image in which the same
+category is annotation-absent; the question and the asserted colour are
+identical within a pair, and the asserted colour is never the present image's
+gold. 260 pairs over 30 categories (520 items, 246 images; 157 images appear as
+both a present image and a negative).
+
+| model | no hint | frozen | refit | p(unknown) | frozen − p(unknown) | geometry (len / rot / along) |
+|---|---|---|---|---|---|---|
+| 3B | 0.983 | 0.867 | 0.975 | 0.817 | +0.050 [0.028, 0.077] | 0.565 / 39.6° / 0.435 |
+| 7B | 0.983 | 0.823 | 0.978 | 0.820 | +0.002 [−0.025, 0.045] | 0.394 / 45.9° / 0.274 |
+| LLaVA | 0.994 | 0.855 | 0.983 | 0.870 | −0.015 [−0.062, 0.025] | 0.586 / 65.9° / 0.240 |
+
+AUROC over the 520 matched items; folds grouped by category. `no hint` and
+`refit` are out of fold. `frozen` fits the no-hint probe on training categories
+and scores the hinted states of held-out categories. Margins are
+category-grouped bootstrap 95% CIs. Grouping folds by image instead of category
+leaves the frozen and refit values within 0.01 (0.876 / 0.984 in 3B,
+0.833 / 0.980 in 7B, 0.869 / 0.989 in LLaVA).
+
+The output collapse, the in-condition decodability and the geometry survive:
+p(unknown) falls from 0.983 to 0.817, from 0.975 to 0.820 and from 0.989 to
+0.870; maximum-probability AUROC from 0.952 to 0.699, from 0.967 to 0.768 and
+from 0.949 to 0.510; refitting recovers 0.975 / 0.978 / 0.983; and the
+present−absent mean difference shortens to 0.565 / 0.394 / 0.586 of its
+no-hint length and rotates 39.6° / 45.9° / 65.9°, against
+0.523 / 0.384 / 0.602 and 38.5° / 47.4° / 70.7° for the plausible hint on the
+main pair. What shrinks is frozen transfer: 0.867 [0.828, 0.901],
+0.823 [0.776, 0.869] and 0.855 [0.805, 0.900] against 0.957 / 0.939 / 0.923 on
+the main pair, and margins over p(unknown) of +0.050 / +0.002 / −0.015 against
++0.123 / +0.142 / +0.142; in 7B and LLaVA the margin is indistinguishable from
+zero and in LLaVA the point estimate is negative. Part of the main design's
+frozen transfer is therefore carried by the change of queried category and
+asserted colour between the arms, not by the evidence alone.
+
+Fabrication at 25% answered coverage (130 of 520 items): 0.185 / 0.154 / 0.146
+(3B / 7B / LLaVA) for the frozen probe, against 0.254 / 0.154 / 0.054 for
+p(unknown) and 0.346 / 0.169 / 0.600 for maximum probability. In 3B the gate
+still beats the model's own signal within-question, by 0.069 instead of 0.115
+on the main pair; in 7B it ties and in LLaVA it is worse. 7B answers only 26%
+of matched conflict items, so this operating point selects 95% of its answers
+and is weakly informative; LLaVA answers 90%, so its point is informative and
+unfavourable. The main-design gate advantage is partly arm-diagnostic.
+
+### 3.2 Main-design reference and gray images
 
 | control | refit probe, no hint | refit probe, conflict | p(unknown), no hint | p(unknown), conflict | maxprob, no hint | maxprob, conflict |
 |---|---|---|---|---|---|---|
 | main pair (grouped by sample) | 0.995 | 0.998 | 0.993 | 0.834 | 0.615 | 0.463 |
 | grouped by category | 0.995 | 0.997 | — | — | — | — |
-| category-matched pairs, grouped by category | 0.985 | 0.973 | 0.983 | 0.817 | 0.701 | 0.468 |
 | gray image (text only) | 0.849 | 0.981 | 0.700 | 0.325 | — | — |
 
 The direction learned on gray images transfers across hints at 0.540 / 0.603,
@@ -483,50 +587,75 @@ already near ceiling under conflict, so its span is only 0.081 and its recovery
 ratios are unstable by construction; the raw contrast is the interpretable
 quantity there.
 
-## 6. Selective gate: fabrication at fixed coverage under conflict
+## 6. Selective gate: fabrication at matched answered coverage under conflict
 
-Deployment numbers use the frozen probe (fitted on the no-hint pair) and the
-plausible hint pair (`sufficient|wrong` vs `absent|a`). The refit gate is an
-upper bound and is not deployable.
+Deployment numbers use scene-cross-fitted probe scores: the probe is fitted on
+the no-hint pairs of four scene folds and applied to the conflict pairs of the
+held-out fold, so no evaluation scene contributes a label to the fit. The
+plausible hint pair is `sufficient|wrong` vs `absent|a`. Coverage is the
+fraction of all items the system answers after gating; the threshold is chosen
+per scorer to reach a target answered coverage, so gates are compared at the
+same achieved coverage rather than at the same number of selected items.
 
-| coverage | 3B frozen | 3B refit | 3B p(unknown) | 3B maxprob | 7B frozen | 7B p(unknown) | LLaVA frozen | LLaVA p(unknown) |
-|---|---|---|---|---|---|---|---|---|
-| 50% | 0.069 | 0.011 | 0.249 | 0.510 | 0.126 | 0.268 | 0.111 | 0.295 |
-| 70% | 0.398 | — | 0.456 | 0.762 | 0.398 | 0.521 | 0.398 | 0.525 |
-| 90% | 0.801 | — | 0.801 | 0.985 | 0.801 | 0.839 | 0.801 | 0.816 |
+An earlier version reported risk among answered at 50% *selection* coverage.
+That protocol is degenerate when a score ranks confident refusals highly:
+7B max-probability selects half the items but answers only 45 of them, and 7B
+answers only 28.4% of conflict items in total, so a 50% operating point does
+not exist for 7B. The matched-coverage numbers below supersede the earlier
+table.
 
-At 70% coverage the probe sits on the structural floor: a half-absent set
-answered at 70% coverage must contain at least 40% absent items. The frozen
-gate reduces fabrication by 3.6x / 2.1x / 2.7x at 50% coverage. A logistic
-readout over the 12 output probabilities (3B, refit) fabricates 0.142, so the
-gain is not just a learned function of the logits.
+| model | target | frozen (OOF) | refit | p(unknown) | maxprob (11 colours) |
+|---|---|---|---|---|---|
+| 3B | 25% | 0.077 | 0.046 | 0.192 | 0.315 |
+| 3B | 50% | 0.115 | 0.100 | 0.249 | 0.368 |
+| 7B | 25% | 0.146 | 0.131 | 0.169 | 0.215 |
+| 7B | 50% | infeasible (max 0.284) | — | — | — |
+| LLaVA | 25% | 0.062 | 0.031 | 0.138 | 0.762 |
+| LLaVA | 50% | 0.149 | 0.107 | 0.295 | 0.655 |
 
-Prevalence shift, 3B threshold calibrated on the balanced set, fabrication
-among answered (probe vs p(unknown)):
+At the shared 25% point the cross-fitted gate reduces fabrication by 2.5x in
+3B and 2.2x in LLaVA relative to `p(unknown)`; in 7B the nominal ratio is 1.2x
+but not distinguishable from zero. Scene bootstrap of the paired difference at
+25% coverage (OOF scores held fixed, 500 draws; `pilot/gate_ci.py`): 3B probe
+0.077 [0.031,0.115] vs p(unknown) 0.192 [0.123,0.254], difference [-0.169,-0.069];
+7B 0.146 [0.092,0.215] vs 0.169 [0.108,0.231], difference [-0.062,+0.008];
+LLaVA 0.062 [0.023,0.115] vs 0.138 [0.092,0.200], difference [-0.138,-0.008].
+At 50% the gain is 2.2x in 3B and 2.0x in LLaVA; 7B never reaches that coverage
+because it over-refuses under conflict. The insample/refit column is not deployable and
+is shown only as the decodability ceiling. A logistic gate over the 12 output
+probabilities (3B) fabricates 0.142 at 50% selection coverage, so the gain is
+not merely a learned readout of the output distribution.
+
+Prevalence shift, threshold calibrated at 25% answered coverage on the balanced
+set, fabrication among answered (probe vs `p(unknown)`):
 
 | unanswerable prevalence | 5% | 10% | 25% | 50% |
 |---|---|---|---|---|
-| 3B probe (p(unknown)) | 0.007 (0.032) | 0.016 (0.066) | 0.045 (0.174) | 0.125 (0.387) |
-| 7B probe (p(unknown)) | 0.028 (0.050) | 0.058 (0.100) | 0.155 (0.250) | 0.355 (0.500) |
-| LLaVA probe (p(unknown)) | 0.007 (0.023) | 0.014 (0.048) | 0.042 (0.132) | 0.116 (0.314) |
+| 3B probe (p(unknown)) | 0.008 (0.023) | 0.017 (0.048) | 0.050 (0.131) | 0.137 (0.312) |
+| 7B probe (p(unknown)) | 0.032 (0.037) | 0.064 (0.076) | 0.171 (0.198) | 0.383 (0.425) |
+| LLaVA probe (p(unknown)) | 0.004 (0.009) | 0.008 (0.019) | 0.023 (0.055) | 0.067 (0.149) |
 
-Split conformal risk control, 130 calibration scenes, Clopper-Pearson 90% UCB
-over all prefixes, evaluated on the held-out half:
+Conformal risk control is underpowered at this sample size and we do not claim
+certification. With the answered subset in both numerator and denominator
+(`risk among answered`), 130 calibration scenes and a Clopper-Pearson 90% UCB
+over a 50-point threshold scan with family-wise correction, no half-split is
+feasible at alpha=5% or alpha=10% in any model (0/20 splits; minimum UCB 0.174
+/ 0.210 / 0.191 in 3B / 7B / LLaVA). Without the family-wise correction the
+10% bound is pointwise feasible in 7/20 (3B), 11/20 (7B) and 7/20 (LLaVA)
+splits at answered coverage 0.30 / 0.19 / 0.22, and the held-out risk is 0.088
+/ 0.060 / 0.107, so LLaVA still misses target. The earlier claim that a 10%
+certificate holds for two of three models came from an inconsistent denominator
+(refused absent items counted in the denominator but not the numerator) and
+from selecting a favourable split; both are corrected here.
 
-| model | alpha=5% | alpha=10% | coverage | test fabrication |
-|---|---|---|---|---|
-| 3B | infeasible (UCB 0.061) | certified | 0.519 | 0.088 |
-| 7B | certified on calibration | — | 0.340 | 0.067 |
-| LLaVA | infeasible (UCB 0.059) | certified | 0.511 | 0.127 |
-
-The 7B 5% certificate does not transfer to the held-out half. A pollution
-detector `probe - p(unknown)` is not useful: present-vs-absent AUROC is
-0.97 / 0.95 / 0.96, but at 50% coverage it selects the same items as the probe
-alone (fabrication 0.069 / 0.119 / 0.111).
+A pollution detector `probe - p(unknown)` is not useful: present-vs-absent
+AUROC is 0.97 / 0.95 / 0.96, but it selects nearly the same items as the probe
+alone.
 
 Always-on and fixed-threshold checks (3B). Pooled over all three hint
-conditions, ranking by the no-hint probe gives 50%-coverage fabrication 0.064
-versus 0.193 for p(known)=1-p(unknown); at 70% coverage, 0.400 versus 0.480.
+conditions, ranking by the no-hint probe gives 0.064 fabrication at 50%
+*selection* coverage versus 0.193 for p(known)=1-p(unknown); at 70% selection
+coverage, 0.400 versus 0.480.
 A fixed threshold at the probe's natural boundary (z>0) answers 43.4% of
 pooled items with 6.6% fabrication and 7.5% false refusal; under conflict it
 answers only 32.7% with 7.9% fabrication and 17.6% false refusal. The
@@ -589,14 +718,16 @@ maxprob 0.831 / 0.649. Risk at 50% coverage: probe 0.087, maxprob 0.007.
 | Qwen2.5-VL-7B | 0.995 | 0.946 | 0.993 | 0.984 | 0.797 | 0.306 | 0.896 | 0.424 [0.393, 0.457] |
 | LLaVA-OneVision-7B | 0.994 | 0.935 | 0.998 | 0.991 | 0.781 | 0.289 | 0.909 | 0.344 [0.324, 0.365] |
 | Gemma-3-4B-it | 0.986 | 0.964 | 0.989 | 0.961 | 0.891 | 0.701 | — | 0.543 [0.502, 0.580] |
+| Phi-3.5-vision | 0.992 | 0.685 | 0.998 | 0.939 | 0.385 | — | — | 0.149 [0.096, 0.212] |
 
 The frozen column is the deployable headline (scene-held-out, hint b, C=0.1);
 the refit column is an upper bound from retraining inside the conflict
-condition. Hint a gives 0.957 / 0.939 / 0.923 frozen. Gemma-3-4B-it is the only
-backbone outside the Qwen family (Gemma-3 language model + SigLIP); its frozen
-values are 0.964 (hint a) and 0.970 (hint b) with refits 0.989 / 0.990, and its
-maxprob *rises* under conflict, so only the output-collapse columns fail to
-replicate.
+condition. Hint a gives 0.957 / 0.939 / 0.923 frozen. Two backbones sit outside
+the Qwen family: Gemma-3-4B-it (Gemma-3 language model + SigLIP) has frozen
+values 0.964 (hint a) and 0.970 (hint b) with refits 0.989 / 0.990, and its
+maxprob *rises* under conflict; Phi-3.5-vision (Phi-3 + CLIP) has frozen 0.685
+(hint a) / 0.675 (hint b) with a refit of 0.998, and its p(unknown) falls to
+0.385 / 0.458. The output-collapse columns therefore fail only for Gemma.
 
 ## 10. Revision controls (3B / 7B, LLaVA where run)
 
@@ -649,13 +780,25 @@ hook is active and the earlier patch effects are not vacuous.
 | LLaVA | std | 0.820 | 0.088 | 0.188 | 0.904 | 0.762 | 0.360 |
 | LLaVA | no unknown | 0.000 | 0.000 | 0.000 | 0.992 | 0.946 | - |
 | LLaVA | sentence hint | 0.793 | 0.559 | 0.736 | 0.333 | 0.088 | 0.548 |
+| Gemma | std | 0.843 | 0.402 | 0.475 | 0.579 | 0.502 | 0.241 |
+| Gemma | no unknown | 0.000 | 0.000 | 0.000 | 0.789 | 0.640 | - |
+| Gemma | sentence hint | 0.812 | 0.851 | 0.870 | 0.038 | 0.027 | 0.559 |
+| Phi-3.5 | std | 0.897 | 0.322 | 0.425 | 0.663 | 0.567 | 0.080 |
+| Phi-3.5 | no unknown | 0.004 | 0.000 | 0.000 | 0.985 | 0.950 | - |
+| Phi-3.5 | sentence hint | 0.931 | 0.877 | 0.931 | 0.088 | 0.046 | 0.276 |
 
 Removing the abstention token removes abstention by construction and raises
 hint adoption; a sentence-form hint is not treated as an assertion and the
-conflict effect disappears. LLaVA moves the same way from a lower baseline
-(conflict refusal 0.088 -> 0.559, adoption 0.904 -> 0.333, wrong-hint accuracy
-0.360 -> 0.548). Both are stated as scope conditions, not as robustness checks
-that pass.
+conflict effect disappears. The same pattern holds in all five models: LLaVA
+moves from a lower baseline (conflict refusal 0.088 -> 0.559, adoption
+0.904 -> 0.333, wrong-hint accuracy 0.360 -> 0.548), Gemma from 0.402 -> 0.851
+(adoption 0.579 -> 0.038, accuracy 0.241 -> 0.559), and Phi-3.5 from
+0.322 -> 0.877 (adoption 0.663 -> 0.088, accuracy 0.080 -> 0.276). Removing
+unknown raises adoption in Gemma 0.579 -> 0.789 and in Phi 0.663 -> 0.985.
+Both are stated as scope conditions, not as robustness checks that pass.
+Gemma and Phi raw runs: `results/runs/prompt_variants_{gemma,phi}.jsonl`;
+analyses `results/prompt_{gemma,phi}.json` (the Phi run was added later and
+matches this table exactly).
 
 ### 10.4 Strict absence
 
@@ -744,11 +887,11 @@ decodable evidence axis can exist without abstention. Caveat: on the conflict
 pair the probe could partly read hint-image mismatch, so this is a boundary
 observation about the axis, not about the gate.
 
-### 10.9 A fourth backbone with a gate outside the Qwen family (Gemma-3-4B)
+### 10.9 A backbone with a gate outside the Qwen family (Gemma-3-4B)
 
 Gemma-3-4B-it (Gemma-3 language model + SigLIP encoder, run at a 512-pixel
 resize in bf16, 261 items x 6 conditions, about 6 minutes on the A10) is the
-only backbone here whose language model is not from the Qwen family. It does
+first backbone here whose language model is not from the Qwen family. It does
 abstain, so unlike SmolVLM it can test the gate.
 
 | condition | refusal | mean conf. | adopts hint | accuracy |
@@ -796,11 +939,14 @@ signals do not collapse — p(unknown) AUROC falls only 0.961 -> 0.891 and
 maxprob *rises* 0.627 -> 0.701 while the answers are overridden as strongly as
 anywhere in the battery. The representational claim (dilution + rotation, with
 the evidence still decodable and transferable) generalises across language-model
-families; the rank-scale/output dissociation that motivates the frozen gate is
-specific to the Qwen2/2.5 readouts in this battery. In Gemma the gate's margin
+families; the rank-scale/output dissociation that motivates the frozen gate
+appears in the Qwen2/2.5 and Phi-3 readouts but not in Gemma, so it is
+readout-specific rather than tied to one family. In Gemma the gate's margin
 over p(unknown) is smaller (0.964 vs 0.891) but still present. A refit gate in
-the conflict condition reaches fabrication 0.038 at 50% coverage against 0.172
-for p(unknown), so the gate is still useful there.
+the conflict condition reaches fabrication 0.038 at 50% selection coverage
+against 0.172 for p(unknown), so the gate is still useful there. (The Gemma
+screen used the selection-coverage convention; the cross-fitted matched-coverage
+protocol was run for the three white-box models only.)
 
 Binary SDT on the fixed no-hint axis (log-linear-corrected, 2000 scene
 bootstrap draws):
@@ -815,7 +961,7 @@ Unlike 3B (d' 3.51 -> 1.45), Gemma shows a criterion shift without a detectable
 sensitivity loss on this coarse statistic, which is consistent with its milder
 rotation (24-29 deg) leaving the fixed axis comparatively intact. The
 decision-level decomposition is therefore model-specific too; only the geometry
-survives in all four.
+survives in every backbone tested here (section 10.10 adds a fifth).
 
 Raw run and analyses are archived: `results/runs/v5_261_gemma.jsonl` + `.npz`,
 the four analysis logs, `results/geometry_gemma.json` and
@@ -823,3 +969,500 @@ the four analysis logs, `results/geometry_gemma.json` and
 takes about 6 minutes to regenerate with `scripts/run_nonqwen.sh`. The
 screen run used to pick the model (`results/runs/screen_gemma40.*`) is archived
 as well.
+
+### 10.10 A second backbone outside the Qwen family (Phi-3.5-vision)
+
+Phi-3.5-vision-instruct (Phi-3-mini language model + CLIP ViT-L/14-336 encoder,
+3072-d hidden state, native `<|image_1|>` prompt, eager attention because the
+config pins flash-attention-2, 512-pixel resize) runs the same 261 items x 6
+conditions in about 8 minutes on the A10. It is the third language-model family
+(Phi) and the third vision encoder (CLIP) in the battery.
+
+| condition | refusal | gold | adopts hint |
+|---|---|---|---|
+| present, no hint | 0.119 | 0.625 | — |
+| present, correct hint | 0.092 | 0.858 | 0.858 |
+| present, conflicting hint | 0.548 | 0.080 | 0.360 |
+| absent, no hint | 0.897 | — | — |
+| absent, hint a | 0.322 | — | 0.663 |
+| absent, hint b | 0.425 | — | 0.567 |
+
+The hint moves both arms: absent refusal 0.897 -> 0.322/0.425 with adoption
+0.663/0.567, and present accuracy 0.625 -> 0.080 under conflict. The gate is
+therefore expressed in this model and can be attacked.
+
+Internal signals (scene-grouped CV, C=0.1; frozen = fit on no-hint training
+scenes, score held-out scenes):
+
+| pair | probe | p(unknown) | maxprob | frozen held-out [95% CI] | refit |
+|---|---|---|---|---|---|
+| none | 0.992 [0.987, 0.997] | 0.939 | 0.442 | — | — |
+| hint a | — | 0.385 | 0.492 | 0.685 [0.640, 0.731] | 0.998 |
+| hint b | — | 0.458 | 0.492 | 0.675 [0.633, 0.718] | 0.998 |
+| correct | — | — | — | 0.954 [0.936, 0.971] | — |
+
+The no-hint probe and the conflict refit are 0.992 and 0.998; the frozen
+transfer loses a quarter of its ranking (0.685/0.675), the lowest in the
+battery, while a probe refit on the same states recovers 0.998. The model's own
+signal collapses through chance (0.939 -> 0.385/0.458), as in the Qwen models
+and unlike Gemma.
+
+Geometry (same estimator as section 2c):
+
+| condition | ratio | angle | along w | coherence |
+|---|---|---|---|---|
+| none | 1.00 | 0° (reference) | 1.00 | 0.388 |
+| conflict a | 0.052 [0.006, 0.113] | 85.9° [80.9, 89.5] | 0.004 | 0.027 [0.008, 0.055] |
+| conflict b | 0.149 [0.096, 0.212] | 74.4° [67.4, 80.2] | 0.040 | 0.070 [0.045, 0.100] |
+| correct | 0.525 [0.470, 0.575] | 52.8° [49.4, 56.8] | 0.317 | 0.234 [0.215, 0.256] |
+
+cos(conflict a, conflict b) 0.720 [0.646, 0.790]. Rotation reaches 86°, nearly
+orthogonal to the no-hint axis, and per-scene coherence falls from 0.388 to
+0.027/0.070. The two hinted colours are less aligned than in the other models
+(0.72 against 0.89-0.97), so direction here is more colour-dependent.
+
+Reading. Phi-3.5 is the strongest version of the dissociation: the evidence
+vector is nearly annihilated along the original axis (projection 0.004/0.040),
+so a frozen gate collapses to 0.685/0.675, yet the same states remain linearly
+decodable at 0.998 when the probe is refit, and the output signal falls below
+chance. The geometry and the output collapse both survive a third language-model
+family and a third encoder, while Gemma shows the geometry without the collapse;
+the collapse is therefore a property of the readout, not of a family.
+
+Construct and predictive validity for Phi (`results/validity_phi.json`, same
+scripts as section 10.8): the no-hint probe separates present from absent at
+0.992 [0.986, 0.996], including present items the model answers wrongly (0.987
+[0.972, 0.997]), and is much weaker within the present arm (0.680 [0.613,
+0.747]), so the separation is not answerability. Predictive validity fails under
+conflict: the frozen score is below chance for absent refusal (AUROC 0.392
+[0.324, 0.463]), present gold (0.376 [0.241, 0.520]) and present adoption
+(0.440 [0.374, 0.514]), though it predicts no-hint absent refusal (0.868
+[0.797, 0.932]). This matches the weak frozen transfer rather than contradicting
+it: the no-hint direction has little projection on the conflict states, so its
+per-item ordering there is not usable.
+
+Binary SDT on the fixed no-hint axis:
+
+| condition | d' | c | Δd' [95% CI] |
+|---|---|---|---|
+| none | 2.43 [2.18, 2.71] | -0.04 [-0.17, +0.10] | — |
+| conflict | -0.44 [-0.63, -0.26] | +0.10 [+0.01, +0.21] | -2.87 [-3.19, -2.58] |
+| correct | 2.57 [2.30, 2.87] | +0.03 [-0.11, +0.18] | +0.15 [-0.12, +0.38] |
+
+The conflict condition is worse than chance on the fixed axis (d' < 0): the
+model's own signal ranks absent items as more present than present ones.
+
+Selective gate under conflict (scene-cross-fitted probe, matched answered
+coverage):
+
+| coverage | probe | p(unknown) | maxprob | paired diff vs p(unknown) |
+|---|---|---|---|---|
+| 25% | 0.285 [0.208, 0.377] | 0.562 [0.477, 0.631] | 0.662 [0.577, 0.723] | -0.277 [-0.354, -0.192] |
+| 50% | 0.556 [0.498, 0.609] | 0.586 [0.544, 0.632] | 0.636 [0.594, 0.678] | -0.034 [-0.073, -0.004] |
+
+The probe still wins at 25% (fabrication 0.285 against 0.562) but the margin
+narrows at 50% and the paired interval only just excludes zero. The gate
+direction survives, but the frozen score is much weaker after an 86° rotation.
+
+Dilution law: the three cells give (gap, d'/d'0) = (0.525, 0.602), (0.052,
+0.049) and (0.149, 0.136); the through-origin slope is 1.13 with RMSE 0.096
+against the fitted 1.425. Residuals are -0.024, -0.076 and -0.145. Phi-3.5 was
+not in the 12-cell fit and its gain lies below the 1.25-1.60 range of the four
+fitted models, which is what "model-specific gain" means: the linear form
+survives, the constant does not extrapolate.
+
+Raw run and analyses are archived as `results/phi_results.json` and
+`results/phi_extra.json`; `scripts/run_phi.sh` regenerates them.
+
+### 10.11 A second stimulus set (PASCAL VOC 2012, 3B)
+
+The same design is rebuilt on PASCAL VOC 2012 val (180 images, long side
+<= 1024, automatic labels only, 1080 states of 2048 dimensions; about 0.7 s per
+sample) and analysed with the identical protocol and the same 3B checkpoint.
+
+| condition | refusal | gold | adopts hint |
+|---|---|---|---|
+| present, no hint | 0.011 | 0.422 | — |
+| present, correct hint | 0.083 | 0.839 | 0.839 |
+| present, conflicting hint | 0.400 | 0.217 | 0.217 |
+| absent, no hint | 0.894 | — | — |
+| absent, hint a | 0.644 | — | 0.339 |
+| absent, hint b | 0.683 | — | 0.311 |
+
+The gate reproduces (absent refusal 0.894 -> 0.644/0.683) and the hint is
+adopted (0.339/0.311), but no-hint colour accuracy is lower than on COCO
+(0.422 against 0.762), so the present arm is noisier.
+
+Signals:
+
+| pair | probe | frozen held-out [95% CI] | refit |
+|---|---|---|---|
+| none | 0.994 [0.987, 0.999] | — | — |
+| hint a | — | 0.925 [0.895, 0.955] | 0.998 |
+| hint b | — | 0.950 [0.921, 0.975] | 0.998 |
+| correct | — | 0.983 [0.971, 0.992] | — |
+
+Geometry: gap ratio 0.412 [0.380, 0.446] at 34.7° [32.6, 38.4] for hint a and
+0.519 [0.489, 0.550] at 33.4° [30.7, 36.7] for hint b; coherence falls
+0.613 -> 0.313/0.394; cos(a, b) 0.890 [0.837, 0.922]. The rotation is smaller
+than in COCO 3B (39-41°) and the frozen transfer correspondingly higher.
+
+SDT: d' 3.44 [3.03, 4.20] with no hint, 0.67 [0.44, 0.90] under conflict
+(Δ -2.77 [-3.52, -2.35]); criterion +0.48 -> -0.08.
+
+Gate at 25% coverage: probe 0.144 [0.078, 0.211] against 0.367 [0.272, 0.444]
+for p(unknown) and 0.422 [0.356, 0.517] for maxprob; paired difference
+[-0.300, -0.133]. At 50% coverage only 47.8% of conflict items are answered, so
+all three scores select the same set and the comparison is uninformative.
+
+Law: cells (0.614, 0.699), (0.412, 0.499), (0.519, 0.656); through-origin slope
+1.20, RMSE 0.123 against 1.425. The dilution-to-sensitivity regularity therefore
+holds on a different stimulus distribution with a slightly lower gain.
+
+Raw run and analyses: `results/voc_results.json`, `results/voc_extra.json`;
+`scripts/run_voc.sh` regenerates them.
+
+## 11. Novelty: what the data support, and what they reject
+
+We tested two candidate quantitative laws that would link evidence geometry to
+behaviour. Both fail. A weaker proportional relation does survive, and its
+scope is the useful result.
+
+1. **A single shared slope across conditions.** A logistic model of
+   P(correct) on the best pre-hint evidence score, with one slope for all three
+   hint conditions, is rejected in 3B (likelihood ratio 37.8, df 5,
+   p = 4.2e-7). Projection-based slopes differ by cell and by model (3B none
+   -0.216 vs conflict -0.037; Gemma none -0.201 vs conflict -0.742), so there
+   is no condition-invariant one-slope law.
+
+2. **Isotropic contraction.** If the hint scaled the class-conditional
+   distributions isotropically, the within-class SD along the readout would
+   shrink by the same factor as the mean gap. It does not
+   (`results/law_isotropic.json`, 4 models x 3 hinted conditions): the gap
+   ratio ranges 0.20-0.69, the SD ratio only 0.62-0.83, and a log-log fit of
+   SD ratio on gap ratio has slope 0.006 (R^2 = 0.001). The readout's d' ratio
+   therefore falls sub-proportionally to dilution (mean 0.60, range 0.28-1.00),
+   which is why rank-based measures survive better than absolute confidence.
+
+3. **A quantitative regularity that does survive.** For the fixed no-hint
+   readout, the rank-sensitivity ratio is proportional to the measured mean-gap
+   ratio: d'_c/d'_0 = 1.42 (gap_c/gap_0) + 0.003, R^2 = 0.918 over the 12
+   model-condition cells (`results/law_isotropic.json`). Through the origin the
+   slope is 1.425, with RMSE 0.060 and maximum residual 0.098. The gain is the
+   reciprocal of the within-class spread contraction, which is nearly
+   condition-independent (SD ratio 0.707 +- 0.065, range 0.62-0.83). It is
+   model-specific but stable within a model across hints: 1.25 in 3B
+   (1.21-1.28), 1.46 in 7B (1.43-1.49), 1.40 in LLaVA (1.35-1.44) and 1.60 in
+   Gemma (1.57-1.62). Since d' = gap/SD is an identity, the empirical content is
+   the near-constancy of the spread contraction: given only the geometric gap
+   ratio, one predicts the rank-sensitivity loss with a single per-model gain.
+
+   Out-of-sample check (`pilot/law_validation.py`, `results/law_validation.json`):
+   leave-one-cell-out MAE 0.056, against 0.179 for a unit slope and 0.202 for the
+   training mean; per-model slopes give RMSE 0.011 against 0.060 for one shared
+   slope. A scene bootstrap re-estimating the no-hint axis in every draw puts the
+   through-origin slope at 1.423 [1.369,1.473] (500 draws). Leave-one-model-out
+   works for 7B (0.018) and LLaVA (0.017) but misses 3B (0.119) and Gemma
+   (0.116), the two extreme gains: the per-model gain must be measured inside a
+   new model, it does not extrapolate. Phi-3.5-vision, run after the fit, gives
+   a through-origin slope of 1.13 and RMSE 0.096 against the fitted 1.425
+   (`results/phi_extra.json`), below the fitted 1.25-1.60 range. VOC 2012, a
+   different stimulus distribution, gives 1.20 and RMSE 0.123
+   (`results/voc_extra.json`).
+
+4. **Behavioural transfer of the dilution law.** Replacing the probe d' with a
+   behavioural d' computed from outputs alone (the logit of p(unknown) over
+   present and absent items) removes the algebraic identity, because the output
+   spread is free to vary. Over the eight hinted cells (4 models x 2
+   conflicting hues; the correct-hint cell has no hinted absent arm),
+   d'_beh ratio = 0.97 gap ratio + 0.12 with R^2 = 0.57, through-origin 1.27
+   and scene-bootstrap slope [0.72, 1.24]; an argmax-rate d' gives 1.47
+   (R^2 = 0.51) (`results/law_behaviour.json`). The gain is model-specific:
+   0.92 in 3B, 1.43 in 7B, 1.62 in LLaVA and 1.40 in Gemma. The dilution law
+   therefore transfers to the model's own output signal in direction and order
+   of magnitude, and the residual factor is the output-head term that item 5
+   describes.
+
+   Scope: the behavioural fit is descriptive, not predictive. Leave-one-cell-out
+   MAE is 0.100 against 0.125 (training mean) and 0.121 (unit slope); leaving a
+   model out misses its cells by 0.21 (3B), 0.02 (7B), 0.07 (LLaVA) and 0.25
+   (Gemma). What transfers is the linear form and an order-of-magnitude scale;
+   with two hinted cells per model the constant is fitted, not predicted, so the
+   paper must not present this as a cross-model law.
+
+5. **What is not supported.** The model's own confidence collapse is *not*
+   fully predicted by this geometry: Gemma has the same dilution and rotation
+   as the Qwen models (0.529, 28.2 deg) but p(unknown) barely degrades (0.961
+   to 0.891) and max probability rises (0.627 to 0.701), while Phi-3.5 rotates
+   furthest (86°/74°) and its own signal falls below chance (0.939 to
+   0.385/0.458). The dissociation is therefore between the representation
+   (shared geometry, with a simple dilution-to-d' gain) and the output head
+   (model-specific sensitivity to the hint). The behavioural gain ranges
+   0.92-1.62, so this is not a universal constant.
+
+Consequence for positioning: the defensible novelty is two-part---the
+controlled 2x3 design that isolates the assertion, and the dissociation between
+a shared evidence geometry (which carries a quantitative dilution-to-d'
+regularity that transfers to outputs) and model-specific output collapse. It is
+not a universal law from geometry to behaviour: the transfer holds with a
+model-specific gain of 0.92-1.62, which is itself a measurable property of the
+output head rather than a constant.
+
+## 12. Cross-backbone control battery (Gemma, Phi, VOC)
+
+Data availability: the per-analysis files for this battery (`control_causal_{gemma,phi}_final.json`, `batch44_{gemma,phi}.json`, `extra44_{gemma,phi}_stats.json`, `control_battery_status.log`, `post_battery_status.log`) were produced on the rented ModelScope A10 and read during analysis, but not copied back before the instance was stopped. They persist on the `/mnt/workspace` volume and can be pulled at the next start; every number used in the paper and in this section is transcribed below. The earlier raw runs for these models (patch, steer, conflict, matched) are local under `results/runs/`.
+
+This batch closes the controls that were missing outside the Qwen family and on
+the second stimulus set. All patching numbers below use the same-image source
+(the image's own no-hint state) pasted into the conflict pass at the stated
+layer; recovery is (patched refusal - base) / (no-hint refusal - base), with
+argmax refusal as the metric.
+
+### 12a. Layer-wise patching
+
+| model | layers | base | no hint | same-source recovery | shuffled recovery |
+|---|---|---|---|---|---|
+| Gemma-3-4B (34) | L8 (24%) | 0.402 | 0.843 | 0.009 | --- |
+| | L16 (47%) | | | 0.122 [0.054, 0.192] | -0.012 |
+| | L24 (71%) | | | 0.896 [0.822, 0.962] | 1.035 |
+| | L30 (88%) | | | 1.009 [1.000, 1.029] | 1.035 |
+| Phi-3.5-vision (32) | L14 (44%) | 0.322 | 0.897 | 0.307 [0.221, 0.388] | -0.019 |
+| | L22 (69%) | | | 0.973 [0.933, 1.013] | 1.067 |
+| | L28 (88%) | | | 1.020 [1.000, 1.046] | 1.050 |
+| | L30 (94%) | | | 1.007 [1.000, 1.022] | 1.020 |
+| VOC-3B (36) | L16 (44%) | 0.644 | 0.894 | -0.244 [-0.47, -0.11] | -0.276 |
+| | L24 (67%) | | | 0.289 [0.11, 0.44] | 0.238 |
+| | L30 (83%) | | | 0.844 [0.71, 0.97] | 0.975 |
+| | L34 (94%) | | | 1.000 [1.00, 1.00] | 1.020 |
+
+Same-image present-question state (drives refusal below base): Gemma L24
+-0.704, L30 -0.736; Phi L22 -0.267, L30 -0.333. Paired same-absent minus
+same-present contrasts: Gemma +0.705/+0.770 (L24/L30), Phi +0.713/+0.770
+(L22/L30). Same-minus-shuffled: Gemma -0.062 [-0.127, 0.004] (L24), Phi -0.054
+[-0.104, -0.004] (L22). Shuffled sources recover as much or more, as in the
+Qwen-family models.
+
+No-op / zero paste (patch6): argmax agreement with the no-op is 1.000 and the
+maximum probability change is 0 at both probed layers in both models; a zero
+paste keeps the refusal decision in every item (change 0.0) but changes the
+argmax in 90.0%/80.5% of absent items in Gemma (L24/L30) and 76.6%/91.6% in
+Phi (L22/L30).
+
+### 12b. Category-matched control
+
+| model | no hint | frozen | refit | p(unknown) | frozen - p(unknown) | geometry |
+|---|---|---|---|---|---|---|
+| Gemma | 0.947 | 0.887 | 0.933 | 0.896 | -0.009 [-0.032, 0.011] | 0.546 / 23.8 deg / 0.500 |
+| Phi | 0.961 | 0.592 | 0.950 | 0.446 | +0.145 [0.063, 0.232] | 0.547 / 81.5 deg / 0.081 |
+
+Gemma replicates the main-pair result: within a fixed question the frozen probe
+does not beat the model's own signal. Phi is the exception, but its own signal
+falls below chance (0.446) and the probe itself is only 0.592 against a 0.950
+refit, so the margin is "least bad", not good. Within-question gate at 25%
+answered coverage (fabrication, probe / p(known) / max prob): Gemma
+0.131 / 0.115 / 0.254; Phi 0.438 / 0.446 / 0.592.
+
+### 12c. Deployment and conformal risk control
+
+Matched answered coverage (hint a, scene-cross-fitted probe; probe / p(unknown)
+/ max prob):
+- 25% coverage: Gemma 0.015 / 0.138 / 0.254; Phi 0.285 / 0.562 / 0.662.
+- 50% coverage: Gemma 0.080 / 0.172 / 0.337; Phi 0.556 / 0.586 / 0.636
+  (Phi must select 82% of items to answer half).
+- Paired scene bootstrap of probe minus p(unknown) at 25% (1000 draws,
+  `pilot/gate_ci.py`): Gemma -0.123 [-0.185, -0.069]; Phi -0.277
+  [-0.354, -0.192]. At 50%: Gemma -0.092 [-0.126, -0.061]; Phi -0.034
+  [-0.073, -0.004]. All intervals exclude zero.
+
+Prevalence sweep at the 25% threshold (probe, p(unknown)): Gemma 0.001 (0.014),
+0.003 (0.029), 0.009 (0.082), 0.025 (0.211) at 5/10/25/50%; Phi 0.014 (0.043),
+0.029 (0.087), 0.081 (0.222), 0.210 (0.461).
+
+Conformal (130 calibration scenes, answered subset in numerator and
+denominator, Clopper-Pearson 90% bound, 50-point scan, family-wise
+Bonferroni): Gemma infeasible at alpha=5%, feasible in 4/20 splits at alpha=10%
+(mean test risk 0.057 at answered coverage 0.295; minimum UCB 0.119); Phi
+infeasible at both (minimum UCB 0.305). Pointwise alpha=10%: Gemma 20/20
+splits, mean held-out risk 0.047 at coverage 0.354; Phi 0/20.
+
+### 12d. Conflict steering (readout-level sufficiency)
+
+Same sweep as the Qwen-family models (`steer_conflict_*.jsonl`: base, ablate,
+a±0.25, a±0.50 applied during the conflicting pass), analysed with
+`pilot/analyze_steer_conflict.py`. Means are over 261 scenes; CIs are paired
+scene bootstraps.
+
+| model | setting | absent refusal | present refusal | absent hint | present gold |
+|---|---|---|---|---|---|
+| Gemma-3-4B | base | 0.439 | 0.008 | 0.540 | 0.241 |
+| | a+0.25 | -0.050 [-0.071, -0.033] | -0.004 [-0.011, 0.000] | +0.048 [+0.029, +0.069] | +0.004 [-0.019, +0.023] |
+| | a-0.25 | +0.034 [+0.015, +0.054] | 0.000 [0.000, 0.000] | -0.034 [-0.054, -0.015] | -0.004 [-0.023, +0.015] |
+| | a+0.50 | -0.109 [-0.140, -0.082] | -0.008 [-0.019, 0.000] | +0.105 [+0.080, +0.130] | +0.011 [-0.011, +0.038] |
+| | a-0.50 | +0.056 [+0.029, +0.082] | 0.000 [0.000, 0.000] | -0.061 [-0.088, -0.034] | -0.019 [-0.046, +0.008] |
+| Phi-3.5-vision | base | 0.374 | 0.548 | 0.615 | 0.080 |
+| | a+0.25 | -0.201 [-0.239, -0.167] | -0.169 [-0.215, -0.126] | +0.169 [+0.138, +0.201] | +0.080 [+0.050, +0.111] |
+| | a-0.25 | +0.239 [+0.201, +0.278] | +0.119 [+0.080, +0.161] | -0.178 [-0.213, -0.145] | -0.080 [-0.111, -0.050] |
+| | a+0.50 | -0.330 [-0.374, -0.284] | -0.349 [-0.406, -0.287] | +0.226 [+0.187, +0.264] | +0.199 [+0.153, +0.245] |
+| | a-0.50 | +0.435 [+0.389, +0.481] | +0.222 [+0.172, +0.276] | -0.238 [-0.278, -0.195] | -0.203 [-0.249, -0.157] |
+
+Gemma's absent gate responds monotonically but with a much smaller amplitude
+than the Qwen-family models: at +/-0.50 the shift is +0.056/-0.109, against
+0.435/-0.330 in Phi. Its present arm is already at the 0.008 refusal floor, so
+the downward direction has no room. Phi is the opposite extreme: conflict
+leaves it refusing 55% of present items, and the same direction moves both
+arms (present refusal -0.349 at +0.50), so the gate there is not specific to
+the absent question. The direction is sufficient at the readout in all five
+models, but its amplitude is model-specific.
+
+The no-hint reference for Gemma is absent refusal 0.843 / present refusal
+0.050; for Phi 0.897 / 0.119.
+
+### 12e. Site and direction controls (Gemma, Phi, conflict pass)
+
+Same battery as 4d, with the direction fitted on each model's no-hint states
+and injected during the conflicting pass. Layer doses are 0.25 of that layer's
+median last-token norm; head rows inject at the unembedding input and also carry
+three random unit directions of the same norm orthogonal to `w`, plus
+ablations. All entries are paired differences from the unsteered conflict base;
+CIs are paired scene bootstraps with 2000 draws (`control_causal_gemma_final.json`,
+`control_causal_phi_final.json`).
+
+Gemma-3-4B (34 layers; base absent refusal 0.439, present refusal 0.008,
+present gold 0.241, present hint 0.674, absent hint 0.540):
+
+| site | absent refusal -/+ | present gold -/+ | present hint -/+ | absent hint -/+ |
+|---|---|---|---|---|
+| L8 (24%) | -0.146 [-0.174,-0.119] / -0.103 [-0.136,-0.075] | +0.042 / -0.080 | -0.050 / +0.088 | +0.142 / +0.111 |
+| L16 (47%) | +0.280 [0.230,0.330] / -0.339 [-0.389,-0.293] | -0.238 / -0.149 | -0.674 / -0.540 | -0.494 / -0.111 |
+| L24 (71%) | +0.010 [-0.015,0.034] / -0.092 [-0.125,-0.061] | -0.142 / -0.027 | -0.375 / -0.080 | -0.262 / +0.065 |
+| L30 (88%) | +0.088 [0.059,0.117] / -0.151 [-0.184,-0.121] | -0.023 / +0.004 | -0.015 / -0.008 | -0.151 / +0.096 |
+
+Head: absent refusal moves +0.034 [0.015,0.054] / -0.050 [-0.071,-0.033] at
++/-0.25 and +0.056 [0.029,0.082] / -0.109 [-0.140,-0.082] at +/-0.50, with
+present gold and hint unchanged (all |delta| <= 0.019, CIs include 0). But the
+three random directions move absent refusal by a mean absolute 0.076 against
+0.042 for `w` (ratio 0.55; absent hint 0.075 vs 0.041, ratio 0.55), and
+ablating `w` is null (-0.002 [-0.006,0.000]), no larger than ablating a random
+direction (<=0.004) although `w` removes 5.9x the energy. Gemma's head is
+movable but not direction-specific. Among layer sites only L30 is clean: both
+signs move the absent gate and present gold/hint are unchanged (|delta| <=
+0.023, CIs include 0). L16 and L24 at the negative sign move the gate but
+destroy the present arm (gold and hint adoption fall by 0.14-0.67), and L8
+lowers absent refusal at both signs. Patching still recovers 90% at L24 and
+101% at L30, so the gate is written late in Gemma; what fails is the claim that
+`w` is a privileged readout direction.
+
+Phi-3.5-vision (32 layers; base absent refusal 0.374, present refusal 0.548,
+present gold 0.080, present hint 0.360, absent hint 0.615):
+
+| site | absent refusal -/+ | present gold -/+ | present hint -/+ | absent hint -/+ |
+|---|---|---|---|---|
+| L14 (44%) | +0.180 [0.148,0.215] / -0.193 [-0.232,-0.159] | -0.038 / +0.100 | -0.065 / +0.100 | -0.176 / +0.190 |
+| L22 (69%) | +0.057 [0.034,0.080] / -0.111 [-0.140,-0.082] | -0.027 / +0.042 | -0.042 / +0.046 | -0.057 / +0.113 |
+| L28 (88%) | +0.036 [0.011,0.059] / -0.136 [-0.167,-0.107] | 0.000 / +0.042 | -0.034 / +0.042 | -0.038 / +0.142 |
+| L30 (94%) | +0.103 [0.071,0.138] / -0.128 [-0.163,-0.096] | +0.050 / +0.046 | -0.031 / -0.008 | -0.109 / +0.130 |
+
+Head: absent refusal moves +0.239 [0.201,0.278] / -0.201 [-0.239,-0.167] at
++/-0.25 and +0.435 [0.389,0.481] / -0.330 [-0.374,-0.284] at +/-0.50; `w`'s
+mean absolute effect is 0.220 against 0.073 for random directions (ratio 3.04),
+and ablating `w` is 12.9x a random ablation. The same direction also moves
+present refusal (-0.207/+0.107 at L14; -0.349 at head +0.50) and present gold
+(+0.100/-0.038 at L14; +0.195/-0.050 at head +0.50), i.e. it controls
+answering as a whole rather than an absent-specific gate. Layer action is
+largest at L14 (44% depth) and weakens deeper, while patching recovers only 31%
+at L14 and 97% at L22: the axis is available to the readout early, but the
+conflict-induced loss is localised late. Injection establishes sufficiency of
+the direction, not its computation site.
+
+Limitation: random-direction controls exist only at the head, in every model;
+layer-site specificity is untested and those profiles are descriptive.
+
+### 12f. Energy-matched removal (Gemma, Phi)
+
+Same design as the Qwen-family energy matching (`pilot/extra44.py --lite`): each
+ablation removes a direction rescaled so that its mean removed energy
+(mean |x.v| / median final-state norm) matches the stated target. Entries are
+absent refusal under the conflicting pass and paired differences from base
+(95% scene bootstrap, 2000 draws). `w->r` scales `w` down to a random
+direction's energy; `r->w` scales a random direction up to `w`'s energy;
+`cm`/`pc1` are the class-mean and first-PC directions.
+
+| model | base | w raw | w->r | r->w | cm->w | pc1->w |
+|---|---|---|---|---|---|---|
+| Gemma-3-4B | 0.439 | 0.437 (-0.002 [-0.006,0.000]) | 0.437 (-0.002 [-0.006,0.000]) | 0.437 (-0.002 [-0.010,0.004]) | 0.460 (+0.021 [+0.010,+0.033]) | 0.460 (+0.021 [+0.010,+0.033]) |
+| Phi-3.5-vision | 0.374 | 0.316 (-0.057 [-0.079,-0.036]) | 0.360 (-0.013 [-0.025,-0.004]) | 0.421 (+0.048 [+0.029,+0.069]) | 0.216 (-0.157 [-0.193,-0.125]) | 0.125 (-0.249 [-0.291,-0.211]) |
+
+`w` carries 5.9x (Gemma) and 7.3x (Phi) the mean projection energy of a random
+direction. In Phi the fractions are 0.080 for `w`, 0.011-0.020 for the random
+directions, and 0.148/0.145 for the class-mean and first-PC directions, so the
+class directions are scaled *down* to `w`'s energy and still move refusal
+several times more.
+
+Reading. In Gemma there is no removal effect to attribute: raw and both
+matched variants of `w` are null, while class-mean and first-PC directions at
+`w`'s energy raise refusal by 0.021 each. The head readout depends on class
+structure, not on `w`. In Phi the raw effect is mostly removed energy: matching
+`w` down shrinks it from -0.057 to -0.013, and a random direction scaled up to
+`w`'s energy moves refusal more and in the opposite direction (+0.048).
+Removing class-mean and first-PC directions at matched energy is far stronger
+(-0.157, -0.249), so what is causally load-bearing at the readout is the class
+subspace, not the evidence direction. Across all five models the residual
+matched effect of `w` is at most 0.073, and in 7B, LLaVA and Phi a matched
+random direction moves refusal at least as much (in Phi, more and opposite).
+Injection efficiency and removal relevance dissociate: the direction that
+steers the gate best is not the direction whose removal matters most.
+
+Dose-response is not an artifact of a fixed absolute norm: rescaling the dose
+to each prompt's own final-state norm gives absent-refusal changes
++0.050/-0.080 at -/+0.50 in Gemma and +0.464/-0.287 in Phi, preserving the
+head-injection sign pattern.
+
+### 12g. What this battery does not establish
+
+Self-critique after completing the battery. None of these gaps is repairable
+from the data already on disk; the first is the main one, and it is the reason
+the paper claims readout-level sufficiency rather than a circuit.
+
+1. **Layer-site random controls were never run.** Random orthogonal directions
+   exist only at the head, in all five models. The layer profiles (L8-L30) mix
+   "site matters" with "any same-norm perturbation at that site matters". Gemma
+   L30 is clean for `w`, but no random direction was injected there. The layer
+   results are therefore descriptive; the causal claim is restricted to the
+   readout, where the random controls do exist.
+2. **The causal direction is fit in-sample.** `w` is estimated on all no-hint
+   states and its injection/ablation is evaluated on the same scenes. The probe
+   transfer results are cross-fitted; the causal ones are not. A split-half fit
+   would test direction stability and was not run.
+3. **Direction and energy are confounded by construction.** Mean-energy
+   matching uses the evaluation scenes and a scalar rescaling; per-item energy
+   matching would be stricter. Even matched, ablation removes a one-dimensional
+   projection, not a mechanism.
+4. **The random controls are three directions from one seed.** CIs are
+   pointwise over a grid of sites, doses and models, with no multiplicity
+   correction across the grid; they are descriptive, not family-wise.
+5. **The category-matched control weakens the deployment story.** The frozen
+   margin over `p(unknown)` is +0.123/+0.142/+0.142 on the main pair but
+   +0.050/+0.002/-0.015 within a fixed question, and the 25%-coverage
+   fabrication advantage shrinks, vanishes in 7B and reverses in LLaVA. Part of
+   the main-design transfer is arm-specific. This is reported in the paper, not
+   hidden, and the refit probe plus the geometry are the parts that survive.
+6. **Conformal risk control is underpowered.** At alpha=10% a family-wise
+   certificate exists only for Gemma (4/20 splits); minimum bounds are
+   0.174/0.210/0.191/0.119/0.305. No deployment guarantee is claimed.
+7. **Labels are single-annotator.** COCO/VOC annotations plus an automated
+   canonical-colour mapping; no inter-annotator agreement was collected.
+   Residual colour-label noise is not quantified, though probe AUROCs near 0.99
+   bound its plausible size.
+8. **External validity is task-specific.** Five models from three language
+   families and two stimulus sets, but all questions are attribute
+   classification; the counting and left-right forms exist only for the Qwen
+   family. VizWiz is the only natural unanswerable set, and there the probe
+   does not beat `p(unknown)`.
+9. **No mechanism or training origin.** The work identifies a decodable
+   direction, a late gate and a dilution/rotation law; it does not identify the
+   circuit that computes either, nor why training produces this geometry.
+
+Decision: no further GPU run is justified for the claims as written. The one
+experiment that would strengthen a stronger claim, layer-site random-direction
+controls at one deep layer per model, tests a claim the paper deliberately does
+not make; it is left as future work rather than run to inflate the appendix.

@@ -1,0 +1,27 @@
+{
+ "3b": {
+  "n_pointwise": 7,
+  "risk_mean": 0.08754878693908172,
+  "cov_mean": 0.30479825517993453
+ },
+ "7b": {
+  "n_pointwise": 11,
+  "risk_mean": 0.0596582729199941,
+  "cov_mean": 0.19014573213046493
+ },
+ "llava": {
+  "n_pointwise": 7,
+  "risk_mean": 0.10736867523229983,
+  "cov_mean": 0.22464558342420934
+ },
+ "gemma": {
+  "n_pointwise": 20,
+  "risk_mean": 0.04722717677452594,
+  "cov_mean": 0.35362595419847326
+ },
+ "phi": {
+  "n_pointwise": 0,
+  "risk_mean": null,
+  "cov_mean": null
+ }
+}

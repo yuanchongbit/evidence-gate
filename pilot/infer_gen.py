@@ -59,6 +59,7 @@ class Gen:
             raise RuntimeError(f"no loader accepted {path}")
         self.resize = resize
         self.ids = {w: first_id(self.proc.tokenizer, w) for w in CANDIDATES}
+        self.cand_names = CANDIDATES
         print("model class:", type(self.model).__name__, flush=True)
 
     def prep(self, img):

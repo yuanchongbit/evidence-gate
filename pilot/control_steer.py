@@ -17,7 +17,7 @@ import time
 import numpy as np
 from PIL import Image
 
-from .constants import DISTRACTOR
+from .constants import CANDIDATES, DISTRACTOR
 from .infer import DATA, ROOT, Scorer, build_user
 from .steer import Steer, fit_direction, set_mode
 from .steer_conflict import find_lm_head, prompts_for
@@ -78,6 +78,15 @@ def build_runner(args):
 
         def score(img, text):
             return scorer.score([img], text)[0]
+    elif args.family == "phi":
+        from .patch_full import find_layers
+        from .phi_infer import Gen
+        g = Gen(args.model, resize=args.resize)
+        _, lm = find_layers(g.model)
+        scorer = g
+
+        def score(img, text):
+            return g.score(img, text)
     else:
         from .infer_gen import Gen
         from .patch4 import find_layers
@@ -110,7 +119,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default=str(DATA / "manifest_v5.jsonl"))
     ap.add_argument("--model", default="Qwen/Qwen2.5-VL-3B-Instruct")
-    ap.add_argument("--family", default="qwen", choices=["qwen", "gen"])
+    ap.add_argument("--family", default="qwen", choices=["qwen", "gen", "phi"])
     ap.add_argument("--resize", type=int, default=512)
     ap.add_argument("--run", default=str(ROOT / "runs" / "v5_261.jsonl"))
     ap.add_argument("--out", default=str(ROOT / "runs" / "control_steer.jsonl"))
@@ -160,7 +169,8 @@ def main():
             f.write(json.dumps({"meta": {
                 "model": args.model, "family": args.family, "resize": args.resize,
                 "candidates": ",".join(getattr(scorer, "cand_names", None)
-                                       or list(scorer.ids)),
+                                       or (CANDIDATES if args.family == "phi"
+                                           else list(scorer.ids))),
                 "scale": scale, "alpha": args.alpha, "seed": args.seed,
                 "layers": layer_ids, "layer_scales": layer_scales,
                 "randoms": args.randoms}}) + "\n")

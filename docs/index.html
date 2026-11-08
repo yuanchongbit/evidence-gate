@@ -21,7 +21,7 @@
     <p class="kicker">Preprint · 2026</p>
     <h1>The Evidence Gate</h1>
     <p class="subtitle">Hints dilute and rotate the evidence axis<br>of vision-language models</p>
-    <p class="authors">yuanchongbit</p>
+    <p class="authors">Chong Yuan</p>
     <nav class="links">
       <a class="primary" href="https://github.com/yuanchongbit/evidence-gate">Code</a>
       <a href="paper/main.pdf">Paper</a>
@@ -35,7 +35,7 @@
 <main class="wrap">
 
 <section class="tldr">
-  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still decodable inside the model, but the hint shortens its mean difference and turns it 24°–71° off the direction the model was reading (40° in the 3B model below); what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last few layers, and can be read out and pushed back along a single direction. The geometry repeats in four backbones from two language-model families; only the collapse of the model’s own confidence is specific to the Qwen readouts.</p>
+  <p><strong>TL;DR.</strong> Ask a vision-language model about an object that is not in the image and it usually says <em>unknown</em>. Add one sentence — “Hint: the umbrella is black.” — and it answers <em>black</em>. We show that this is not a failure of seeing. The evidence is still decodable inside the model, but the hint shortens its mean difference and turns it 24°–86° off the no-hint linear-readout direction (40° in the 3B model below); what breaks is the <em>gate</em> that turns evidence into abstention. The gate is written late, in the last third of the network (69–94% depth), and can be read out and pushed back along a single direction. The geometry repeats in five backbones from three language-model families; the collapse of the model’s own confidence appears in the Qwen and Phi readouts but not in Gemma, so it is readout-specific rather than family-wide.</p>
 </section>
 
 <section id="idea">
@@ -69,8 +69,8 @@
 </section>
 
 <section id="results">
-  <h2>The output readout collapses in the Qwen family. The evidence axis dilutes and rotates in all four.</h2>
-  <p class="lead">Under a conflicting hint, every signal computed from the output distribution of the three Qwen-backed models (the two Qwen2.5-VL sizes and LLaVA-OneVision, whose language model is Qwen2-7B) loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state keeps most of its ranking on held-out scenes (0.958 in 3B, 0.946 in 7B, 0.935 in LLaVA), but its present–absent gap halves (15.9 → 7.3) and the full mean difference both shrinks and turns. The information is re-encoded, not erased. The fourth backbone, Gemma-3-4B-it (Gemma-3 with a SigLIP encoder, no Qwen component), shows the same geometry but not the output collapse: its p(unknown) AUROC falls only from 0.961 to 0.891, its maximum probability rises from 0.627 to 0.701, and its held-out probe transfers at 0.964 / 0.970.</p>
+  <h2>The output readout collapses in Qwen and Phi. The evidence axis dilutes and rotates in all five.</h2>
+  <p class="lead">Under a conflicting hint, every signal computed from the output distribution of the three Qwen-backed models (the two Qwen2.5-VL sizes and LLaVA-OneVision, whose language model is Qwen2-7B) loses the ability to tell “evidence present” from “evidence absent”. A linear probe on the final hidden state keeps most of its ranking on held-out scenes (0.958 in 3B, 0.946 in 7B, 0.935 in LLaVA), but its present–absent gap halves (15.9 → 7.3) and the full mean difference both shrinks and turns. The information is re-encoded, not erased. Gemma-3-4B-it (Gemma-3 with a SigLIP encoder, no Qwen component) shows the same geometry but not the output collapse: its p(unknown) AUROC falls only from 0.961 to 0.891, its maximum probability rises from 0.627 to 0.701, and its held-out probe transfers at 0.964 / 0.970. Phi-3.5-vision (Phi-3 with a CLIP encoder) is the opposite case: it abstains (0.897) and is overridden (0.322 / 0.425), rotates its evidence vector 86° / 74° so that a no-hint probe falls to 0.685 / 0.675, yet a refit still decodes the same states at 0.998, and its own signal collapses to below chance (0.939 → 0.385 / 0.458).</p>
 
   <figure class="chart">
     <svg viewBox="0 0 760 320" role="img" aria-label="AUROC of evidence detection under three hint conditions">
@@ -120,7 +120,7 @@
 
 <section id="mechanism">
   <h2>The suppression is late; the evidence is diluted and rotated</h2>
-  <p class="lead">Under conflict the probe’s present–absent gap shrinks from 15.9 to 7.3, while the within-class spread is unchanged. Measured in the full state space (table below), the present-minus-absent mean difference keeps 0.39–0.64 of its length and turns 24°–71° away from the no-hint axis; the two hinted colours rotate to nearly the same direction (cos 0.91 in the Qwen models, 0.97 in Gemma). Whitened by within-class noise the separation does not fall, and a probe refit on the conflict pair reaches 0.989–0.999: the evidence is re-coded rather than destroyed. This is why p(unknown) fails — it reads an absolute scale and a fixed direction — while rank-based gating survives.</p>
+  <p class="lead">Under conflict the probe’s present–absent gap shrinks from 15.9 to 7.3, while the within-class spread shrinks much less (0.62–0.83× across models, against a mean gap of 0.20–0.69×). Measured in the full state space (table below), the present-minus-absent mean difference keeps 0.39–0.64 of its length and turns 24°–71° away from the no-hint axis in the four fitted models; the two hinted colours rotate to nearly the same direction (cos 0.91 in the Qwen models, 0.97 in Gemma). Whitened by within-class noise the separation does not fall, and a probe refit on the conflict pair reaches 0.989–0.999: the evidence is re-coded rather than destroyed. This is why p(unknown) fails — it reads an absolute scale and a fixed direction — while rank-based gating survives. Quantitatively, across 12 model–condition cells, d′<sub>c</sub>/d′<sub>0</sub> = 1.42 × (gap ratio) + 0.003 (R² = 0.918), with a per-model gain between 1.25 and 1.60, because the within-class spread contraction is nearly condition-independent (0.71 ± 0.07). The gain is not shared across models, and this regularity stops at the readout: it does not predict the models’ own confidence collapse. Replacing the probe with a behavioural d′ computed from outputs alone removes the identity: over the eight hinted cells the behavioural ratio follows the same gap ratio (slope 0.97 with intercept 0.12, R² = 0.57; through-origin 1.27), with a model-specific gain of 0.92 (3B), 1.43 (7B), 1.62 (LLaVA) and 1.40 (Gemma). Out of sample, the probe law holds when the per-model gain is estimated inside the model (leave-one-cell-out error 0.056 against 0.179 for a unit slope; scene-bootstrap slope 1.42 [1.37, 1.47]) but the gain does not extrapolate to an unseen model (leave-one-model-out 0.02–0.12); the behavioural fit is descriptive rather than predictive (leave-one-cell-out 0.100 against 0.121–0.125 baselines).</p>
 
   <div class="tablewrap">
     <table>
@@ -130,41 +130,53 @@
         <tr><td>Qwen2.5-VL-7B</td><td>0.39 / 0.43</td><td>48° / 44°</td><td>0.26 / 0.31</td><td>0.70 → 0.41</td></tr>
         <tr><td>LLaVA-OneVision-7B</td><td>0.61 / 0.64</td><td>71° / 69°</td><td>0.20 / 0.23</td><td>0.61 → 0.45</td></tr>
         <tr><td>Gemma-3-4B-it</td><td>0.53 / 0.54</td><td>29° / 24°</td><td>0.47 / 0.50</td><td>0.59 → 0.54</td></tr>
+        <tr><td>Phi-3.5-vision</td><td>0.05 / 0.15</td><td>86° / 74°</td><td>0.004 / 0.04</td><td>0.39 → 0.03</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">Full present–absent mean-difference vector, measured from the final hidden state (261 scenes; scene bootstrap in the paper). <em>a</em> is the plausible hint, <em>b</em> the far-hue one. The same estimator applied to the no-hint vector against itself returns ratio 1.00 and an angle of 3–5°, the noise floor. Per-scene gaps lose cross-scene coherence while noise-normalised separation does not fall: the aggregate shortens partly because different scenes stop pointing the same way. Gemma-3-4B-it (Gemma-3 + SigLIP, no Qwen component) reproduces the dilution, the rotation, the colour-independent direction (cos 0.97) and the held-out transfer (0.964 / 0.970), but not the output collapse: its max-probability rises under conflict (0.627 → 0.701) while its answers are overridden as strongly as in 3B (accuracy 0.567 → 0.241). The geometry generalises across language-model families; the rank–scale dissociation is specific to the Qwen2/2.5 readouts.</p>
+  <p class="small">Full present–absent mean-difference vector, measured from the final hidden state (261 scenes; scene bootstrap in the paper). <em>a</em> is the plausible hint, <em>b</em> the far-hue one. The same estimator applied to the no-hint vector against itself returns ratio 1.00 and an angle of 3–5°, the noise floor. Per-scene gaps lose cross-scene coherence while noise-normalised separation does not fall: the aggregate shortens partly because different scenes stop pointing the same way. Gemma-3-4B-it reproduces the dilution, the rotation, the colour-independent direction (cos 0.97) and the held-out transfer (0.964 / 0.970), but not the output collapse: its max-probability rises under conflict (0.627 → 0.701) while its answers are overridden as strongly as in 3B (accuracy 0.567 → 0.241). Phi-3.5-vision pushes the geometry furthest: at 86° / 74° the no-hint probe falls to 0.685 / 0.675 although a refit reaches 0.998, and its own signal collapses to 0.385 / 0.458. The geometry therefore generalises across three language-model families and three vision encoders; the output collapse appears in the Qwen and Phi readouts but not in Gemma, so it is readout-specific rather than family-wide. A second stimulus set built on PASCAL VOC 2012 (180 images, automatic labels, same 3B checkpoint) reproduces the behaviour, the frozen transfer (0.925 / 0.950), the geometry (0.41 / 0.52, 35° / 33°) and the gate (0.367 → 0.144 at 25% coverage).</p>
 
   <figure class="chart">
-    <svg viewBox="0 0 760 330" role="img" aria-label="Recovery of refusal after layer-wise activation patching">
+    <svg viewBox="0 0 760 330" role="img" aria-label="Recovery of refusal after layer-wise activation patching in five models">
       <g class="axis">
         <line x1="80" y1="270" x2="710" y2="270"></line>
         <line x1="80" y1="40" x2="80" y2="270"></line>
         <text x="72" y="274" text-anchor="end">0%</text>
-        <text x="72" y="202" text-anchor="end">25%</text>
-        <text x="72" y="134" text-anchor="end">50%</text>
-        <text x="72" y="66" text-anchor="end">75%</text>
-        <text x="80" y="295" text-anchor="middle">50%</text>
-        <text x="395" y="295" text-anchor="middle">75%</text>
-        <text x="710" y="295" text-anchor="middle">100%</text>
-        <line class="grid" x1="80" y1="202" x2="710" y2="202"></line>
-        <line class="grid" x1="80" y1="134" x2="710" y2="134"></line>
-        <line class="grid" x1="80" y1="66" x2="710" y2="66"></line>
+        <text x="72" y="216.5" text-anchor="end">25%</text>
+        <text x="72" y="159" text-anchor="end">50%</text>
+        <text x="72" y="101.5" text-anchor="end">75%</text>
+        <text x="72" y="44" text-anchor="end">100%</text>
+        <text x="95" y="295" text-anchor="middle">20%</text>
+        <text x="247" y="295" text-anchor="middle">40%</text>
+        <text x="399" y="295" text-anchor="middle">60%</text>
+        <text x="551" y="295" text-anchor="middle">80%</text>
+        <text x="702" y="295" text-anchor="middle">100%</text>
+        <line class="grid" x1="80" y1="212.5" x2="710" y2="212.5"></line>
+        <line class="grid" x1="80" y1="155" x2="710" y2="155"></line>
+        <line class="grid" x1="80" y1="97.5" x2="710" y2="97.5"></line>
         <text x="395" y="318" text-anchor="middle">relative depth of the patched layer</text>
       </g>
       <!-- 3B: 67% -> 22%; 89% -> 80% -->
-      <polyline class="line m3b" points="272,210.1 671,52.4"></polyline>
-      <circle class="m3b" cx="272" cy="210.1" r="5"></circle><circle class="m3b" cx="671" cy="52.4" r="5"></circle>
+      <polyline class="line m3b" points="449.6,219.4 618.2,86.0"></polyline>
+      <circle class="m3b" cx="449.6" cy="219.4" r="5"></circle><circle class="m3b" cx="618.2" cy="86.0" r="5"></circle>
       <!-- 7B: 64% -> 0; 86% -> 69; 93% -> 90 -->
-      <polyline class="line m7b" points="237,270 584,80.6 660,27.1"></polyline>
-      <circle class="m7b" cx="237" cy="270" r="5"></circle><circle class="m7b" cx="584" cy="80.6" r="5"></circle><circle class="m7b" cx="660" cy="27.1" r="5"></circle>
+      <polyline class="line m7b" points="431.4,270 593.9,111.3 648.5,63.0"></polyline>
+      <circle class="m7b" cx="431.4" cy="270" r="5"></circle><circle class="m7b" cx="593.9" cy="111.3" r="5"></circle><circle class="m7b" cx="648.5" cy="63.0" r="5"></circle>
       <!-- LLaVA: 64% -> 36; 86% -> 80; 93% -> 96 -->
-      <polyline class="line llava" points="237,172.1 584,52.4 660,8.9"></polyline>
-      <circle class="llava" cx="237" cy="172.1" r="5"></circle><circle class="llava" cx="584" cy="52.4" r="5"></circle><circle class="llava" cx="660" cy="8.9" r="5"></circle>
+      <polyline class="line llava" points="431.4,187.2 593.9,86.0 648.5,49.2"></polyline>
+      <circle class="llava" cx="431.4" cy="187.2" r="5"></circle><circle class="llava" cx="593.9" cy="86.0" r="5"></circle><circle class="llava" cx="648.5" cy="49.2" r="5"></circle>
+      <!-- Gemma: 24% -> 1; 47% -> 12; 71% -> 90; 88% -> 101 -->
+      <polyline class="line gemma" points="121.7,267.7 300.9,242.4 479.2,63.0 612.8,37.7"></polyline>
+      <circle class="gemma" cx="121.7" cy="267.7" r="5"></circle><circle class="gemma" cx="300.9" cy="242.4" r="5"></circle><circle class="gemma" cx="479.2" cy="63.0" r="5"></circle><circle class="gemma" cx="612.8" cy="37.7" r="5"></circle>
+      <!-- Phi: 44% -> 31; 69% -> 97; 88% -> 102; 94% -> 101 -->
+      <polyline class="line phi" points="275.9,198.7 465.6,46.9 607.6,35.4 655.4,37.7"></polyline>
+      <circle class="phi" cx="275.9" cy="198.7" r="5"></circle><circle class="phi" cx="465.6" cy="46.9" r="5"></circle><circle class="phi" cx="607.6" cy="35.4" r="5"></circle><circle class="phi" cx="655.4" cy="37.7" r="5"></circle>
       <g class="legend">
-        <circle class="m3b" cx="92" cy="22" r="5"></circle><text x="106" y="26">Qwen2.5-VL-3B</text>
-        <circle class="m7b" cx="240" cy="22" r="5"></circle><text x="254" y="26">Qwen2.5-VL-7B</text>
-        <circle class="llava" cx="390" cy="22" r="5"></circle><text x="404" y="26">LLaVA-OneVision-7B</text>
+        <circle class="m3b" cx="92" cy="14" r="5"></circle><text x="106" y="18">Qwen2.5-VL-3B</text>
+        <circle class="m7b" cx="300" cy="14" r="5"></circle><text x="314" y="18">Qwen2.5-VL-7B</text>
+        <circle class="llava" cx="500" cy="14" r="5"></circle><text x="514" y="18">LLaVA-OneVision-7B</text>
+        <circle class="gemma" cx="92" cy="32" r="5"></circle><text x="106" y="36">Gemma-3-4B</text>
+        <circle class="phi" cx="300" cy="32" r="5"></circle><text x="314" y="36">Phi-3.5-vision</text>
       </g>
     </svg>
     <figcaption>We capture the last-token state from an unpolluted no-hint forward pass and paste it into the hinted pass at layer L. Each source is the same sample’s no-hint state; a label-matched shuffled-source control (previous sample, also absent) behaves similarly, which suggests a category-level state but cannot separate it from a generic prior.</figcaption>
@@ -174,31 +186,33 @@
 
   <p>The same direction still works when the hint is present. Applied during the conflicting pass, −0.25·‖h‖ raises absent-object refusal from 0.542 to 0.874, and +0.25·‖h‖ raises true-colour answers from 0.383 to 0.479 while hint adoption stays at 0.433. Conflict dilutes, rotates and under-weights the evidence; it does not disconnect it from the decision. Because the vector is injected immediately before unembedding, this is readout-level causal evidence.</p>
 
-  <p>Two controls bound the claim. Ablating <em>w</em> lowers absent refusal by 0.215 / 0.211 / 0.102 (3B / 7B / LLaVA) and raises hint adoption by 0.201 / 0.209 / 0.113, while ablating any of three random directions moves every metric by at most 0.015. That ratio is not direction-specific evidence, because the projections remove different amounts of the state: the mean absolute projection fraction is 0.055 for <em>w</em> versus 0.019 / 0.004 / 0.008 for the random directions, a 5.4× energy difference. Matching the removed energy removes most of the effect: <em>w</em> scaled to a random direction's energy changes absent refusal by −0.073 (3B) and −0.018 (7B), a random direction scaled up to <em>w</em>'s energy is null in 3B (+0.010) but larger than <em>w</em> in 7B (−0.044), and class-mean / first-PC directions at the same energy move 3B refusal (+0.083) and leave 7B unchanged (+0.004). Addition is also not specific: large random directions of the same norm can open the gate. The defensible claim is readout-level sufficiency and an efficient readout direction, not an identified circuit.</p>
+  <p>Two controls bound the claim. Ablating <em>w</em> lowers absent refusal by 0.215 / 0.211 / 0.102 (3B / 7B / LLaVA) and raises hint adoption by 0.201 / 0.209 / 0.113, while ablating any of three random directions moves every metric by at most 0.015. That ratio is not direction-specific evidence, because the projections remove different amounts of the state: the mean absolute projection fraction is 0.055 for <em>w</em> versus 0.019 / 0.004 / 0.008 for the random directions, a 5.4× energy difference. Matching the removed energy removes most of the effect: <em>w</em> scaled to a random direction's energy changes absent refusal by −0.073 (3B) and −0.018 (7B), a random direction scaled up to <em>w</em>'s energy is null in 3B (+0.010) but larger than <em>w</em> in 7B (−0.044), and class-mean / first-PC directions at the same energy move 3B refusal (+0.083) and leave 7B unchanged (+0.004). Addition is also not specific: large random directions of the same norm can open the gate. The defensible claim is readout-level sufficiency, not an identified circuit; the direction is efficient in the Qwen-family models and Phi, but not in Gemma, where any same-norm perturbation moves the gate. Energy-matched removal in the two non-Qwen models separates injection from necessity. In Gemma the raw ablation is null (0.437 against a base of 0.439) and stays null under both matched variants, while class-mean and first-PC directions at <em>w</em>'s energy raise refusal by +0.021 each: the head readout depends on class structure, not on <em>w</em>. In Phi the raw effect (−0.057) is mostly removed energy; matched down to a random direction's energy it shrinks to −0.013, a random direction scaled up to <em>w</em>'s energy moves refusal more and in the opposite direction (+0.048), and class-mean / first-PC directions at matched energy lower it by 0.157 / 0.249. Injection efficiency and removal relevance dissociate.</p>
 
   <p>The effect replicates in the other two models, whose conflict policies are opposite. Qwen2.5-VL-7B over-refuses (absent refusal 0.918); −0.25·‖h‖ raises it to 1.000 and +0.25·‖h‖ lowers it to 0.057. LLaVA-OneVision-7B refuses almost nothing (0.138 absent, 0.004 present); the same sweep gives 0.734 and 0.000. Opening the gate does not choose the answer: it makes LLaVA more hint-adherent (0.833 → 0.990 on absent items) while its present-item true-colour rate stays statistically unchanged (+0.019), and lets 7B recover true answers (0.249 → 0.421) but also adopt the hint more (0.176 → 0.425). The direction is an abstention gate, not an answer selector.</p>
 
-  <p>The causal controls replicate. Dose-matched injection is inert through layer 16 (3B) and layer 20 (7B) and only bites at layer 32 / 26; LLaVA's onset is earlier (layer 20) but still in the last 30% of depth. Same-image, opposite-question patching at L24/L26 gives paired absent-minus-present recovery gaps of +0.51 / +0.83 (3B), +0.84 / +0.86 (7B) and +0.74 / +0.80 (LLaVA), while shuffled sources restore at least as much — the late state carries the policy of the question it was recorded under, not a code for this image's evidence.</p>
+  <p>The causal controls replicate. Dose-matched injection is inert through layer 16 (3B) and layer 20 (7B) and only bites at layer 32 / 26; LLaVA's onset is earlier (layer 20) but still in the last 30% of depth. Same-image, opposite-question patching at L24/L26 gives paired absent-minus-present recovery gaps of +0.51 / +0.83 (3B), +0.84 / +0.86 (7B), +0.74 / +0.80 (LLaVA), +0.71 / +0.77 (Gemma) and +0.71 / +0.77 (Phi), while shuffled sources restore at least as much — the late state carries the policy of the question it was recorded under, not a code for this image's evidence. Readout-level steering also replicates outside the Qwen family with different amplitudes and different direction specificity: at ±0.50·‖h‖ absent refusal moves by +0.056 / −0.109 in Gemma (whose present arm already sits at the 0.008 refusal floor) and +0.435 / −0.330 in Phi, where conflict leaves the present arm refusing 0.548, so the gate is less specific to the absent question. A random-direction control at the head qualifies this: the fitted direction is 3.0× the mean random effect in Phi (12.9× for ablation) but 0.55× in Gemma, where ablating <em>w</em> is null (−0.002) despite removing 5.9× the energy of a random projection. Layer injection is clean only at L30 in Gemma (absent refusal −0.151 / +0.088 at ±0.25, present gold and hint unchanged; L16 and L24 at the negative sign move the gate but wreck the present arm), whereas in Phi the direction already acts at L14 (−0.193 / +0.180) and weakens deeper even though patching recovers only 31% at L14 and 97% at L22. Gemma's head is movable but non-direction-specific; Phi's early injection shows the axis is available before the conflict effect is localised, not where it is computed.</p>
 </section>
 
 <section id="gate">
   <h2>Turning the mechanism into a gate</h2>
-  <p class="lead">Fabrication = answering a colour when the queried object is absent. At a fixed 50% coverage, ranking by the probe instead of by the model’s own confidence removes most fabrications — but only when the prompt is polluted. Pooled over all three hint conditions, the advantage shrinks from 23× to 3× (0.064 vs. 0.193), and a fixed score threshold becomes conservative under conflict because the axis contracts.</p>
+  <p class="lead">Fabrication = answering a colour when the queried object is absent. The probe is fitted only on no-hint scenes and scored on held-out scenes, so no evaluation scene contributes a label. At a shared 25% answered coverage, ranking by the probe instead of by the model’s own confidence removes most fabrications when the prompt is polluted. At 50% coverage the gain persists in 3B and LLaVA, but 7B refuses 72% of conflict items and never reaches that operating point.</p>
   <div class="tablewrap">
     <table>
-      <thead><tr><th>50% coverage</th><th>probe</th><th>p(unknown)</th><th>max probability</th></tr></thead>
+      <thead><tr><th>conflict, 25% answered</th><th>probe</th><th>p(unknown)</th><th>max probability</th></tr></thead>
       <tbody>
-        <tr><td>no hint</td><td class="best">0.031</td><td>0.042</td><td>0.425</td></tr>
-        <tr><td>correct hint</td><td class="best">0.027</td><td>0.088</td><td>0.119</td></tr>
-        <tr><td class="conflict">conflicting hint</td><td class="best">0.069</td><td class="warn">0.249</td><td class="warn">0.510</td></tr>
+        <tr><td>Qwen2.5-VL-3B</td><td class="best">0.077</td><td class="warn">0.192</td><td class="warn">0.315</td></tr>
+        <tr><td>Qwen2.5-VL-7B</td><td class="best">0.146</td><td>0.169</td><td class="warn">0.215</td></tr>
+        <tr><td>LLaVA-OneVision-7B</td><td class="best">0.062</td><td class="warn">0.138</td><td class="warn">0.762</td></tr>
+        <tr><td>Gemma-3-4B</td><td class="best">0.015</td><td class="warn">0.138</td><td class="warn">0.254</td></tr>
+        <tr><td>Phi-3.5-vision</td><td class="best">0.285</td><td class="warn">0.562</td><td class="warn">0.662</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">The same pattern holds on Qwen2.5-VL-7B (frozen probe 0.126 vs. p(unknown) 0.268) and LLaVA-OneVision-7B (0.111 vs. 0.295). The probe advantage is specific to the hidden state: a logistic readout over the same 12 output probabilities fabricates 0.142 under conflict at 50% coverage. The refit probe reaches 0.011 in 3B but is an upper bound. The gain survives unanswerable prevalences from 5% to 50%; a 10% conformal risk certificate holds in 3B and LLaVA, and a 5% certificate is infeasible at 130 calibration scenes.</p>
+  <p class="small">At 50% answered coverage the cross-fitted probe reaches 0.115 vs. 0.249 for p(unknown) in 3B, 0.149 vs. 0.295 in LLaVA and 0.080 vs. 0.172 in Gemma; in Phi-3.5 the margin narrows to 0.556 vs. 0.586 (paired difference [−0.073, −0.004]). At 25% coverage the scene-bootstrap paired difference against p(unknown) excludes zero in 3B [−0.169, −0.069], LLaVA [−0.138, −0.008], Gemma [−0.185, −0.069] and Phi-3.5 [−0.354, −0.192] but not in 7B [−0.062, +0.008], so every advantage except 7B's is established; Gemma's is the largest at the operating point but comes from threshold placement, since its probe and p(unknown) rank the main pair almost equally (0.887 vs. 0.896). The advantage is specific to the hidden state: a logistic readout over the same 12 output probabilities fabricates 0.142 under conflict at 50% selection coverage. The gain survives unanswerable prevalences from 5% to 50%. A category-matched control, which holds the question and the asserted colour fixed across the label, removes or reverses most of this margin in 7B, LLaVA and Gemma, and leaves Phi only 0.008 at the operating point (see <a href="#limits">limitations</a>). Conformal certification is <em>not</em> supportable at 130 calibration scenes for most models: with the answered subset in both numerator and denominator, the family-wise 10% certificate exists only for Gemma (4/20 splits), and we report the minimum bound (0.174 / 0.210 / 0.191 / 0.119 / 0.305) instead of a certificate.</p>
 </section>
 
 <section id="models">
-  <h2>Three layer-swept models, one depth profile</h2>
+  <h2>Five layer-swept models, one depth profile</h2>
   <div class="tablewrap">
     <table>
       <thead><tr><th>model</th><th>probe, no hint</th><th>held-out probe, conflict</th><th>p(unknown), no hint</th><th>p(unknown), conflict</th><th>axis gap ratio</th><th>patch recovery</th></tr></thead>
@@ -206,15 +220,21 @@
         <tr><td>Qwen2.5-VL-3B (36 layers)</td><td>0.995</td><td>0.958</td><td>0.993</td><td>0.834</td><td>0.47</td><td>22% @ 67%, 80% @ 89%</td></tr>
         <tr><td>Qwen2.5-VL-7B (28 layers)</td><td>0.995</td><td>0.946</td><td>0.984</td><td>0.797</td><td>0.42</td><td>~0% @ 64%, 69% @ 86%, 90% @ 93%</td></tr>
         <tr><td>LLaVA-OneVision-7B (28 layers)</td><td>0.994</td><td>0.935</td><td>0.991</td><td>0.781</td><td>0.34</td><td>36% @ 64%, 80% @ 86%, 96% @ 93%</td></tr>
+        <tr><td>Gemma-3-4B (34 layers)</td><td>0.986</td><td>0.964</td><td>0.961</td><td>0.891</td><td>0.54</td><td>1% @ 24%, 12% @ 47%, 90% @ 71%, 101% @ 88%</td></tr>
+        <tr><td>Phi-3.5-vision (32 layers)</td><td>0.992</td><td>0.685</td><td>0.939</td><td>0.385</td><td>0.15</td><td>31% @ 44%, 97% @ 69%, 102% @ 88%, 101% @ 94%</td></tr>
       </tbody>
     </table>
   </div>
-  <p class="small">LLaVA is far more hint-sensitive: under conflict its present-object refusal is 0.004 and absent-object refusal 0.138, against 0.556 and 0.918 in Qwen2.5-VL-7B. Yet recovery is localised at the same relative depth, and the axis dilutes and rotates in all three. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open. Gemma-3-4B was scored on geometry, probe transfer and signal detection but not swept layer by layer, so the depth profile rests on these three.</p>
+  <p class="small">LLaVA is far more hint-sensitive: under conflict its present-object refusal is 0.004 and absent-object refusal 0.138, against 0.556 and 0.918 in Qwen2.5-VL-7B. Yet recovery is localised at the same relative depth, and the axis dilutes and rotates in all five. Gemma-3-4B and Phi-3.5-vision put the transition later in relative depth: recovery reaches 12% / 90% / 101% at 47% / 71% / 88% in Gemma and 31% / 97% / 102% at 44% / 69% / 88% in Phi, although they have 34 and 32 blocks against 28 in the Qwen-7B and LLaVA. Depth, not layer count, sets the profile. Sensitivity and locus are separable: a model that is easier to fool has the same gate, pushed further open.</p>
 </section>
 
 <section id="limits">
   <h2>What we do not claim</h2>
   <div class="cols limits">
+    <div>
+      <h3>The gate’s margin is partly arm-specific</h3>
+      <p>A category-matched control holds the queried category and the asserted colour fixed within a pair. The output collapse, the in-condition refit and the geometry survive, but the frozen probe’s margin over p(unknown) falls from +0.123 / +0.142 / +0.142 to +0.050 / +0.002 / −0.015 (3B / 7B / LLaVA), and at 25% answered coverage its fabrication advantage shrinks from 0.115 to 0.069 in 3B, disappears in 7B and reverses in LLaVA. Gemma’s margin also reverses within-question (−0.009 against p(unknown)); Phi’s stays positive (+0.145) only because its own signal is below chance, and at the operating point the difference is 0.008. Part of the main-design gain therefore reflects the two arms asking different questions, not the evidence alone.</p>
+    </div>
     <div>
       <h3>Not a universal better confidence</h3>
       <p>On VizWiz’s naturally unanswerable questions, the model’s own p(unknown) matches the frozen probe (0.878 vs. 0.827). The probe still beats max-probability (0.437), but its advantage over p(unknown) is specific to settings where a hint attacks the refusal gate.</p>
@@ -241,7 +261,7 @@
     </div>
     <div>
       <h3>The output collapse is model-specific</h3>
-      <p>Gemma-3-4B dilutes and rotates its evidence axis as strongly as the Qwen models, yet its own confidence barely degrades (p(unknown) AUROC 0.961 → 0.891, maximum probability 0.627 → 0.701) while its answers are overridden just the same. The collapse that motivates a frozen gate is a property of the Qwen2/2.5 readouts; in Gemma the probe’s margin over p(unknown) is smaller (0.964 vs. 0.891) but still present. SmolVLM-Instruct, a further backbone, never abstains at all, so it cannot test the gate.</p>
+      <p>Gemma-3-4B dilutes and rotates its evidence axis as strongly as the Qwen models, yet its own confidence barely degrades (p(unknown) AUROC 0.961 → 0.891, maximum probability 0.627 → 0.701) while its answers are overridden just the same. Phi-3.5-vision (Phi-3 + CLIP) is the counterexample in the other direction: it dilutes to 0.05 / 0.15 of its length, rotates 86° / 74°, collapses its own signal to 0.385 / 0.458, and its frozen probe falls to 0.685 / 0.675 although a refit reaches 0.998. The collapse that motivates a frozen gate therefore appears in the Qwen2/2.5 and Phi-3 readouts but not in Gemma, so it is readout-specific rather than tied to one language-model family. SmolVLM-Instruct, a further backbone, never abstains at all, so it cannot test the gate.</p>
     </div>
   </div>
 </section>
@@ -251,7 +271,7 @@
 <pre><code>@misc{yuanchongbit2026evidencegate,
   title  = {Hints Dilute and Rotate the Evidence Axis
             of Vision-Language Models},
-  author = {yuanchongbit},
+  author = {Chong Yuan},
   year   = {2026},
   note   = {Preprint in preparation},
   url    = {https://github.com/yuanchongbit/evidence-gate}
@@ -262,7 +282,7 @@
 </main>
 
 <footer>
-  <div class="wrap">Built as a static page for GitHub Pages. Last updated October 2026.</div>
+  <div class="wrap">Built as a static page for GitHub Pages. Last updated November 2026.</div>
 </footer>
 
 </body>

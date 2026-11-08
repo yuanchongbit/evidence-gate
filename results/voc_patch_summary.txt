@@ -1,0 +1,11 @@
+n=180
+  absent|a<-same@L16                           p_unknown 0.514  base 0.561  delta -0.046 [-0.050, -0.043]  n=180
+  absent|a<-same@L24                           p_unknown 0.605  base 0.561  delta +0.044 [+0.032, +0.057]  n=180
+  absent|a<-same@L30                           p_unknown 0.728  base 0.561  delta +0.167 [+0.140, +0.195]  n=180
+  absent|a<-same@L34                           p_unknown 0.769  base 0.561  delta +0.209 [+0.176, +0.242]  n=180
+  absent|a                                     p_unknown 0.561  n=180
+  absent|none                                  p_unknown 0.772  n=180
+  absent|a<-shuf@L16                           p_unknown 0.515  base 0.560  delta -0.045 [-0.051, -0.040]  n=179
+  absent|a<-shuf@L24                           p_unknown 0.614  base 0.560  delta +0.054 [+0.033, +0.077]  n=179
+  absent|a<-shuf@L30                           p_unknown 0.752  base 0.560  delta +0.192 [+0.146, +0.243]  n=179
+  absent|a<-shuf@L34                           p_unknown 0.770  base 0.560  delta +0.210 [+0.157, +0.267]  n=179

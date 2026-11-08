@@ -14,7 +14,7 @@ import time
 import numpy as np
 from PIL import Image
 
-from .constants import DISTRACTOR
+from .constants import CANDIDATES, DISTRACTOR
 from .infer import DATA, ROOT, SYSTEM, Scorer, build_user
 from .infer_gen import Gen
 
@@ -75,7 +75,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default=str(DATA / "manifest_v5.jsonl"))
     ap.add_argument("--model", default="Qwen/Qwen2.5-VL-3B-Instruct")
-    ap.add_argument("--family", default="qwen", choices=["qwen", "gen"])
+    ap.add_argument("--family", default="qwen", choices=["qwen", "gen", "phi"])
     ap.add_argument("--resize", type=int, default=512)
     ap.add_argument("--out", default=str(ROOT / "runs" / "prompt_variants.jsonl"))
     ap.add_argument("--limit", type=int, default=0)
@@ -91,16 +91,26 @@ def main():
 
         def score(m, img, text, buf=None):
             return m.score([img], text, capture=buf)[0]
+        cand = std.cand_names
+    elif args.family == "phi":
+        from .phi_infer import Gen as PhiGen
+        std = PhiGen(args.model, resize=args.resize)
+
+        def score(m, img, text, buf=None):
+            return m.score(img, text, capture=buf)
+        cand = CANDIDATES
     else:
         std = SysGen(args.model, SYSTEM, resize=args.resize)
 
         def score(m, img, text, buf=None):
             return m.score(img, text, capture=buf)
-    cand = std.cand_names if args.family == "qwen" else list(std.ids)
+        cand = list(std.ids)
 
     def set_system(fmt):
         text = NOUNK_SYSTEM if fmt == "nounk" else SYSTEM
         if args.family == "qwen":
+            std.system = text
+        elif args.family == "phi":
             std.system = text
         else:
             std.sys = text

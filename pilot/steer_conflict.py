@@ -12,7 +12,7 @@ import time
 
 from PIL import Image
 
-from .constants import DISTRACTOR
+from .constants import CANDIDATES, DISTRACTOR
 from .infer import DATA, ROOT, Scorer, build_user
 from .steer import Steer, fit_direction, set_mode
 
@@ -39,7 +39,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--manifest", default=str(DATA / "manifest_v5.jsonl"))
     ap.add_argument("--model", default="Qwen/Qwen2.5-VL-3B-Instruct")
-    ap.add_argument("--family", default="qwen", choices=["qwen", "gen"])
+    ap.add_argument("--family", default="qwen", choices=["qwen", "gen", "phi"])
     ap.add_argument("--resize", type=int, default=512)
     ap.add_argument("--run", default=str(ROOT / "runs" / "v5_261.jsonl"))
     ap.add_argument("--out", default=str(ROOT / "runs" / "steer_conflict.jsonl"))
@@ -61,6 +61,13 @@ def main():
 
         def score(img, text):
             return scorer.score([img], text)[0]
+    elif args.family == "phi":
+        from .phi_infer import Gen
+        scorer = Gen(args.model, resize=args.resize)
+        cand_names = CANDIDATES
+
+        def score(img, text):
+            return scorer.score(img, text)
     else:
         from .infer_gen import Gen
         scorer = Gen(args.model, resize=args.resize)

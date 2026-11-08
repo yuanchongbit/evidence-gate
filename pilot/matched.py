@@ -92,19 +92,32 @@ def presence(args):
 def run(args):
     import time
     from PIL import Image
-    from .infer import ROOT, Scorer, build_user
+    from .infer import ROOT, build_user
+    if args.gen:
+        from .infer_gen import Gen
+        scorer = Gen(args.model, resize=args.resize,
+                     trust_remote_code=args.trust_remote_code, dtype=args.dtype)
+
+        def score(img, text, buf):
+            return scorer.score(img, text, capture=buf)
+    else:
+        from .infer import Scorer
+        scorer = Scorer(args.model)
+
+        def score(img, text, buf):
+            return scorer.score([img], text, capture=buf)[0]
     rows = [json.loads(l) for l in open(args.manifest)]
-    scorer = Scorer(args.model)
     t0 = time.time()
     hidden = {}
     with open(args.out, "w") as f:
         f.write(json.dumps({"meta": {"model": args.model,
                                      "candidates": ",".join(scorer.cand_names),
-                                     "kind": "category_matched"}}) + "\n")
+                                     "kind": "category_matched",
+                                     "gen": bool(args.gen)}}) + "\n")
         for n, r in enumerate(rows, 1):
             img = Image.open(ROOT / r["renders"]["orig"]).convert("RGB")
             buf = []
-            p = scorer.score([img], build_user(r, "none"), capture=buf)[0]
+            p = score(img, build_user(r, "none"), buf)
             hidden[r["sample_id"]] = buf[0]
             rec = {k: r[k] for k in ("pair_id", "side", "sample_id", "category", "present")}
             rec["probs"] = {"none": p}
@@ -112,7 +125,7 @@ def run(args):
                 text = (f"Hint: the {r['category']} is {r['hint_color']}.\n"
                         f"What color is the {r['category']}?\nAnswer with one word.")
                 buf = []
-                rec["probs"]["conflict"] = scorer.score([img], text, capture=buf)[0]
+                rec["probs"]["conflict"] = score(img, text, buf)
                 hidden[f"{r['sample_id']}|conflict"] = buf[0]
             f.write(json.dumps(rec) + "\n")
             f.flush()
@@ -205,6 +218,11 @@ def main():
     ap.add_argument("--analyze", action="store_true")
     ap.add_argument("--conflict", action="store_true",
                     help="also run/analyse a hint that asserts a wrong colour")
+    ap.add_argument("--gen", action="store_true",
+                    help="use the model-agnostic Gen wrapper (LLaVA, Gemma, ...)")
+    ap.add_argument("--resize", type=int, default=512)
+    ap.add_argument("--trust-remote-code", action="store_true")
+    ap.add_argument("--dtype", default="bfloat16", choices=["bfloat16", "float16"])
     args = ap.parse_args()
     if args.build:
         build(args)

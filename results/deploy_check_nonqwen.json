@@ -1,0 +1,462 @@
+{
+ "gemma": {
+  "gate_oof": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.08045977011494253,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.08045977011494253
+  },
+  "gate_insample": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.06896551724137931,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.06896551724137931
+  },
+  "gate_oof_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.2845303867403315,
+   "n_answered": 362,
+   "fabrication_per_selected": 0.28493150684931506
+  },
+  "gate_insample_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.2845303867403315,
+   "n_answered": 362,
+   "fabrication_per_selected": 0.28493150684931506
+  },
+  "gate_oof_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5,
+   "risk_among_answered": 0.08045977011494253,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.08045977011494253
+  },
+  "gate_insample_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5,
+   "risk_among_answered": 0.06896551724137931,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.06896551724137931
+  },
+  "gate_oof_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.015384615384615385,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.015384615384615385
+  },
+  "gate_insample_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.0,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.0
+  },
+  "gate_p_unknown": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.1724137931034483,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.1724137931034483
+  },
+  "gate_p_unknown_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.29863013698630136,
+   "n_answered": 365,
+   "fabrication_per_selected": 0.29863013698630136
+  },
+  "gate_p_unknown_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5,
+   "risk_among_answered": 0.1724137931034483,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.1724137931034483
+  },
+  "gate_p_unknown_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.13846153846153847,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.13846153846153847
+  },
+  "gate_maxprob": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.324,
+   "n_answered": 250,
+   "fabrication_per_selected": 0.3524904214559387
+  },
+  "gate_maxprob_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.3474320241691843,
+   "n_answered": 331,
+   "fabrication_per_selected": 0.40821917808219177
+  },
+  "gate_maxprob_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5268199233716475,
+   "risk_among_answered": 0.3371647509578544,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.3709090909090909
+  },
+  "gate_maxprob_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.25384615384615383,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.25384615384615383
+  },
+  "gate_maxprob_colour": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.3371647509578544,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.3371647509578544
+  },
+  "gate_maxprob_colour_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.35342465753424657,
+   "n_answered": 365,
+   "fabrication_per_selected": 0.35342465753424657
+  },
+  "gate_maxprob_colour_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5,
+   "risk_among_answered": 0.3371647509578544,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.3371647509578544
+  },
+  "gate_maxprob_colour_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.25384615384615383,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.25384615384615383
+  },
+  "prevalence_oof": {
+   "threshold": 1.355665632856927,
+   "matched25": {
+    "answered_coverage": 0.24904214559386972,
+    "selection_coverage": 0.24904214559386972,
+    "risk_among_answered": 0.015384615384615385,
+    "n_answered": 130,
+    "fabrication_per_selected": 0.015384615384615385
+   },
+   "sweep": {
+    "0.05": {
+     "coverage": 0.47013909513909513,
+     "fabrication_among_answered": 0.0013634808244057804
+    },
+    "0.10": {
+     "coverage": 0.4460696960696961,
+     "fabrication_among_answered": 0.0028741053098818173
+    },
+    "0.25": {
+     "coverage": 0.3738614988614989,
+     "fabrication_among_answered": 0.008573036311277349
+    },
+    "0.50": {
+     "coverage": 0.2535145035145035,
+     "fabrication_among_answered": 0.025285560870838622
+    }
+   }
+  },
+  "prevalence_p_unknown": {
+   "threshold": 0.9999999687504958,
+   "matched25": {
+    "answered_coverage": 0.24904214559386972,
+    "selection_coverage": 0.24904214559386972,
+    "risk_among_answered": 0.13846153846153847,
+    "n_answered": 130,
+    "fabrication_per_selected": 0.13846153846153847
+   },
+   "sweep": {
+    "0.05": {
+     "coverage": 0.4165800415800416,
+     "fabrication_among_answered": 0.013849033063006862
+    },
+    "0.10": {
+     "coverage": 0.40072765072765076,
+     "fabrication_among_answered": 0.028793774319066146
+    },
+    "0.25": {
+     "coverage": 0.3531704781704782,
+     "fabrication_among_answered": 0.08167770419426049
+    },
+    "0.50": {
+     "coverage": 0.27390852390852394,
+     "fabrication_among_answered": 0.21062618595825425
+    }
+   }
+  },
+  "prevalence_maxprob_colour": {
+   "threshold": 0.9999945716722145,
+   "matched25": {
+    "answered_coverage": 0.24904214559386972,
+    "selection_coverage": 0.24904214559386972,
+    "risk_among_answered": 0.25384615384615383,
+    "n_answered": 130,
+    "fabrication_per_selected": 0.25384615384615383
+   },
+   "sweep": {
+    "0.05": {
+     "coverage": 0.36636842886842885,
+     "fabrication_among_answered": 0.028869635709580992
+    },
+    "0.10": {
+     "coverage": 0.35821948321948316,
+     "fabrication_among_answered": 0.059052751580474676
+    },
+    "0.25": {
+     "coverage": 0.33377264627264625,
+     "fabrication_among_answered": 0.1584450253044881
+    },
+    "0.50": {
+     "coverage": 0.293027918027918,
+     "fabrication_among_answered": 0.3609527429367795
+    }
+   }
+  },
+  "conformal_5": {
+   "n_splits": 20,
+   "n_feasible": 0,
+   "test_risk_mean": null,
+   "test_coverage_mean": null,
+   "min_ucb_mean": 0.11888229141858908
+  },
+  "conformal_10": {
+   "n_splits": 20,
+   "n_feasible": 4,
+   "test_risk_mean": 0.05660846365880219,
+   "test_coverage_mean": 0.2948473282442748,
+   "min_ucb_mean": null
+  }
+ },
+ "phi": {
+  "gate_oof": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.42245989304812837,
+   "n_answered": 187,
+   "fabrication_per_selected": 0.39080459770114945
+  },
+  "gate_insample": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.37640449438202245,
+   "n_answered": 178,
+   "fabrication_per_selected": 0.34099616858237547
+  },
+  "gate_oof_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.5085470085470085,
+   "n_answered": 234,
+   "fabrication_per_selected": 0.43561643835616437
+  },
+  "gate_insample_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.5064935064935064,
+   "n_answered": 231,
+   "fabrication_per_selected": 0.4328767123287671
+  },
+  "gate_oof_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.8237547892720306,
+   "risk_among_answered": 0.5555555555555556,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.4604651162790698
+  },
+  "gate_insample_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.8371647509578544,
+   "risk_among_answered": 0.5478927203065134,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.448512585812357
+  },
+  "gate_oof_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.3103448275862069,
+   "risk_among_answered": 0.2846153846153846,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.2839506172839506
+  },
+  "gate_insample_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.3007662835249042,
+   "risk_among_answered": 0.23846153846153847,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.21656050955414013
+  },
+  "gate_p_unknown": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.5852713178294574,
+   "n_answered": 258,
+   "fabrication_per_selected": 0.5823754789272031
+  },
+  "gate_p_unknown_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.6,
+   "n_answered": 295,
+   "fabrication_per_selected": 0.5808219178082191
+  },
+  "gate_p_unknown_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5057471264367817,
+   "risk_among_answered": 0.5862068965517241,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.5833333333333334
+  },
+  "gate_p_unknown_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.5615384615384615,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.5615384615384615
+  },
+  "gate_maxprob": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.6558441558441559,
+   "n_answered": 154,
+   "fabrication_per_selected": 0.48659003831417624
+  },
+  "gate_maxprob_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.6634146341463415,
+   "n_answered": 205,
+   "fabrication_per_selected": 0.5150684931506849
+  },
+  "gate_maxprob_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.8946360153256705,
+   "risk_among_answered": 0.6360153256704981,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.5246252676659529
+  },
+  "gate_maxprob_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.4157088122605364,
+   "risk_among_answered": 0.6615384615384615,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.4976958525345622
+  },
+  "gate_maxprob_colour": {
+   "coverage": 0.5,
+   "risk_among_answered": 0.6360153256704981,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.6360153256704981
+  },
+  "gate_maxprob_colour_70": {
+   "coverage": 0.6992337164750958,
+   "risk_among_answered": 0.6,
+   "n_answered": 295,
+   "fabrication_per_selected": 0.6109589041095891
+  },
+  "gate_maxprob_colour_matched50": {
+   "answered_coverage": 0.5,
+   "selection_coverage": 0.5,
+   "risk_among_answered": 0.6360153256704981,
+   "n_answered": 261,
+   "fabrication_per_selected": 0.6360153256704981
+  },
+  "gate_maxprob_colour_matched25": {
+   "answered_coverage": 0.24904214559386972,
+   "selection_coverage": 0.24904214559386972,
+   "risk_among_answered": 0.6615384615384615,
+   "n_answered": 130,
+   "fabrication_per_selected": 0.6615384615384615
+  },
+  "prevalence_oof": {
+   "threshold": 1.281413327752724,
+   "matched25": {
+    "answered_coverage": 0.24904214559386972,
+    "selection_coverage": 0.3103448275862069,
+    "risk_among_answered": 0.2846153846153846,
+    "n_answered": 130,
+    "fabrication_per_selected": 0.2839506172839506
+   },
+   "sweep": {
+    "0.05": {
+     "coverage": 0.7591807909604519,
+     "fabrication_among_answered": 0.013767441860465118
+    },
+    "0.10": {
+     "coverage": 0.730225988700565,
+     "fabrication_among_answered": 0.02862669245647969
+    },
+    "0.25": {
+     "coverage": 0.643361581920904,
+     "fabrication_among_answered": 0.08122941822173435
+    },
+    "0.50": {
+     "coverage": 0.4985875706214689,
+     "fabrication_among_answered": 0.20963172804532576
+    }
+   }
+  },
+  "prevalence_p_unknown": {
+   "threshold": 0.833854696909763,
+   "matched25": {
+    "answered_coverage": 0.24904214559386972,
+    "selection_coverage": 0.24904214559386972,
+    "risk_among_answered": 0.5615384615384615,
+    "n_answered": 130,
+    "fabrication_per_selected": 0.5615384615384615
+   },
+   "sweep": {
+    "0.05": {
+     "coverage": 0.4795197740112994,
+     "fabrication_among_answered": 0.04300441826215022
+    },
+    "0.10": {
+     "coverage": 0.4759887005649717,
+     "fabrication_among_answered": 0.08664688427299704
+    },
+    "0.25": {
+     "coverage": 0.46539548022598864,
+     "fabrication_among_answered": 0.22154779969650987
+    },
+    "0.50": {
+     "coverage": 0.44774011299435024,
+     "fabrication_among_answered": 0.4605678233438486
+    }
+   }
+  },
+  "prevalence_maxprob_colour": {
+   "threshold": 0.7412617319287301,
+   "matched25": {
+    "answered_coverage": 0.24904214559386972,
+    "selection_coverage": 0.24904214559386972,
+    "risk_among_answered": 0.6615384615384615,
+    "n_answered": 130,
+    "fabrication_per_selected": 0.6615384615384615
+   },
+   "sweep": {
+    "0.05": {
+     "coverage": 0.37853107344632764,
+     "fabrication_among_answered": 0.06417910447761195
+    },
+    "0.10": {
+     "coverage": 0.384180790960452,
+     "fabrication_among_answered": 0.1264705882352941
+    },
+    "0.25": {
+     "coverage": 0.4011299435028249,
+     "fabrication_among_answered": 0.3028169014084507
+    },
+    "0.50": {
+     "coverage": 0.42937853107344637,
+     "fabrication_among_answered": 0.5657894736842105
+    }
+   }
+  },
+  "conformal_5": {
+   "n_splits": 20,
+   "n_feasible": 0,
+   "test_risk_mean": null,
+   "test_coverage_mean": null,
+   "min_ucb_mean": 0.30479653268855034
+  },
+  "conformal_10": {
+   "n_splits": 20,
+   "n_feasible": 0,
+   "test_risk_mean": null,
+   "test_coverage_mean": null,
+   "min_ucb_mean": 0.30479653268855034
+  }
+ }
+}

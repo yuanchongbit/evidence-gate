@@ -1,0 +1,47 @@
+[transformers] `Phi3VProcessor` defines `image_processor_class = 'Phi3VImageProcessor'`, which is deprecated. Register the correct mapping in `AutoImageProcessor` instead.
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='su'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='su'
+Loading weights:   0%|          | 0/592 [00:00<?, ?it/s]Loading weights:   0%|          | 1/592 [00:02<24:12,  2.46s/it]Loading weights:   1%|          | 5/592 [00:03<05:51,  1.67it/s]Loading weights:   1%|          | 7/592 [00:03<03:57,  2.46it/s]Loading weights:   1%|▏         | 8/592 [00:04<04:23,  2.21it/s]Loading weights:   2%|▏         | 9/592 [00:04<04:31,  2.14it/s]Loading weights:   2%|▏         | 11/592 [00:05<04:46,  2.03it/s]Loading weights:   2%|▏         | 13/592 [00:06<03:20,  2.88it/s]Loading weights:   2%|▏         | 14/592 [00:06<03:52,  2.48it/s]Loading weights:   6%|▌         | 35/592 [00:06<00:33, 16.59it/s]Loading weights:  10%|▉         | 58/592 [00:06<00:15, 35.45it/s]Loading weights:  12%|█▏        | 70/592 [00:09<00:46, 11.30it/s]Loading weights:  13%|█▎        | 79/592 [00:13<01:20,  6.36it/s]Loading weights:  14%|█▍        | 85/592 [00:15<01:37,  5.20it/s]Loading weights:  15%|█▌        | 90/592 [00:17<01:57,  4.26it/s]Loading weights:  16%|█▌        | 93/592 [00:17<01:54,  4.36it/s]Loading weights:  16%|█▌        | 96/592 [00:19<02:14,  3.70it/s]Loading weights:  17%|█▋        | 98/592 [00:19<02:17,  3.58it/s]Loading weights:  17%|█▋        | 100/592 [00:20<02:12,  3.71it/s]Loading weights:  17%|█▋        | 101/592 [00:22<03:37,  2.26it/s]Loading weights:  17%|█▋        | 102/592 [00:22<03:19,  2.46it/s]Loading weights:  18%|█▊        | 104/592 [00:23<03:00,  2.71it/s]Loading weights:  18%|█▊        | 106/592 [00:23<02:49,  2.88it/s]Loading weights:  18%|█▊        | 107/592 [00:24<03:34,  2.26it/s]Loading weights:  18%|█▊        | 108/592 [00:24<03:10,  2.54it/s]Loading weights:  19%|█▊        | 110/592 [00:25<02:51,  2.81it/s]Loading weights:  19%|█▉        | 115/592 [00:25<01:27,  5.43it/s]Loading weights:  23%|██▎       | 136/592 [00:25<00:21, 21.65it/s]Loading weights:  26%|██▌       | 155/592 [00:25<00:11, 38.65it/s]Loading weights:  30%|██▉       | 177/592 [00:25<00:06, 61.23it/s]Loading weights:  41%|████▏     | 245/592 [00:25<00:02, 155.47it/s]Loading weights: 100%|██████████| 592/592 [00:26<00:00, 22.75it/s] 
+model class: Phi3VForCausalLM
+stack model n_layers 32 profile [14, 22, 28, 30] same [22, 30] noop [22, 30]
+[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:71: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:172: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:202: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+You are not running the flash-attention implementation, expect numerical differences.
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:71: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:172: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:202: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+10/261 50s
+20/261 101s
+30/261 151s
+40/261 201s
+50/261 250s
+60/261 300s
+70/261 350s
+80/261 401s
+90/261 451s
+100/261 502s
+110/261 552s
+120/261 602s
+130/261 653s
+140/261 703s
+150/261 753s
+160/261 804s
+170/261 854s
+180/261 904s
+190/261 954s
+200/261 1004s
+210/261 1054s
+220/261 1104s
+230/261 1154s
+240/261 1205s
+250/261 1255s
+260/261 1305s
+saved /mnt/workspace/results/runs/patch_full_phi.jsonl

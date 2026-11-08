@@ -1,0 +1,19 @@
+{
+  "patch6": {
+    "n": 261,
+    "layers": {
+      "22": {
+        "argmax_equal_noop": 1.0,
+        "max_abs_prob_diff_noop": 0.0,
+        "argmax_equal_zero": 0.23371647509578544,
+        "refusal_change_zero": 0.0
+      },
+      "30": {
+        "argmax_equal_noop": 1.0,
+        "max_abs_prob_diff_noop": 0.0,
+        "argmax_equal_zero": 0.0842911877394636,
+        "refusal_change_zero": 0.0
+      }
+    }
+  }
+}

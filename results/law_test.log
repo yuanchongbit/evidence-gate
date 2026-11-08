@@ -1,0 +1,24 @@
+== 3b gap0=47.509 sd0=0.537 d'=88.52 AUC=0.988
+  none        gap_ratio=1.000 sd_ratio=1.000 d'_ratio=1.000 AUC=0.988 d'=88.52
+  correct     gap_ratio=0.605 sd_ratio=0.783 d'_ratio=0.773 AUC=0.966 d'=68.42
+  conflict    gap_ratio=0.409 sd_ratio=0.826 d'_ratio=0.495 AUC=0.907 d'=43.82
+  conflict_b  gap_ratio=0.433 sd_ratio=0.794 d'_ratio=0.545 AUC=0.924 d'=48.29
+== 7b gap0=111.197 sd0=1.215 d'=91.54 AUC=0.990
+  none        gap_ratio=1.000 sd_ratio=1.000 d'_ratio=1.000 AUC=0.990 d'=91.54
+  correct     gap_ratio=0.689 sd_ratio=0.688 d'_ratio=1.002 AUC=0.992 d'=91.68
+  conflict    gap_ratio=0.259 sd_ratio=0.698 d'_ratio=0.372 AUC=0.879 d'=34.01
+  conflict_b  gap_ratio=0.307 sd_ratio=0.671 d'_ratio=0.457 AUC=0.926 d'=41.83
+== llava gap0=66.073 sd0=0.603 d'=109.64 AUC=0.994
+  none        gap_ratio=1.000 sd_ratio=1.000 d'_ratio=1.000 AUC=0.994 d'=109.64
+  correct     gap_ratio=0.482 sd_ratio=0.740 d'_ratio=0.650 AUC=0.977 d'=71.30
+  conflict    gap_ratio=0.199 sd_ratio=0.709 d'_ratio=0.281 AUC=0.833 d'=30.77
+  conflict_b  gap_ratio=0.234 sd_ratio=0.696 d'_ratio=0.336 AUC=0.875 d'=36.80
+== gemma gap0=132.590 sd0=1.895 d'=69.95 AUC=0.963
+  none        gap_ratio=1.000 sd_ratio=1.000 d'_ratio=1.000 AUC=0.963 d'=69.95
+  correct     gap_ratio=0.467 sd_ratio=0.624 d'_ratio=0.749 AUC=0.951 d'=52.41
+  conflict    gap_ratio=0.466 sd_ratio=0.638 d'_ratio=0.730 AUC=0.943 d'=51.07
+  conflict_b  gap_ratio=0.496 sd_ratio=0.617 d'_ratio=0.804 AUC=0.964 d'=56.28
+
+log sd_ratio = 0.006 log gap_ratio + -0.346; R2=0.001 (n=12)
+d' ratio mean=0.599 range 0.281-1.002
+mean |pred AUC from d' - observed AUC| = 0.0718

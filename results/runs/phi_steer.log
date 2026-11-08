@@ -1,0 +1,47 @@
+direction fitted, median hidden norm 43.5
+[transformers] `Phi3VProcessor` defines `image_processor_class = 'Phi3VImageProcessor'`, which is deprecated. Register the correct mapping in `AutoImageProcessor` instead.
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='su'
+[transformers] Missing validation function in 'RotaryEmbeddingConfigMixin' for 'rope_type'='su'
+Loading weights:   0%|          | 0/592 [00:00<?, ?it/s]Loading weights:   0%|          | 1/592 [00:02<23:07,  2.35s/it]Loading weights:   1%|          | 5/592 [00:03<05:20,  1.83it/s]Loading weights:   1%|          | 7/592 [00:03<03:30,  2.78it/s]Loading weights:   2%|▏         | 9/592 [00:03<03:06,  3.13it/s]Loading weights:   2%|▏         | 10/592 [00:04<03:21,  2.88it/s]Loading weights:   2%|▏         | 11/592 [00:05<04:40,  2.07it/s]Loading weights:   2%|▏         | 14/592 [00:05<02:53,  3.32it/s]Loading weights:   6%|▌         | 35/592 [00:05<00:30, 18.11it/s]Loading weights:  10%|▉         | 59/592 [00:05<00:13, 38.27it/s]Loading weights:  12%|█▏        | 71/592 [00:06<00:20, 25.93it/s]Loading weights:  16%|█▌        | 94/592 [00:06<00:11, 42.57it/s]Loading weights:  19%|█▉        | 113/592 [00:06<00:08, 57.68it/s]Loading weights:  23%|██▎       | 134/592 [00:06<00:05, 77.30it/s]Loading weights:  26%|██▌       | 155/592 [00:07<00:04, 96.18it/s]Loading weights:  30%|██▉       | 176/592 [00:07<00:03, 116.56it/s]Loading weights:  39%|███▊      | 229/592 [00:07<00:01, 200.82it/s]Loading weights:  99%|█████████▉| 589/592 [00:07<00:00, 963.36it/s]Loading weights: 100%|██████████| 592/592 [00:07<00:00, 80.20it/s] 
+model class: Phi3VForCausalLM
+[transformers] `use_return_dict` is deprecated! Use `return_dict` instead!
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:71: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:172: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:202: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+You are not running the flash-attention implementation, expect numerical differences.
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:71: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:172: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+/usr/local/lib/python3.12/site-packages/transformers/modeling_attn_mask_utils.py:202: FutureWarning: The attention mask API under `transformers.modeling_attn_mask_utils` (`AttentionMaskConverter`) is deprecated and will be removed in Transformers v5.10. Please use the new API in `transformers.masking_utils`.
+  warnings.warn(DEPRECATION_MESSAGE, FutureWarning)
+10/261 49s
+20/261 97s
+30/261 144s
+40/261 192s
+50/261 238s
+60/261 286s
+70/261 333s
+80/261 381s
+90/261 428s
+100/261 476s
+110/261 524s
+120/261 571s
+130/261 619s
+140/261 667s
+150/261 715s
+160/261 762s
+170/261 810s
+180/261 858s
+190/261 906s
+200/261 953s
+210/261 1000s
+220/261 1047s
+230/261 1095s
+240/261 1142s
+250/261 1190s
+260/261 1238s
+saved /mnt/workspace/results/runs/steer_conflict_phi.jsonl

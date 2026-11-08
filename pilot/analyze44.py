@@ -98,7 +98,7 @@ def patch6_summary(path):
     meta, recs = load_jsonl(path)
     names = meta["candidates"].split(",")
     out = {"n": len(recs), "layers": {}}
-    for L in meta["layers"]:
+    for L in meta.get("noop_layers", meta["layers"]):
         same_noop, same_zero, dmax = [], [], []
         ref_change = []
         for r in recs:

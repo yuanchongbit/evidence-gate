@@ -88,6 +88,8 @@ def fig_depth():
         ("Qwen2.5-VL-3B", [66.7, 88.9], [22, 80], NAVY, "o"),
         ("Qwen2.5-VL-7B", [64.3, 85.7, 92.9], [0, 69, 90], TEAL, "s"),
         ("LLaVA-OneVision-7B", [64.3, 85.7, 92.9], [36, 80, 96], ORANGE, "^"),
+        ("Gemma-3-4B", [23.5, 47.1, 70.6, 88.2], [1, 12, 90, 101], "#7c3aed", "D"),
+        ("Phi-3.5-vision", [43.8, 68.8, 87.5, 93.8], [31, 97, 102, 101], "#a16207", "v"),
     ]
     fig, axes = plt.subplots(1, 2, figsize=(6.8, 2.5),
                              gridspec_kw={"width_ratios": [1.1, 1]})
@@ -95,12 +97,13 @@ def fig_depth():
     ax = axes[0]
     for name, xs, ys, color, marker in models:
         ax.plot(xs, ys, "-", color=color, lw=1.6, marker=marker, ms=4.5, label=name)
-    ax.set_xlim(50, 100)
-    ax.set_ylim(-4, 102)
+    ax.set_xlim(18, 101)
+    ax.set_ylim(-6, 106)
     ax.set_xlabel("relative depth of the patched layer (%)")
     ax.set_ylabel("refusal recovered (%)")
-    ax.set_xticks([50, 60, 70, 80, 90, 100])
-    ax.legend(loc="upper left", frameon=False, handlelength=1.6)
+    ax.set_xticks([20, 40, 60, 80, 100])
+    ax.legend(loc="upper left", frameon=False, handlelength=1.3, fontsize=7.2,
+              borderaxespad=0.2, labelspacing=0.3)
     ax.grid(axis="y", color=LIGHT, lw=0.7)
     ax.set_axisbelow(True)
     ax.set_title("(a) no-hint state pasted back", loc="left", fontsize=8.5)
